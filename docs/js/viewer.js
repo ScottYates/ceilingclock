@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { PARTS, ALL, MATERIALS, AXIS } from './parts.js?v=20261030r';
-import { optics, LENS, CEILING } from './optics.js?v=20261030r';
+import { PARTS, ALL, MATERIALS, AXIS } from './parts.js?v=20261030s';
+import { optics, LENS, CEILING } from './optics.js?v=20261030s';
 
 // createViewer(container) -> { ready: Promise, setState({visible, highlight, explode, tilt, focus, beam, camera, target}), onPick }
 export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'models/clock.glb' } = {}) {
@@ -39,7 +39,7 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
   root.add(pivot);
 
   const meshes = {};
-  const state = { visible: ALL, highlight: [], explode: 0, tilt: 0, focus: 0, beam: false };
+  const state = { visible: ALL, highlight: [], explode: 0, tilt: 0, focus: 0, beam: false, flip: false };
   let explodeAnim = null;
   const listeners = [];
 
@@ -158,7 +158,8 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute([...fc[0].toArray(), ...fc[1].toArray(), ...fc[2].toArray(), ...fc[3].toArray()].map((v, i) => i % 3 === 2 ? ceilZ : v), 3));
     // the mirror flips the picture once; the clock's Mirror setting puts it right, so show it the right way round
-    g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 1, 1, 1, 1, 0, 0, 0], 2));   // reads upright from in front of the clock
+    // reads upright from in front of the clock; flip = the clock's "Flip projection" (turned 180 degrees)
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(state.flip ? [1, 0, 0, 0, 0, 1, 1, 1] : [0, 1, 1, 1, 1, 0, 0, 0], 2));
     g.setIndex([0, 1, 2, 0, 2, 3]);
     imgMesh.geometry.dispose();
     imgMesh.geometry = g;
@@ -172,8 +173,9 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
     if (s.tilt !== undefined) { state.tilt = s.tilt; pivot.rotation.x = s.tilt * Math.PI / 180; }
     if (s.focus !== undefined) state.focus = s.focus;
     if (s.beam !== undefined) state.beam = s.beam;
+    if (s.flip !== undefined) state.flip = s.flip;
     if (s.text !== undefined) beamText = s.text;
-    if (s.tilt !== undefined || s.focus !== undefined || s.beam !== undefined || s.text !== undefined) updateBeam();
+    if (s.tilt !== undefined || s.focus !== undefined || s.beam !== undefined || s.flip !== undefined || s.text !== undefined) updateBeam();
     if (s.camera) camera.position.set(...s.camera);
     if (s.target) controls.target.set(...s.target);
     if (s.explode !== undefined) {
@@ -223,5 +225,5 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
     renderer.render(scene, camera);
   });
 
-  return { ready, setState, onPick: (f) => listeners.push(f), get explode() { return state.explode; }, get tilt() { return state.tilt; }, get focus() { return state.focus; }, get beam() { return state.beam; } };
+  return { ready, setState, onPick: (f) => listeners.push(f), get explode() { return state.explode; }, get tilt() { return state.tilt; }, get focus() { return state.focus; }, get beam() { return state.beam; }, get flip() { return state.flip; } };
 }

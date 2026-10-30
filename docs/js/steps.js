@@ -120,7 +120,7 @@ export const STEPS = [
 <li>Plug in the 5 V supply. The projector shows <code>WIFI SETUP</code> until you connect it (see <a href="firmware.html">Firmware</a>).</li>
 <li><b>Aim:</b> hold the lens mount and roll the barrel toward the front. It clicks every 5°, from 5° back to 30° forward; the grooves on the barrel's right end show the steps. The picture turns with the barrel, so the time stays straight.</li>
 <li><b>Focus:</b> darken the room and slide the lens sleeve up or down (about ±5 mm) until the digits are sharp. Sliding it up focuses closer; sliding it down focuses further away. Push the tapered focus pin into the hole at the front of the lens mount to hold it. Tilting further sends the light further, so refocus after a big change. On the <a href="index.html">3D model</a> page, "Show focusing" plays this.</li>
-<li>The mirror flips the image once. If the time reads mirrored or upside down, fix it with <b>Mirror left/right</b> and <b>Flip upside down</b> on the settings page.</li>
+<li>If the time reads upside down from where you lie, press <b>Flip projection</b> on the clock's web page (or tick <b>Upside down</b> in the projector settings). If it reads back to front, tick <b>Mirror left/right</b>. The "Flip upside down" button on the <a href="index.html">3D model</a> page shows what it does.</li>
 <li>Adjust <b>LCD contrast</b> until the background is as dark as it gets without the digits fading.</li></ol>
 <table><thead><tr><th>Tilt</th><th>0°</th><th>10°</th><th>15°</th><th>20°</th><th>25°</th><th>30°</th></tr></thead><tbody>
 <tr><td>Image moves forward (8 ft ceiling, 1.8 m above the clock)</td><td>0</td><td>32 cm</td><td>48 cm</td><td>66 cm</td><td>84 cm</td><td>104 cm</td></tr></tbody></table>

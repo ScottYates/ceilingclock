@@ -38,6 +38,7 @@ struct Config {
   DisplayCfg proj;                // ceiling projector, brightness %
   bool projMirrorX = true;
   bool projMirrorY = false;
+  bool projUpsideDown = false;    // turn the projected picture 180 degrees
   bool projInvert = true;         // true = bright digits on dark ceiling
   uint8_t lcdContrast = 60;
   uint8_t sunriseMaxBright = 160; // 0-255; caps ring current

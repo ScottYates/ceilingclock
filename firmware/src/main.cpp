@@ -416,7 +416,8 @@ void pushLcd() {
     for (int x = 0; x < 84; x++) {
       bool lit = canvas.getPixel(x, y);
       bool dark = cfg.projInvert ? !lit : lit;
-      if (dark) lcd.drawPixel(cfg.projMirrorX ? 83 - x : x, cfg.projMirrorY ? 47 - y : y, BLACK);
+      bool mx = cfg.projMirrorX != cfg.projUpsideDown, my = cfg.projMirrorY != cfg.projUpsideDown;   // 180 degrees = both flips
+      if (dark) lcd.drawPixel(mx ? 83 - x : x, my ? 47 - y : y, BLACK);
     }
   lcd.display();
 }
@@ -592,6 +593,7 @@ void apiState() {
   lv["sunrise"] = live.sunrise;
   lv["vol"] = soundPlaying() ? live.vol : 0;
   lv["invert"] = cfg.projInvert;
+  lv["upsideDown"] = cfg.projUpsideDown;
   // the 84 x 48 projector image, 1 bit per pixel, 11 bytes per row, as hex
   static const char* hx = "0123456789abcdef";
   const uint8_t* buf = canvas.getBuffer();
@@ -691,6 +693,7 @@ void apiAction() {
   else if (what == "peek") peekUntilMs = millis() + 15000;
   else if (what == "front") toggleFront();
   else if (what == "proj") toggleProjector();
+  else if (what == "flip") { cfg.projUpsideDown = !cfg.projUpsideDown; saveConfig(); pushLcd(); }
   else if (what == "ring" && id >= 0 && id < cfg.alarmCount) startRing(id, cfg.alarms[id].rampSec);
   else if (what == "skip" && id >= 0 && id < cfg.alarmCount) { cfg.alarms[id].t.skipNext = !cfg.alarms[id].t.skipNext; saveConfig(); }
   else if (what == "test") {

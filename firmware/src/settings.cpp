@@ -30,6 +30,7 @@ void configToJson(const Config& c, JsonDocument& doc) {
   dispToJson(c.front, doc["front"].to<JsonObject>());
   dispToJson(c.proj, doc["proj"].to<JsonObject>());
   doc["projMirrorX"] = c.projMirrorX; doc["projMirrorY"] = c.projMirrorY; doc["projInvert"] = c.projInvert;
+  doc["projUpsideDown"] = c.projUpsideDown;
   doc["lcdContrast"] = c.lcdContrast; doc["sunriseMaxBright"] = c.sunriseMaxBright;
   doc["showOnAlarm"] = c.showOnAlarm;
   doc["webPassword"] = c.webPassword;
@@ -55,6 +56,7 @@ bool configFromJson(Config& c, JsonVariantConst v) {
   dispFromJson(c.front, v["front"], 7);
   dispFromJson(c.proj, v["proj"], 100);
   c.projMirrorX = v["projMirrorX"] | c.projMirrorX; c.projMirrorY = v["projMirrorY"] | c.projMirrorY;
+  c.projUpsideDown = v["projUpsideDown"] | c.projUpsideDown;
   c.projInvert = v["projInvert"] | c.projInvert;
   c.lcdContrast = constrain((int)(v["lcdContrast"] | c.lcdContrast), 0, 127);
   c.sunriseMaxBright = constrain((int)(v["sunriseMaxBright"] | c.sunriseMaxBright), 0, 255);

@@ -3,7 +3,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ceiling Clock: a Wi-Fi ceiling projection alarm clock</title>
 <meta name="description" content="Build a Wi-Fi synced ceiling projection alarm clock with an ESP32-S3: 3D model, assembly steps, wiring and parts list.">
-<link rel="stylesheet" href="style.css?v=20261030r">
+<link rel="stylesheet" href="style.css?v=20261030s">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}</script>
 </head><body>
 <header class="site"><div class="in">
@@ -26,6 +26,7 @@
     <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
       <button class="btn ghost" id="bBeam" style="padding:6px 10px;font-size:.85rem">Show light on the ceiling</button>
       <button class="btn ghost" id="bFocus" style="padding:6px 10px;font-size:.85rem">Show focusing</button>
+      <button class="btn ghost" id="bFlip" style="padding:6px 10px;font-size:.85rem">Flip upside down</button>
     </div>
     <p id="optics" style="font-size:.85rem;color:var(--mut);margin:6px 0 0"></p>
     <div style="display:flex;gap:6px;margin-top:8px">
@@ -58,10 +59,10 @@
 <footer>Ceiling Clock · open hardware and firmware · <a href="https://github.com/ScottYates/ceilingclock">source on GitHub</a></footer>
 
 <script type="module">
-import { createViewer } from './js/viewer.js?v=20261030r';
-import { PARTS } from './js/parts.js?v=20261030r';
-import { STEPS } from './js/steps.js?v=20261030r';
-import { optics } from './js/optics.js?v=20261030r';
+import { createViewer } from './js/viewer.js?v=20261030s';
+import { PARTS } from './js/parts.js?v=20261030s';
+import { STEPS } from './js/steps.js?v=20261030s';
+import { optics } from './js/optics.js?v=20261030s';
 
 const v = createViewer(document.getElementById('viewer'));
 const ex = document.getElementById('explode');
@@ -105,6 +106,14 @@ document.getElementById('bBeam').onclick = () => {
   const on = !v.beam;
   v.setState(on ? { beam: true, explode: 0, ...BEAM_CAM } : { beam: false, camera: [300, 250, 390], target: [0, 40, 0] });
   ex.value = 0; showOptics();
+};
+// Flip upside down: same as the clock's "Flip projection" button; shows the light so you can see it turn
+document.getElementById('bFlip').onclick = () => {
+  const s = { flip: !v.flip };
+  if (!v.beam) Object.assign(s, { beam: true, explode: 0, ...BEAM_CAM });
+  v.setState(s); ex.value = 0;
+  document.getElementById('bFlip').textContent = v.flip ? 'Flip back upright' : 'Flip upside down';
+  showOptics();
 };
 // Show focusing: the light on the ceiling, then the sleeve slides from blurry to sharp
 let focusAnim = null;

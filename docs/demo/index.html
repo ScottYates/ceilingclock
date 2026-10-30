@@ -42,6 +42,7 @@ button.p{background:var(--acc);color:#111;font-weight:600}button.d{background:tr
 <div class="row">
 <button onclick="act('front')" id="bFront">Front display</button>
 <button onclick="act('proj')" id="bProj">Projector</button>
+<button onclick="act('flip').then(load)" id="bFlip">Flip projection</button>
 <button onclick="act('peek')">Show 15 s</button>
 <button onclick="act('resync')">Resync time</button></div>
 </div>
@@ -71,7 +72,8 @@ button.p{background:var(--acc);color:#111;font-weight:600}button.d{background:tr
 <label>LCD contrast<input type="number" min="0" max="127" id="contrast"></label></div>
 <div class="row">
 <label class="sw"><input type="checkbox" id="mx">Mirror left/right</label>
-<label class="sw"><input type="checkbox" id="my">Flip upside down</label>
+<label class="sw"><input type="checkbox" id="my">Mirror top/bottom</label>
+<label class="sw"><input type="checkbox" id="ud">Upside down (turn 180°)</label>
 <label class="sw"><input type="checkbox" id="inv">Bright digits on dark</label></div>
 <div class="row"><label class="sw"><input type="checkbox" id="showAlarm">Turn displays on while an alarm rings</label></div>
 <div class="row"><b style="width:100%">Night</b>
@@ -120,9 +122,10 @@ function drawRing(lv){const [r,g,b]=lv.ring,mx=Math.max(r,g,b);let dots='';
 function drawCeil(lv){const c=$('ceil'),x=c.getContext('2d');x.fillStyle='#07080b';x.fillRect(0,0,336,192);
  if(!lv.projOn||!lv.projPct){x.fillStyle='#4a4f57';x.font='15px system-ui';x.textAlign='center';x.fillText('Projector off',168,100);$('ceilLbl').textContent='On the ceiling · projector off';return}
  const a=0.3+0.7*lv.projPct/100,h=lv.lcd||'';
- for(let y=0;y<48;y++)for(let i=0;i<84;i++){const b=parseInt(h.substr((y*11+(i>>3))*2,2),16),bit=(b>>(7-(i&7)))&1,lit=lv.invert?bit:!bit;
-  if(lit){x.fillStyle=`rgba(255,214,150,${a})`;x.fillRect(i*4,y*4,4,4)}else if(lv.invert){x.fillStyle=`rgba(255,214,150,${a*0.05})`;x.fillRect(i*4,y*4,4,4)}}
- $('ceilLbl').textContent='On the ceiling · '+lv.projPct+'% brightness'}
+ const ud=lv.upsideDown;
+ for(let y=0;y<48;y++)for(let i=0;i<84;i++){const b=parseInt(h.substr((y*11+(i>>3))*2,2),16),bit=(b>>(7-(i&7)))&1,lit=lv.invert?bit:!bit,X=ud?83-i:i,Y=ud?47-y:y;
+  if(lit){x.fillStyle=`rgba(255,214,150,${a})`;x.fillRect(X*4,Y*4,4,4)}else if(lv.invert){x.fillStyle=`rgba(255,214,150,${a*0.05})`;x.fillRect(X*4,Y*4,4,4)}}
+ $('ceilLbl').textContent='On the ceiling · '+lv.projPct+'% brightness'+(ud?' · upside down':'')}
 function drawSpk(s,lv){const v=lv.vol||0,st=s.stream||{};let t;
  if(st.state=='connecting')t='Connecting to stream…';
  else if(s.playing)t=(s.ring=='ringing'?(s.source=='backup'?'Backup sound playing':s.source=='stream'?'Alarm stream playing':'Alarm sound playing'):'Preview playing')+(s.source=='stream'&&st.title?' · '+st.title:'')+' · volume '+v+'/21';
@@ -140,6 +143,7 @@ async function poll(){try{const s=await(await fetch('/api/state')).json();drawLi
  $('rtc').textContent=s.rtc?'RTC backup ok':'no RTC';$('rtc').className='pill '+(s.rtc?'ok':'bad');
  $('next').textContent=s.nextAt?'Next: '+s.nextLabel+' '+fmtT(s.nextAt):'No alarms set';
  $('bFront').textContent='Front display: '+(s.frontOn?'on':'off');$('bProj').textContent='Projector: '+(s.projOn?'on':'off');
+ if(s.live)$('bFlip').textContent='Flip projection'+(s.live.upsideDown?' (now upside down)':'');
  $('ldr').textContent=s.ldr+(s.night?' (night)':'');
  $('ringbar').style.display=s.ring=='idle'?'none':'block';$('bSnz').style.display=s.ring=='ringing'?'':'none';
  $('ringtxt').textContent=s.ring=='ringing'?(s.ringLabel||'Alarm')+' ringing':'Snoozed until '+fmtT(s.snoozeUntil);
@@ -170,13 +174,13 @@ function testSound(i){const a=C.alarms[i];act('test',(a.stream?'&stream='+encode
 function fill(){const opt=MODES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');$('f_mode').innerHTML=opt;$('p_mode').innerHTML=opt;
  $('f_mode').value=C.front.mode;$('f_day').value=C.front.dayBright;$('f_night').value=C.front.nightBright;
  $('p_mode').value=C.proj.mode;$('p_day').value=C.proj.dayBright;$('p_night').value=C.proj.nightBright;
- $('contrast').value=C.lcdContrast;$('mx').checked=C.projMirrorX;$('my').checked=C.projMirrorY;$('inv').checked=C.projInvert;
+ $('contrast').value=C.lcdContrast;$('mx').checked=C.projMirrorX;$('my').checked=C.projMirrorY;$('inv').checked=C.projInvert;$('ud').checked=C.projUpsideDown;
  $('showAlarm').checked=C.showOnAlarm;$('nStart').value=hm(C.nightStart);$('nEnd').value=hm(C.nightEnd);
  $('useLdr').checked=C.useLdr;$('ldrT').value=C.ldrThreshold;$('sunMax').value=C.sunriseMaxBright;
  $('tz').value=C.tz;$('ntp').value=C.ntp;$('h24').checked=C.hour24;$('pw').value=C.webPassword;renderAlarms()}
 function collect(){C.front={mode:+$('f_mode').value,dayBright:+$('f_day').value,nightBright:+$('f_night').value};
  C.proj={mode:+$('p_mode').value,dayBright:+$('p_day').value,nightBright:+$('p_night').value};
- C.lcdContrast=+$('contrast').value;C.projMirrorX=$('mx').checked;C.projMirrorY=$('my').checked;C.projInvert=$('inv').checked;
+ C.lcdContrast=+$('contrast').value;C.projMirrorX=$('mx').checked;C.projMirrorY=$('my').checked;C.projInvert=$('inv').checked;C.projUpsideDown=$('ud').checked;
  C.showOnAlarm=$('showAlarm').checked;C.nightStart=mh($('nStart').value);C.nightEnd=mh($('nEnd').value);
  C.useLdr=$('useLdr').checked;C.ldrThreshold=+$('ldrT').value;C.sunriseMaxBright=+$('sunMax').value;
  C.tz=$('tz').value.trim();C.ntp=$('ntp').value.trim();C.hour24=$('h24').checked;C.webPassword=$('pw').value}
