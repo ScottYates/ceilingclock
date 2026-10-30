@@ -50,4 +50,4 @@ done
 
 For a 0.56" front display, add `-D 'tm_size="0.56"'` when exporting the base (the repo includes `stl/base_056.stl`).
 
-The web viewer loads `docs/models/clock.glb`, which holds every part in its assembled position.
+The web viewer loads `docs/models/clock.glb`, which holds every part in its assembled position. Rebuild it with `python3 hardware/export_viewer_model.py` (needs openscad and trimesh); bought components are modelled in `hardware/components.scad`, one mesh per material.

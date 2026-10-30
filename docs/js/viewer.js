@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { PARTS, ALL } from './parts.js?v=20261030m';
+import { PARTS, ALL, MATERIALS } from './parts.js?v=20261030n';
 
 // createViewer(container) -> { ready: Promise, setState({visible, highlight, explode, camera, target}), onPick }
 export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'models/clock.glb' } = {}) {
@@ -40,15 +40,20 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
   const ready = new Promise((resolve, reject) => {
     new GLTFLoader().load(modelUrl, (gltf) => {
       gltf.scene.traverse((o) => {
-        if (!o.isMesh || !PARTS[o.name]) return;
-        const p = PARTS[o.name];
+        if (!o.isMesh) return;
+        const [base, matName] = o.name.split('__');
+        const p = PARTS[base];
+        if (!p) return;
+        const mt = (matName && MATERIALS[matName]) || { color: p.color, opacity: p.opacity };
         o.geometry.computeVertexNormals();
         o.material = new THREE.MeshStandardMaterial({
-          color: p.color, roughness: 0.6, metalness: 0.05,
-          transparent: !!p.opacity, opacity: p.opacity ?? 1,
+          color: mt.color, roughness: mt.roughness ?? 0.6, metalness: mt.metalness ?? 0.05,
+          emissive: mt.emissive ?? 0x000000, transparent: !!mt.opacity, opacity: mt.opacity ?? 1,
         });
         o.userData.base = o.position.clone();
-        meshes[o.name] = o;
+        o.userData.part = base;
+        o.userData.mt = mt;
+        (meshes[base] = meshes[base] || []).push(o);
       });
       root.add(gltf.scene);  // vertices are raw OpenSCAD mm, z up; root rotates them to y-up
       apply();
@@ -58,16 +63,20 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
 
   function apply() {
     const hl = new Set(state.highlight);
-    for (const [name, m] of Object.entries(meshes)) {
+    for (const [name, list] of Object.entries(meshes)) {
       const p = PARTS[name];
-      m.visible = state.visible.includes(name);
-      const e = p.explode;
-      m.position.set(m.userData.base.x + e[0] * state.explode, m.userData.base.y + e[1] * state.explode, m.userData.base.z + e[2] * state.explode);
+      const vis = state.visible.includes(name) && !(p.hideExploded && state.explode > 0.04);
       const dim = hl.size > 0 && !hl.has(name);
-      m.material.color.setHex(dim ? 0xc9c5bc : p.color);
-      m.material.transparent = dim || !!p.opacity;
-      m.material.opacity = dim ? 0.28 : (p.opacity ?? 1);
-      m.material.depthWrite = !dim;
+      for (const m of list) {
+        const mt = m.userData.mt, e = p.explode;
+        m.visible = vis;
+        m.position.set(m.userData.base.x + e[0] * state.explode, m.userData.base.y + e[1] * state.explode, m.userData.base.z + e[2] * state.explode);
+        m.material.color.setHex(dim ? 0xc9c5bc : mt.color);
+        m.material.emissive.setHex(dim ? 0x000000 : (mt.emissive ?? 0x000000));
+        m.material.transparent = dim || !!mt.opacity;
+        m.material.opacity = dim ? 0.28 : (mt.opacity ?? 1);
+        m.material.depthWrite = !dim && !mt.opacity;
+      }
     }
   }
 
@@ -92,8 +101,8 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
     const r = renderer.domElement.getBoundingClientRect();
     mouse.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(mouse, camera);
-    const hits = ray.intersectObjects(Object.values(meshes).filter((m) => m.visible), false);
-    const name = hits.length ? hits[0].object.name : null;
+    const hits = ray.intersectObjects(Object.values(meshes).flat().filter((m) => m.visible), false);
+    const name = hits.length ? hits[0].object.userData.part : null;
     listeners.forEach((f) => f(name));
   });
 

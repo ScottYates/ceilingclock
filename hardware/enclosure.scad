@@ -6,8 +6,8 @@
 // Render one part:   openscad -D 'part="base"' -D 'print=true' -o base.stl enclosure.scad
 // Parts: base lid tower carrier sleeve lens_cap ring_holder dome pins (plate of snap pins + focus pins)
 // No screws: the lid, tower and ring holder are held by printed snap pins; the circuit board snaps under hooks.
-// Reference (not printed, for the 3D viewer): ref_esp32 ref_perfboard ref_lcd ref_led ref_lens
-//   ref_ring ref_speaker ref_tm1637 ref_amp ref_rtc ref_mosfet ref_button ref_usbc
+// Bought components (not printed, for the 3D viewer): see components.scad. Add -D 'mat="..."' to
+//   render one material of a component, e.g. -D 'part="ref_tm1637"' -D 'mat="led_red"'.
 
 part = "assembly";
 print = false;     // true = move/rotate the part into its printing orientation
@@ -280,29 +280,8 @@ module pin_plate() {
   for (i = [0:1]) translate([i * 13, 34, flat]) rotate([90, 0, 0]) focus_pin();
 }
 
-// ---------------------------------------------------------------- reference components (not printed)
-module ref_esp32()     translate([pb_xy[0] - 31.5, pb_xy[1] - 12.75, pb_top + 8]) cube([63, 25.5, 1.6]);
-module ref_perfboard() translate([pb_xy[0], pb_xy[1], feet_h + floor_t + pb_boss_h + 0.8]) cube([70, 50, 1.6], center = true);
-module ref_lcd() {
-  z = lid_top + lip + carrier_h - 6;
-  translate([tower_xy[0], tower_xy[1], z]) {
-    translate([0, 0, 0.8]) cube([45, 45, 1.6], center = true);
-    translate([0, -2, 1.6 + 2]) cube([40, 34, 4], center = true);
-  }
-}
-module ref_led()  translate([tower_xy[0], tower_xy[1], lid_top + lip + 1.5]) { cylinder(d = 20, h = 1.6); translate([0, 0, 1.6]) cylinder(d = 6, h = 2.5); }
-module ref_lens() translate([tower_xy[0], tower_xy[1], lens_z - lens_seat]) scale([1, 1, 0.16]) sphere(d = 50);
-module ref_ring() translate([ring_xy[0], ring_xy[1], lid_top + 1.5]) difference() { cylinder(d = ring_od, h = 1.6); translate([0, 0, -1]) cylinder(d = ring_id, h = 4); }
-module ref_speaker() translate([spk_xy[0], spk_xy[1], feet_h + floor_t]) { cylinder(d = 40, h = 2); translate([0, 0, 2]) cylinder(d1 = 34, d2 = 18, h = 8); }
-module ref_tm1637() translate([0, -box_d/2 + wall, tm_z]) {
-  translate([0, tm_disp[2] / 2, 0]) cube([tm_disp[0], tm_disp[2], tm_disp[1]], center = true);
-  translate([0, tm_disp[2] + 0.8, 0]) cube([tm_board[0], 1.6, tm_board[1]], center = true);
-}
-module ref_amp()    translate([-15, 30, feet_h + floor_t]) cube([18, 18, 3]);
-module ref_rtc()    translate([-15, -35, feet_h + floor_t]) cube([22, 38, 3]);
-module ref_mosfet() translate([55, -40, feet_h + floor_t]) cube([17, 34, 6]);
-module ref_button() translate([button_xy[0], button_xy[1], lid_top - 18]) { cylinder(d = 16, h = 18); translate([0, 0, 18]) cylinder(d = 19, h = 3); }
-module ref_usbc()   translate([usbc_x - 7, box_d/2 - wall - 12, rear_z - 3.5]) cube([14, 12, 1.6]);
+// ---------------------------------------------------------------- bought components (viewer only, not printed)
+include <components.scad>
 
 // ---------------------------------------------------------------- dispatch
 module show(p) {
@@ -329,6 +308,11 @@ module show(p) {
   else if (p == "ref_mosfet") ref_mosfet();
   else if (p == "ref_button") ref_button();
   else if (p == "ref_usbc") ref_usbc();
+  else if (p == "ref_buttonB") ref_buttonB();
+  else if (p == "ref_window") ref_window();
+  else if (p == "ref_ldr") ref_ldr();
+  else if (p == "ref_diffuser") ref_diffuser();
+  else if (p == "ref_wires") ref_wires();
 }
 
 // Printing orientation: lay each part on the bed at z = 0.

@@ -4,13 +4,13 @@ const ELEC = ['ref_perfboard', 'ref_esp32', 'ref_amp', 'ref_rtc', 'ref_mosfet'];
 const PRINTED = ['base', 'lid', 'tower', 'carrier', 'sleeve', 'lens_cap', 'ring_holder', 'dome', 'pins_asm'];
 
 const s1 = ['base', 'ref_speaker'];
-const s2 = [...s1, 'ref_tm1637', 'ref_usbc'];
+const s2 = [...s1, 'ref_tm1637', 'ref_window', 'ref_usbc', 'ref_buttonB'];
 const s3 = [...s2, ...ELEC];
-const s4 = [...s3, 'lid', 'ref_button', 'pins_asm'];
+const s4 = [...s3, 'lid', 'ref_button', 'ref_ldr', 'pins_asm'];
 const s5 = [...s4, 'tower'];
-const s6 = [...s5, 'carrier', 'ref_led', 'ref_lcd'];
+const s6 = [...s5, 'carrier', 'ref_led', 'ref_diffuser', 'ref_lcd'];
 const s7 = [...s6, 'sleeve', 'ref_lens', 'lens_cap'];
-const s8 = [...s7, 'ring_holder', 'ref_ring', 'dome'];
+const s8 = [...s7, 'ring_holder', 'ref_ring', 'dome', 'ref_wires'];
 
 const ISO = { camera: [360, 360, 540], target: [0, 120, 0] };
 
@@ -42,9 +42,9 @@ export const STEPS = [
   },
   {
     title: 'Front display and rear panel',
-    view: { visible: s2, highlight: ['ref_tm1637', 'ref_usbc'], explode: 0.35, camera: [-200, 180, 380], target: [0, 30, 0] },
+    view: { visible: s2, highlight: ['ref_tm1637', 'ref_window', 'ref_usbc', 'ref_buttonB'], explode: 0.35, camera: [-200, 180, 380], target: [0, 30, 0] },
     html: `<ol>
-<li>Cut a 36 × 20 mm piece of red or smoked acrylic (or tinted film) and glue it behind the front window. This makes the digits darker and nicer at night.</li>
+<li>Cut a 31 × 15 mm piece of 2 mm red or smoked acrylic and glue it into the front window, flush with the outside. It makes the digits darker and nicer at night. Tinted film stuck on the outside works too.</li>
 <li>Solder a 4-pin lead to the TM1637 module, then slide its PCB down into the two slotted rails behind the window, digits facing out. The rails fit the 42 × 24 mm board of a 0.36" module. If you're using a 0.56" module, print <code>base_056.stl</code> instead of <code>base.stl</code>.</li>
 <li>Glue the USB-C breakout onto its cradle so the socket lines up with the rear cutout. Solder red/black leads to VBUS/GND.</li>
 <li>Fit a second 16 mm button (button B) into the round hole on the rear wall.</li></ol>`,
@@ -63,7 +63,7 @@ export const STEPS = [
   },
   {
     title: 'Lid and snooze button',
-    view: { visible: s4, highlight: ['lid', 'ref_button', 'pins_asm'], explode: 0.45, camera: [260, 300, 400], target: [0, 60, 0] },
+    view: { visible: s4, highlight: ['lid', 'ref_button', 'ref_ldr', 'pins_asm'], explode: 0.45, camera: [260, 300, 400], target: [0, 60, 0] },
     html: `<ol>
 <li>Push the 16 mm snooze button through the front hole of the lid and tighten its nut.</li>
 <li>Glue the LDR into the small hole at the front-left corner, with its face flush with the top.</li>
@@ -80,7 +80,7 @@ export const STEPS = [
   },
   {
     title: 'Build the light engine',
-    view: { visible: s6.filter((n) => n !== 'tower'), highlight: ['carrier', 'ref_led', 'ref_lcd'], explode: 0.75, camera: [230, 230, 260], target: [30, 145, -8] },
+    view: { visible: s6.filter((n) => n !== 'tower'), highlight: ['carrier', 'ref_led', 'ref_diffuser', 'ref_lcd'], explode: 0.75, camera: [230, 230, 260], target: [30, 145, -8] },
     html: `<p>The carrier holds, from bottom to top: the LED, a diffuser, and the LCD.</p>
 <ol>
 <li><b>LED:</b> stick the 20 mm star into the floor pocket with thermal tape or a dab of thermal glue. Feed its two wires down through the floor slots.</li>

@@ -18,6 +18,11 @@ export const PARTS = {
   ref_speaker:   { label: 'Speaker',                kind: 'part',  color: 0x3b3b3b, explode: [0, 0, 30] },
   ref_tm1637:    { label: 'TM1637 front display',   kind: 'part',  color: 0xc0392b, explode: [0, -30, 0] },
   ref_usbc:      { label: 'USB-C power breakout',   kind: 'part',  color: 0x2a6f9e, explode: [0, 30, 0] },
+  ref_buttonB:   { label: 'Rear button',            kind: 'part',  color: 0xb8bec6, explode: [0, 34, 0] },
+  ref_window:    { label: 'Red acrylic window',     kind: 'part',  color: 0x8a0a0a, explode: [0, -42, 0] },
+  ref_ldr:       { label: 'Light sensor (LDR)',     kind: 'part',  color: 0xf2f2f2, explode: [0, 0, 88] },
+  ref_diffuser:  { label: 'Diffuser sheet',         kind: 'part',  color: 0xffffff, explode: [0, 0, 98] },
+  ref_wires:     { label: 'Wiring',                 kind: 'part',  color: 0xd03030, explode: [0, 0, 0], hideExploded: true },
   ref_button:    { label: 'Snooze button',          kind: 'part',  color: 0xb8bec6, explode: [0, 0, 95] },
   ref_led:       { label: '3 W LED on star',        kind: 'part',  color: 0xf2c94c, explode: [0, 0, 70] },
   ref_lcd:       { label: 'Nokia 5110 LCD',         kind: 'part',  color: 0xb03030, explode: [0, 0, 150] },
@@ -26,3 +31,36 @@ export const PARTS = {
 };
 
 export const ALL = Object.keys(PARTS);
+
+// Materials of bought components: meshes are named "<part>__<material>".
+export const MATERIALS = {
+  pcb_blue:    { color: 0x1f4fa0, roughness: 0.55 },
+  pcb_green:   { color: 0x2e7d32, roughness: 0.55 },
+  pcb_red:     { color: 0xb3261e, roughness: 0.55 },
+  pcb_purple:  { color: 0x5b2a86, roughness: 0.55 },
+  pcb_black:   { color: 0x1c1d20, roughness: 0.5 },
+  black:       { color: 0x141414, roughness: 0.7 },
+  metal:       { color: 0xc4c8cf, metalness: 0.85, roughness: 0.32 },
+  metal_dark:  { color: 0x7a8088, metalness: 0.8, roughness: 0.4 },
+  alu:         { color: 0xdfe3e8, metalness: 0.7, roughness: 0.3 },
+  gold:        { color: 0xd8ad45, metalness: 0.9, roughness: 0.3 },
+  copper:      { color: 0xcf8a3f, metalness: 0.8, roughness: 0.35 },
+  white:       { color: 0xf3f3f1, roughness: 0.6 },
+  led_red:     { color: 0xff3020, emissive: 0xc01000 },
+  seg_off:     { color: 0x3a1010, roughness: 0.6 },
+  led_yellow:  { color: 0xffe07a, emissive: 0x806010 },
+  glass:       { color: 0xa9d8ff, opacity: 0.45, roughness: 0.05 },
+  lcd_glass:   { color: 0xc4ccb4, opacity: 0.85, roughness: 0.15 },
+  acrylic_red: { color: 0x9a1010, opacity: 0.45, roughness: 0.1 },
+  diffuser:    { color: 0xffffff, opacity: 0.7, roughness: 0.9 },
+  screw_green: { color: 0x1f8c45, roughness: 0.6 },
+  resistor:    { color: 0x6aa3c8, roughness: 0.6 },
+  cap_blue:    { color: 0x2140a0, roughness: 0.5 },
+  cone:        { color: 0x55585e, roughness: 0.8 },
+  wire_red:    { color: 0xd12a2a, roughness: 0.6 },
+  wire_black:  { color: 0x222222, roughness: 0.6 },
+  wire_yellow: { color: 0xe8c21a, roughness: 0.6 },
+  wire_white:  { color: 0xeeeeee, roughness: 0.6 },
+  wire_blue:   { color: 0x2c6fd6, roughness: 0.6 },
+  wire_green:  { color: 0x2fa34a, roughness: 0.6 },
+};
