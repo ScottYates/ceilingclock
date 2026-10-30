@@ -55,7 +55,7 @@ export const STEPS = [
 <ol>
 <li>Solder two rows of female headers so the ESP32-S3 board plugs in rather than being soldered. That way you can replace or reflash it easily.</li>
 <li>Mount the MAX98357A, DS3231 and MOSFET module on the board, or beside it on short leads.</li>
-<li>Add the 5 V and GND rails, the 1000 µF capacitor (for the LED ring) and the 100 µF capacitor (by the amplifier). Solder the LED resistor here too: four 22 Ω resistors in parallel, spaced apart (see the wiring page).</li>
+<li>Add the 5 V and GND rails, the 1000 µF capacitor (for the LED ring) and the 100 µF capacitor (by the amplifier). Solder the 4.7 Ω 2 W LED resistor here too, standing a few millimetres off the board so air can reach it.</li>
 <li>Bring every off-board connection to a pin header: LCD, LED, ring, display, speaker, buttons, LDR, power. Then each wire plugs in during final assembly.</li>
 <li><b>Test before mounting:</b> flash the firmware (see <a href="firmware.html">Firmware</a>), check the web page loads and "Ring now" beeps.</li>
 <li>Screw the board onto the four bosses with M3 × 6 screws.</li></ol>`,

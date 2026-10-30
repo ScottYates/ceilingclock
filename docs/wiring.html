@@ -2,7 +2,7 @@
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Wiring · Ceiling Clock</title>
-<link rel="stylesheet" href="style.css?v=20261030f">
+<link rel="stylesheet" href="style.css?v=20261030g">
 </head><body>
 <header class="site"><div class="in">
 <a class="brand" href="index.html"><span class="dot"></span>Ceiling Clock</a>
@@ -25,8 +25,7 @@
 
 <h3>Projector LED circuit</h3>
 <p>5 V → MOSFET module VIN+ / VIN−. Module OUT+ → LED resistor → LED +. LED − → module OUT−. GPIO 13 → module SIG/PWM, module GND → GND. The firmware dims the LED with 10 kHz PWM.</p>
-<p><b>LED resistor:</b> four 22 Ω 1/4 W resistors from the resistor kit, soldered side by side <b>in parallel</b> (both ends joined), make about 5.5 Ω. That gives roughly 350 mA, and each resistor dissipates about 0.16 W, inside its 1/4 W rating. Space them a few millimetres apart in free air, not against plastic. If you have a single 6.8 Ω resistor rated 2 W or more, it can replace all four (about 300 mA).</p>
-<p style="font-size:.9rem;color:var(--mut)">Don't use fewer than four 22 Ω resistors, and never a single 1/4 W resistor: it would have to dissipate about 0.6 W and would burn out.</p>
+<p><b>LED resistor:</b> one 4.7 Ω 2 W resistor from the 2 W kit. That gives roughly 400 mA, which is well under the LED's 700 mA rating. The resistor dissipates about 0.75 W, so it runs warm: leave a few millimetres of air around it. For a dimmer, cooler projector, use the kit's 10 Ω instead (about 200 mA).</p>
 
 <div class="note"><b>Flashing while powered:</b> don't plug a computer into the ESP32's USB port while the 5 V supply is connected, unless your board has a protection diode on its 5V pin. Unplug the supply first, or after the first flash use the web page's firmware update instead.</div>
 
