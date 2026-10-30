@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { PARTS, ALL, MATERIALS, AXIS } from './parts.js?v=20261030s';
-import { optics, LENS, CEILING } from './optics.js?v=20261030s';
+import { PARTS, ALL, MATERIALS, AXIS } from './parts.js?v=20261030t';
+import { optics, LENS, CEILING } from './optics.js?v=20261030t';
 
 // createViewer(container) -> { ready: Promise, setState({visible, highlight, explode, tilt, focus, beam, camera, target}), onPick }
 export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'models/clock.glb' } = {}) {
@@ -64,7 +64,12 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
       root.add(gltf.scene);  // vertices are raw OpenSCAD mm, z up; root rotates them to y-up
       for (const [name, list] of Object.entries(meshes)) {
         if (!PARTS[name].tilts) continue;
-        for (const m of list) { m.geometry.translate(0, -AXIS.y, -AXIS.z); pivot.add(m); }
+        for (const m of list) {
+          m.geometry.translate(0, -AXIS.y, -AXIS.z);
+          // the focus ring screws in and out: centre it on the lens axis so it can turn
+          if (PARTS[name].focuses) { m.geometry.translate(-LENS.x, 0, 0); m.userData.base.x += LENS.x; }
+          pivot.add(m);
+        }
       }
       apply();
       resolve();
@@ -82,6 +87,7 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
         m.visible = vis;
         m.position.set(m.userData.base.x + e[0] * state.explode, m.userData.base.y + e[1] * state.explode,
                        m.userData.base.z + e[2] * state.explode + (p.focuses ? state.focus : 0));
+        if (p.focuses) m.rotation.z = -state.focus / LENS.pitch * 2 * Math.PI;   // one turn per 3 mm, like the thread
         m.material.color.setHex(dim ? 0xc9c5bc : mt.color);
         m.material.emissive.setHex(dim ? 0x000000 : (mt.emissive ?? 0x000000));
         m.material.transparent = dim || !!mt.opacity;
@@ -131,7 +137,7 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
     const o = optics(state.focus, state.tilt);
     const t = state.tilt * Math.PI / 180;
     // lens centre in the pivot frame; image corners: x across (long side), y forward/back
-    const lx = 38, lz = LENS.rL + state.focus;
+    const lx = LENS.x, lz = LENS.rL + state.focus;
     const L = CEILING / Math.cos(t), hw = o.width / 2, hh = o.height / 2, a = LENS.aperture / 2 * 0.8;
     const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
     // beam: from the lens aperture to the image, as a four-sided frustum (length along the tilted axis;
@@ -171,7 +177,7 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
     if (s.visible) state.visible = s.visible;
     if (s.highlight) state.highlight = s.highlight;
     if (s.tilt !== undefined) { state.tilt = s.tilt; pivot.rotation.x = s.tilt * Math.PI / 180; }
-    if (s.focus !== undefined) state.focus = s.focus;
+    if (s.focus !== undefined) { state.focus = s.focus; apply(); }
     if (s.beam !== undefined) state.beam = s.beam;
     if (s.flip !== undefined) state.flip = s.flip;
     if (s.text !== undefined) beamText = s.text;

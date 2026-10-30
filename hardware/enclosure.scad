@@ -47,7 +47,7 @@ ax_y = box_d/2 - wall - 0.5 - br_R;                        // 30.5
 lens_v = 106;                    // lens-to-LCD distance for a 100 mm lens and ~1.8 m throw
 mirror_L = 50;  mirror_W = 50;  mirror_t = 1.1;            // 50 x 50 x 1.1 mm front-surface mirror
 mx = 38;                                                   // mirror centre x = lens x
-rL = 47;                                                   // lens centre, radial distance above the axis (focus +/-5)
+rL = 54;                                                   // lens centre, radial distance above the axis (focus +/-5)
 lcd_x = mx - (lens_v - rL);                                // -21: LCD pixel plane
 mh = mirror_L / 2 / sqrt(2);
 br_x0 = lcd_x - 12;                                        // -33: open left end (the LCD holder plugs in here)
@@ -60,13 +60,17 @@ cap_x0 = led_x - 4;  cap_x1 = br_x0 - 0.5;  cap_R = 30;
 collar_od = 44;  collar_id = 40;
 diff_x = led_x + 9;
 cap_tab_x = cap_x0 - 6;  cap_tab_dy = 18;                  // two pinned tabs resting on the lid's left arm
-// lens mount: socket the sleeve slides in, sitting on the barrel; two snap-pin tabs along the barrel's top line
+// focusing: the lens sits in a sleeve with a coarse thread, screwed into a threaded collar (the lens mount)
+// that is pinned to the barrel. A knurled grip on top of the sleeve stands clear of the collar, so you turn
+// it with your fingers: one turn = 3 mm. A springy tongue in the collar presses on the thread so it stays put.
 lens_d = 50.5;  lens_seat = 3;  lens_clear = 46;
-sl_od = 55;  sl_h = 9;
-lm_wall = 2.2;  lm_id = sl_od + 0.4;  lm_od = lm_id + 2 * lm_wall;  lm_tab = lm_od/2 + 5;
-lm_top = 55;                                               // r of the mount's top
-lens_z = z_ax + rL + 1.75;                                 // top of the sleeve (lens seat) at nominal focus
-br_hole = 45;                                              // light hole in the barrel top
+thr_P = 3;  thr_e = 0.8;  thr_R = 27.5;  thr_clr = 0.35;  // thread: pitch, depth/2, major radius, clearance
+focus_mm = 0;                                              // focus position for the assembled model (-5 .. +5)
+grip_h = 6;  grip_od = 61;  sl_thr = 17;                   // knurled grip, thread length below it
+lens_z = z_ax + rL + 1.75 + focus_mm;                      // top of the sleeve (lens seat)
+lm_od = 62;  lm_tab = lm_od/2 + 4;  lm_wall = lm_od/2 - thr_R - thr_clr;
+lm_top = rL - 5 + 1.75 - grip_h - 0.5;                     // r of the collar's top: the grip clears it at the lowest focus
+br_hole = 2 * thr_R + 1.5;                                 // the sleeve's thread passes through the barrel top
 // detents: notches on the barrel's right end, a springy tongue on the bearing block below the axis
 det_r = 22;  det_angles = [-5, 0, 5, 10, 15, 20, 25, 30];
 // lid: covers the front and the left end; the barrel and LED cap sit in the cut-out
@@ -197,6 +201,9 @@ module lid() {
   difference() {
     translate([0, 0, base_top]) rrect(box_w, box_d, lid_t, corner_r);
     translate([lid_cut[0], lid_cut[2], base_top - 1]) cube([200, 200, 10]);
+    // bevel the edge in front of the barrel so the lens mount clears it at full tilt
+    translate([mx - lm_od/2 - 2, lid_cut[2], base_top]) rotate([0, 90, 0]) linear_extrude(lm_od + 4)
+      polygon([[0.01, 0.01], [0.01, -2.5], [-lid_t - 0.01, -6], [-lid_t - 0.01, 0.01]]);
     // pin holes with a recess so the pin heads sit flush
     for (p = posts) translate([p[0] * post_xy[0], p[1] * post_xy[1], base_top - 1]) {
       cylinder(d = pin_hole, h = 10);
@@ -294,36 +301,57 @@ module led_cap() {
   }
 }
 
-// ---------------------------------------------------------------- lens mount (on the barrel), sleeve and cap
+// ---------------------------------------------------------------- lens mount (threaded collar on the barrel), sleeve and cap
+// Single-start thread: a circle offset by thr_e, swept up a helix. Its phase depends only on absolute z,
+// so the sleeve and the collar always mesh. Internal = the same with a little clearance.
+module helix(r, z0, z1) {
+  h = z1 - z0;
+  translate([0, 0, z0]) linear_extrude(height = h, twist = -360 * h / thr_P, slices = ceil(h / thr_P * 30), convexity = 6)
+    rotate(360 * (z0 - z_ax) / thr_P) translate([thr_e, 0]) circle(r = r - thr_e, $fn = 96);
+}
+
 module lens_mount() {
   difference() {
     union() {
-      translate([mx, ax_y, z_ax + br_R - 4]) cylinder(d = lm_od, h = lm_top - br_R + 4, $fn = 96);
+      // the saddle reaches down the barrel's sides so it covers the light hole all round
+      translate([mx, ax_y, z_ax + 13]) cylinder(d = lm_od, h = lm_top - 13, $fn = 96);
       hull() for (s = [-1, 1]) translate([mx + s * lm_tab, ax_y, z_ax + br_R - 4]) cylinder(d = 12, h = tab_t + 4);
     }
     ax_cyl(br_R + 0.2, br_x0 - 50, br_x1 + 50);                                     // saddle on the barrel
-    translate([mx, ax_y, z_ax + br_R - 0.2]) cylinder(d = lm_id, h = 100, $fn = 96);
-    translate([mx, ax_y, z_ax]) cylinder(d = br_hole, h = 100, $fn = 96);
+    translate([mx, ax_y, 0]) helix(thr_R + thr_clr, z_ax + 12, z_ax + lm_top + 1);   // internal thread
     for (s = [-1, 1]) translate([mx + s * lm_tab, ax_y, z_ax]) {
       cylinder(d = pin_hole, h = 100);
       translate([0, 0, br_R + tab_t - pin_head_t]) cylinder(d = pin_recess, h = 100);
     }
-    // focus lock: a tapered printed pin pushed through this hole presses on the sleeve
-    translate([mx, ax_y - lm_od/2 - 1, z_ax + lm_top - 6]) rotate([-90, 0, 0]) cylinder(d = pin_hole, h = lm_wall + 2);
+    // springy tongue at the back of the collar: two slots
+    for (s = [-1, 1]) translate([mx + s * 3.5 - 0.5, ax_y, z_ax + lm_top - 8]) cube([1, lm_od, 9]);
   }
+  // the tongue's nub presses on the sleeve's thread so it doesn't creep
+  translate([mx, ax_y + thr_R + thr_clr + 0.6, z_ax + lm_top - 4]) sphere(r = 1.2, $fn = 20);
 }
 
 module sleeve() {
-  translate([mx, ax_y, lens_z - sl_h]) difference() {
-    cylinder(d = sl_od, h = sl_h, $fn = 96);
-    translate([0, 0, -1]) cylinder(d = lens_clear, h = sl_h + 2, $fn = 96);    // light path
-    translate([0, 0, sl_h - lens_seat]) cylinder(d = lens_d, h = 10, $fn = 96); // lens seat
+  translate([mx, ax_y, 0]) difference() {
+    union() {
+      translate([0, 0, lens_z - grip_h]) difference() {                            // knurled grip
+        cylinder(d = grip_od, h = grip_h, $fn = 120);
+        for (a = [0 : 10 : 359]) rotate(a) translate([grip_od / 2, 0, -1]) cylinder(d = 2.4, h = grip_h + 2, $fn = 12);
+      }
+      helix(thr_R, lens_z - grip_h - sl_thr, lens_z - grip_h + 0.01);              // external thread
+    }
+    translate([0, 0, lens_z - grip_h - sl_thr - 1]) cylinder(d = lens_clear, h = 100, $fn = 96);   // light path
+    translate([0, 0, lens_z - lens_seat]) cylinder(d = lens_d, h = 10, $fn = 96);                  // lens seat
+    // arrows on the top face: turn clockwise (seen from above) to focus further, anticlockwise to focus closer
+    for (k = [0, 1]) rotate(k * 180 + 60) translate([0, 0, lens_z - 0.6]) {
+      rotate_extrude(angle = 40, $fn = 60) translate([27.2, 0]) square([1.2, 1]);
+      translate([27.8, 0, 0]) linear_extrude(1) polygon([[-2, 0], [2, 0], [0, -3]]);
+    }
   }
 }
 
 module lens_cap() {
   translate([mx, ax_y, lens_z]) difference() {
-    cylinder(d = sl_od, h = 3, $fn = 96);
+    cylinder(d = lens_d + 4, h = 2, $fn = 96);
     translate([0, 0, -1]) cylinder(d = lens_clear, h = 10, $fn = 96);
   }
 }
@@ -371,23 +399,10 @@ module snap_pin() {
   }
 }
 
-// Focus lock: tapered so it wedges in the lens mount hole; the tip presses on the sleeve.
-module focus_pin() {
-  flat = pin_d / 2 - 0.5;
-  intersection() {
-    union() {
-      translate([0, 0, -2]) cylinder(d = 9, h = 2, $fn = 48);            // finger tab
-      cylinder(d1 = pin_hole + 0.35, d2 = pin_d - 0.2, h = lm_wall + 1.2, $fn = 40);
-    }
-    translate([-50, -flat, -50]) cube([100, 2 * flat, 100]);
-  }
-}
-
-// Print plate: 12 snap pins (10 needed + spares) and 2 focus pins, lying on their flats.
+// Print plate: 12 snap pins (10 needed + spares), lying on their flats.
 module pin_plate() {
   flat = pin_d / 2 - 0.5;
   for (i = [0:11]) translate([(i % 6) * 11, floor(i / 6) * 16, flat]) rotate([90, 0, 0]) snap_pin();
-  for (i = [0:1]) translate([i * 13, 34, flat]) rotate([90, 0, 0]) focus_pin();
 }
 
 // ---------------------------------------------------------------- bought components (viewer only, not printed)

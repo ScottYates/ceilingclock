@@ -24,12 +24,12 @@ export const STEPS = [
 <tr><td>barrel.stl</td><td><b>Black</b> PLA/PETG</td><td>Must be opaque. Stands on its open end; the mirror ramp inside is a 45° slope, so no supports.</td></tr>
 <tr><td>lcd_holder.stl</td><td>Black</td><td>Prints flat.</td></tr>
 <tr><td>led_cap.stl</td><td>Black PETG preferred</td><td>Holds the LED, so PETG copes with the warmth better. Stands on its collar.</td></tr>
-<tr><td>lens_mount.stl</td><td>Black</td><td>Prints upside down, no supports.</td></tr>
-<tr><td>sleeve.stl</td><td>Black</td><td>Prints lens-seat face down.</td></tr>
+<tr><td>lens_mount.stl</td><td>Black</td><td>The threaded collar. Prints upside down, no supports; 0.16 mm layers.</td></tr>
+<tr><td>sleeve.stl</td><td>Black</td><td>The threaded focus ring. Prints grip-down, no supports. Use 0.16 mm layers so the thread comes out smooth.</td></tr>
 <tr><td>lens_cap.stl</td><td>Any</td><td>3 mm ring that traps the lens.</td></tr>
 <tr><td>ring_holder.stl</td><td>Any</td><td>—</td></tr>
 <tr><td>dome.stl</td><td>White or natural PLA</td><td>Vase mode or 2 walls, 0% infill, so it glows evenly.</td></tr>
-<tr><td>pins.stl</td><td><b>PETG</b> (or PLA)</td><td>12 snap pins (10 needed, 2 spares) and 2 focus pins, lying on their flats. Use <b>100% infill</b> and 0.12–0.16 mm layers. PETG flexes without snapping.</td></tr>
+<tr><td>pins.stl</td><td><b>PETG</b> (or PLA)</td><td>12 snap pins (10 needed, 2 spares), lying on their flats. Use <b>100% infill</b> and 0.12–0.16 mm layers. PETG flexes without snapping.</td></tr>
 </tbody></table>
 <p>Total print time is about 12–15 hours. The base needs a bed of at least 180 × 145 mm; everything else is smaller.</p>`,
   },
@@ -82,8 +82,9 @@ export const STEPS = [
 <li>Peel the protective film off the mirror only now, holding it by the edges. The coating is on the front, so any fingerprint shows up on the ceiling.</li>
 <li>Put two short strips of thin double-sided tape on the 45° ramp inside the barrel's closed (right) end. Slide the mirror in from the open end, <b>shiny side up</b>, and press it onto the tape with its lower edge against the stop.</li>
 <li>Push the LCD holder into the open end, key at the bottom, until it's flush. Feed the LCD lead out through the slot low on the barrel's front side.</li>
-<li>Set the lens mount on top of the barrel, focus-pin hole toward the front, and push a snap pin through each of its two tabs.</li>
-<li>Drop the 50 mm lens into the sleeve's seat, glue the lens cap on with three small dots (keep glue off the glass), and slide the sleeve into the mount, lens end up.</li></ol>`,
+<li>Set the lens mount (the threaded collar) on top of the barrel, slotted tongue toward the back, and push a snap pin through each of its two tabs.</li>
+<li>Drop the 50 mm lens into the seat in the top of the focus ring, and glue the lens cap on with three small dots (keep glue off the glass).</li>
+<li>Screw the focus ring into the collar, clockwise, about three turns, until its grip is roughly 5 mm above the collar. That's close to focused for an 8 ft ceiling. The thread is coarse (3 mm per turn) so it starts easily; if it's stiff, run it in and out a few times.</li></ol>`,
   },
   {
     title: 'LED cap and fitting the barrel',
@@ -119,11 +120,11 @@ export const STEPS = [
     html: `<ol>
 <li>Plug in the 5 V supply. The projector shows <code>WIFI SETUP</code> until you connect it (see <a href="firmware.html">Firmware</a>).</li>
 <li><b>Aim:</b> hold the lens mount and roll the barrel toward the front. It clicks every 5°, from 5° back to 30° forward; the grooves on the barrel's right end show the steps. The picture turns with the barrel, so the time stays straight.</li>
-<li><b>Focus:</b> darken the room and slide the lens sleeve up or down (about ±5 mm) until the digits are sharp. Sliding it up focuses closer; sliding it down focuses further away. Push the tapered focus pin into the hole at the front of the lens mount to hold it. Tilting further sends the light further, so refocus after a big change. On the <a href="index.html">3D model</a> page, "Show focusing" plays this.</li>
+<li><b>Focus:</b> darken the room and turn the knurled focus ring on top of the lens. Clockwise (seen from above) lowers the lens and focuses further away; anticlockwise raises it and focuses closer. The arrows on the ring show the way. One turn moves the lens 3 mm, and about ±1½ turns from the middle covers any normal ceiling. The thread holds wherever you leave it, and a springy tongue in the collar stops it creeping. Tilting further sends the light further, so give it a small turn after a big change. On the <a href="index.html">3D model</a> page, "Show focusing" plays this.</li>
 <li>If the time reads upside down from where you lie, press <b>Flip projection</b> on the clock's web page (or tick <b>Upside down</b> in the projector settings). If it reads back to front, tick <b>Mirror left/right</b>. The "Flip upside down" button on the <a href="index.html">3D model</a> page shows what it does.</li>
 <li>Adjust <b>LCD contrast</b> until the background is as dark as it gets without the digits fading.</li></ol>
 <table><thead><tr><th>Tilt</th><th>0°</th><th>10°</th><th>15°</th><th>20°</th><th>25°</th><th>30°</th></tr></thead><tbody>
 <tr><td>Image moves forward (8 ft ceiling, 1.8 m above the clock)</td><td>0</td><td>32 cm</td><td>48 cm</td><td>66 cm</td><td>84 cm</td><td>104 cm</td></tr></tbody></table>
-<p>The image is about 50 cm wide straight up and grows a little with tilt; at 30° its far edge is about 15% wider than its near edge. The clock stands about 10 cm tall.</p>`,
+<p>The image is about 50 cm wide straight up and grows a little with tilt; at 30° its far edge is about 15% wider than its near edge. The clock stands about 11 cm tall at the focus ring.</p>`,
   },
 ];
