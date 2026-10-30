@@ -1,16 +1,20 @@
 // Every mesh in models/clock.glb, with display info.
 // explode: [x, y, z] offset in mm (model coordinates, z up) at full explode.
+// tilts: true = rides in the barrel and turns with the tilt slider (about AXIS, parallel to X).
+export const AXIS = { y: 30.5, z: 44.5 };
 export const PARTS = {
   base:          { label: 'Base',                   kind: 'print', color: 0x39404a, explode: [0, 0, 0] },
-  lightbox:      { label: 'Light box',              kind: 'print', color: 0x2d323a, explode: [0, 0, 55] },
-  carriage:      { label: 'Light-engine carriage',  kind: 'print', color: 0xe8743b, explode: [0, 0, 110] },
-  lid:           { label: 'Lid',                    kind: 'print', color: 0x55606e, explode: [0, 0, 175] },
-  lens_mount:    { label: 'Lens mount',             kind: 'print', color: 0x2d323a, explode: [0, 0, 205] },
-  sleeve:        { label: 'Lens sleeve',            kind: 'print', color: 0x8f99a6, explode: [0, 0, 235] },
-  lens_cap:      { label: 'Lens cap',               kind: 'print', color: 0xe8743b, explode: [0, 0, 265] },
-  ring_holder:   { label: 'Sunrise ring holder',    kind: 'print', color: 0x8f99a6, explode: [0, 0, 190] },
-  pins_asm:      { label: 'Snap pins (9)',          kind: 'print', color: 0xe8743b, explode: [0, 0, 215] },
-  dome:          { label: 'Diffuser dome',          kind: 'print', color: 0xf4f1ea, explode: [0, 0, 230], opacity: 0.7 },
+  led_cap:       { label: 'LED cap',                kind: 'print', color: 0x2d323a, explode: [-45, 0, 0] },
+  barrel:        { label: 'Barrel',                 kind: 'print', color: 0x2d323a, explode: [0, 0, 70], tilts: true },
+  lcd_holder:    { label: 'LCD holder',             kind: 'print', color: 0xe8743b, explode: [-25, 0, 70], tilts: true },
+  lid:           { label: 'Lid',                    kind: 'print', color: 0x55606e, explode: [0, 0, 40] },
+  lens_mount:    { label: 'Lens mount',             kind: 'print', color: 0x434a55, explode: [0, 0, 110], tilts: true },
+  sleeve:        { label: 'Lens sleeve',            kind: 'print', color: 0x8f99a6, explode: [0, 0, 140], tilts: true },
+  lens_cap:      { label: 'Lens cap',               kind: 'print', color: 0xe8743b, explode: [0, 0, 170], tilts: true },
+  ring_holder:   { label: 'Sunrise ring holder',    kind: 'print', color: 0x8f99a6, explode: [0, 0, 60] },
+  pins_asm:      { label: 'Snap pins (8)',          kind: 'print', color: 0xe8743b, explode: [0, 0, 75], stl: 'pins' },
+  pins_barrel:   { label: 'Snap pins on the barrel (2)', kind: 'print', color: 0xe8743b, explode: [0, 0, 125], stl: 'pins', tilts: true },
+  dome:          { label: 'Diffuser dome',          kind: 'print', color: 0xf4f1ea, explode: [0, 0, 95], opacity: 0.7 },
   ref_perfboard: { label: 'Perfboard',              kind: 'part',  color: 0x2f8f5b, explode: [0, 0, 18] },
   ref_esp32:     { label: 'ESP32-S3 board',         kind: 'part',  color: 0x1f4e8c, explode: [0, 0, 32] },
   ref_amp:       { label: 'MAX98357A amplifier',    kind: 'part',  color: 0x7b3fa0, explode: [0, 0, 14] },
@@ -21,15 +25,15 @@ export const PARTS = {
   ref_usbc:      { label: 'USB-C power breakout',   kind: 'part',  color: 0x2a6f9e, explode: [-30, 0, 0] },
   ref_buttonB:   { label: 'Side button (B)',        kind: 'part',  color: 0xb8bec6, explode: [-34, 0, 0] },
   ref_window:    { label: 'Red acrylic window',     kind: 'part',  color: 0x8a0a0a, explode: [0, -42, 0] },
-  ref_ldr:       { label: 'Light sensor (LDR)',     kind: 'part',  color: 0xf2f2f2, explode: [0, 0, 200] },
-  ref_mirror:    { label: '45° mirror',             kind: 'part',  color: 0xdfe8f0, explode: [0, 0, 85] },
-  ref_led:       { label: '3 W LED on star',        kind: 'part',  color: 0xf2c94c, explode: [-25, 0, 110] },
-  ref_diffuser:  { label: 'Diffuser sheet',         kind: 'part',  color: 0xffffff, explode: [0, 0, 150] },
-  ref_lcd:       { label: 'Nokia 5110 LCD',         kind: 'part',  color: 0xb03030, explode: [0, 0, 165] },
+  ref_ldr:       { label: 'Light sensor (LDR)',     kind: 'part',  color: 0xf2f2f2, explode: [0, 0, 60] },
+  ref_led:       { label: '3 W LED on star',        kind: 'part',  color: 0xf2c94c, explode: [-80, 0, 0] },
+  ref_diffuser:  { label: 'Diffuser disc',          kind: 'part',  color: 0xffffff, explode: [-45, 0, 45] },
+  ref_lcd:       { label: 'Nokia 5110 LCD',         kind: 'part',  color: 0xb03030, explode: [-25, 0, 115], tilts: true },
+  ref_mirror:    { label: '45° mirror',             kind: 'part',  color: 0xdfe8f0, explode: [0, 0, 95], tilts: true },
   ref_wires:     { label: 'Wiring',                 kind: 'part',  color: 0xd03030, explode: [0, 0, 0], hideExploded: true },
-  ref_button:    { label: 'Snooze button',          kind: 'part',  color: 0xb8bec6, explode: [0, 0, 200] },
-  ref_lens:      { label: '50 mm lens (f = 100)',   kind: 'part',  color: 0x9fd3ff, explode: [0, 0, 250], opacity: 0.55 },
-  ref_ring:      { label: 'WS2812B 16-LED ring',    kind: 'part',  color: 0x111111, explode: [0, 0, 205] },
+  ref_button:    { label: 'Snooze button',          kind: 'part',  color: 0xb8bec6, explode: [0, 0, 60] },
+  ref_lens:      { label: '50 mm lens (f = 100)',   kind: 'part',  color: 0x9fd3ff, explode: [0, 0, 155], opacity: 0.55, tilts: true },
+  ref_ring:      { label: 'WS2812B 16-LED ring',    kind: 'part',  color: 0x111111, explode: [0, 0, 70] },
 };
 
 export const ALL = Object.keys(PARTS);

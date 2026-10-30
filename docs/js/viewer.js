@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { PARTS, ALL, MATERIALS } from './parts.js?v=20261030p';
+import { PARTS, ALL, MATERIALS, AXIS } from './parts.js?v=20261030q';
 
-// createViewer(container) -> { ready: Promise, setState({visible, highlight, explode, camera, target}), onPick }
+// createViewer(container) -> { ready: Promise, setState({visible, highlight, explode, tilt, camera, target}), onPick }
 export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'models/clock.glb' } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -32,8 +32,13 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
   root.rotation.x = -Math.PI / 2;
   scene.add(root);
 
+  // parts that ride in the barrel hang off a pivot on the barrel's axis
+  const pivot = new THREE.Group();
+  pivot.position.set(0, AXIS.y, AXIS.z);
+  root.add(pivot);
+
   const meshes = {};
-  const state = { visible: ALL, highlight: [], explode: 0 };
+  const state = { visible: ALL, highlight: [], explode: 0, tilt: 0 };
   let explodeAnim = null;
   const listeners = [];
 
@@ -56,6 +61,10 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
         (meshes[base] = meshes[base] || []).push(o);
       });
       root.add(gltf.scene);  // vertices are raw OpenSCAD mm, z up; root rotates them to y-up
+      for (const [name, list] of Object.entries(meshes)) {
+        if (!PARTS[name].tilts) continue;
+        for (const m of list) { m.geometry.translate(0, -AXIS.y, -AXIS.z); pivot.add(m); }
+      }
       apply();
       resolve();
     }, undefined, reject);
@@ -83,6 +92,7 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
   function setState(s = {}) {
     if (s.visible) state.visible = s.visible;
     if (s.highlight) state.highlight = s.highlight;
+    if (s.tilt !== undefined) { state.tilt = s.tilt; pivot.rotation.x = s.tilt * Math.PI / 180; }
     if (s.camera) camera.position.set(...s.camera);
     if (s.target) controls.target.set(...s.target);
     if (s.explode !== undefined) {
@@ -132,5 +142,5 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
     renderer.render(scene, camera);
   });
 
-  return { ready, setState, onPick: (f) => listeners.push(f), get explode() { return state.explode; } };
+  return { ready, setState, onPick: (f) => listeners.push(f), get explode() { return state.explode; }, get tilt() { return state.tilt; } };
 }

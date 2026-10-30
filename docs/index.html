@@ -3,7 +3,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ceiling Clock: a Wi-Fi ceiling projection alarm clock</title>
 <meta name="description" content="Build a Wi-Fi synced ceiling projection alarm clock with an ESP32-S3: 3D model, assembly steps, wiring and parts list.">
-<link rel="stylesheet" href="style.css?v=20261030p">
+<link rel="stylesheet" href="style.css?v=20261030q">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}</script>
 </head><body>
 <header class="site"><div class="in">
@@ -19,6 +19,8 @@
   <div class="panel">
     <label class="range" for="explode">Explode view</label>
     <input type="range" id="explode" min="0" max="100" value="0">
+    <label class="range" for="tilt" style="margin-top:12px">Projector tilt: <b id="tiltv">0°</b> <span style="font-weight:400;color:var(--mut)">(moves the time forward on the ceiling)</span></label>
+    <input type="range" id="tilt" min="-5" max="30" step="5" value="0">
     <div style="display:flex;gap:6px;margin-top:8px">
       <button class="btn ghost" id="bAsm" style="padding:6px 10px;font-size:.85rem">Assembled</button>
       <button class="btn ghost" id="bExp" style="padding:6px 10px;font-size:.85rem">Exploded</button>
@@ -49,9 +51,9 @@
 <footer>Ceiling Clock · open hardware and firmware · <a href="https://github.com/ScottYates/ceilingclock">source on GitHub</a></footer>
 
 <script type="module">
-import { createViewer } from './js/viewer.js?v=20261030p';
-import { PARTS } from './js/parts.js?v=20261030p';
-import { STEPS } from './js/steps.js?v=20261030p';
+import { createViewer } from './js/viewer.js?v=20261030q';
+import { PARTS } from './js/parts.js?v=20261030q';
+import { STEPS } from './js/steps.js?v=20261030q';
 
 const v = createViewer(document.getElementById('viewer'));
 const ex = document.getElementById('explode');
@@ -66,7 +68,7 @@ for (const [title, kind] of groups) {
     const li = document.createElement('li');
     li.dataset.name = name;
     li.innerHTML = `<span class="sw" style="background:#${p.color.toString(16).padStart(6, '0')}"></span>${p.label}` +
-      (kind === 'print' ? `<a class="k" href="https://github.com/ScottYates/ceilingclock/blob/main/hardware/stl/${name}.stl" title="View STL" onclick="event.stopPropagation()">STL</a>` : '');
+      (kind === 'print' ? `<a class="k" href="https://github.com/ScottYates/ceilingclock/blob/main/hardware/stl/${p.stl || name}.stl" title="View STL" onclick="event.stopPropagation()">STL</a>` : '');
     li.onclick = () => select(selected === name ? null : name);
     legend.appendChild(li);
   }
@@ -78,6 +80,9 @@ function select(name) {
 }
 v.onPick((name) => select(name && name !== selected ? name : null));
 ex.oninput = () => v.setState({ explode: ex.value / 100 });
+const tl = document.getElementById('tilt'), tv = document.getElementById('tiltv');
+const showTilt = (d) => { tl.value = d; tv.textContent = d + '°'; };
+tl.oninput = () => { v.setState({ tilt: +tl.value }); showTilt(+tl.value); };
 const anim = (to) => { v.setState({ explode: to, animate: true }); ex.value = to * 100; };
 document.getElementById('bAsm').onclick = () => anim(0);
 document.getElementById('bExp').onclick = () => anim(1);
@@ -87,7 +92,7 @@ v.ready.then(() => {
   document.getElementById('loading').remove();
   // index.html#step=N shows assembly step N (used by the assembly page's "Open in 3D" links)
   const m = location.hash.match(/step=(\d+)/);
-  if (m && STEPS[+m[1]]) { const s = STEPS[+m[1]].view; v.setState(s); ex.value = s.explode * 100; }
+  if (m && STEPS[+m[1]]) { const s = STEPS[+m[1]].view; v.setState({ tilt: 0, ...s }); ex.value = s.explode * 100; showTilt(s.tilt || 0); }
   else setTimeout(() => anim(0.4), 400);
   window.__viewerReady = true;
 }).catch((e) => { document.getElementById('loading').textContent = 'Could not load the 3D model: ' + e.message; });
