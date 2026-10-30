@@ -88,7 +88,7 @@ v.ready.then(() => {
   // index.html#step=N shows assembly step N (used by the assembly page's "Open in 3D" links)
   const m = location.hash.match(/step=(\d+)/);
   if (m && STEPS[+m[1]]) { const s = STEPS[+m[1]].view; v.setState(s); ex.value = s.explode * 100; }
-  else setTimeout(() => anim(0.6), 400);
+  else setTimeout(() => anim(0.4), 400);
   window.__viewerReady = true;
 }).catch((e) => { document.getElementById('loading').textContent = 'Could not load the 3D model: ' + e.message; });
 window.__viewer = v;
