@@ -1,12 +1,12 @@
 // Assembly steps. Each step drives the 3D view (visible parts, highlighted parts,
 // explode amount, camera) and the instructions on assembly.html.
 const ELEC = ['ref_perfboard', 'ref_esp32', 'ref_amp', 'ref_rtc', 'ref_mosfet'];
-const PRINTED = ['base', 'lid', 'tower', 'carrier', 'sleeve', 'lens_cap', 'ring_holder', 'dome'];
+const PRINTED = ['base', 'lid', 'tower', 'carrier', 'sleeve', 'lens_cap', 'ring_holder', 'dome', 'pins_asm'];
 
 const s1 = ['base', 'ref_speaker'];
 const s2 = [...s1, 'ref_tm1637', 'ref_usbc'];
 const s3 = [...s2, ...ELEC];
-const s4 = [...s3, 'lid', 'ref_button'];
+const s4 = [...s3, 'lid', 'ref_button', 'pins_asm'];
 const s5 = [...s4, 'tower'];
 const s6 = [...s5, 'carrier', 'ref_led', 'ref_lcd'];
 const s7 = [...s6, 'sleeve', 'ref_lens', 'lens_cap'];
@@ -18,7 +18,7 @@ export const STEPS = [
   {
     title: 'Print the parts',
     view: { visible: PRINTED, highlight: [], explode: 0.75, camera: [470, 400, 690], target: [0, 160, 0] },
-    html: `<p>Print the eight parts in <code>hardware/stl/</code>. They are already in printing orientation.</p>
+    html: `<p>Print the nine files in <code>hardware/stl/</code>. They are already in printing orientation. The case needs <b>no screws</b>: printed snap pins hold the lid, tower and ring holder, and the circuit board snaps under printed hooks.</p>
 <table><thead><tr><th>Part</th><th>Material</th><th>Notes</th></tr></thead><tbody>
 <tr><td>base.stl</td><td>PLA/PETG, black or dark grey</td><td>0.2 mm layers, 3 walls, 15% infill. The display rails need no supports. For a 0.56" display, print <code>base_056.stl</code> instead.</td></tr>
 <tr><td>lid.stl</td><td>Same as base</td><td>Prints flat, no supports.</td></tr>
@@ -28,6 +28,7 @@ export const STEPS = [
 <tr><td>lens_cap.stl</td><td>Any</td><td>3 mm ring that traps the lens.</td></tr>
 <tr><td>ring_holder.stl</td><td>Any</td><td>—</td></tr>
 <tr><td>dome.stl</td><td>White or natural PLA</td><td>Vase mode or 2 walls, 0% infill, so it glows evenly.</td></tr>
+<tr><td>pins.stl</td><td><b>PETG</b> (or PLA)</td><td>14 snap pins (11 needed, 3 spares) and 2 focus pins, lying on their flats. Use <b>100% infill</b> and 0.12–0.16 mm layers. PETG flexes without snapping.</td></tr>
 </tbody></table>
 <p>Total print time is about 14–18 hours, mostly the base and tower. Every part fits a 180 × 180 mm bed.</p>`,
   },
@@ -58,23 +59,23 @@ export const STEPS = [
 <li>Add the 5 V and GND rails, the 1000 µF capacitor (for the LED ring) and the 100 µF capacitor (by the amplifier). Solder the 4.7 Ω 2 W LED resistor here too, standing a few millimetres off the board so air can reach it.</li>
 <li>Bring every off-board connection to a pin header: LCD, LED, ring, display, speaker, buttons, LDR, power. Then each wire plugs in during final assembly.</li>
 <li><b>Test before mounting:</b> flash the firmware (see <a href="firmware.html">Firmware</a>), check the web page loads and "Ring now" beeps.</li>
-<li>Screw the board onto the four bosses with M3 × 6 screws.</li></ol>`,
+<li>Press the board down onto the four corner pads until the four hooks along its long edges click over it. To remove it, ease the hooks outward with a fingernail.</li></ol>`,
   },
   {
     title: 'Lid and snooze button',
-    view: { visible: s4, highlight: ['lid', 'ref_button'], explode: 0.45, camera: [260, 300, 400], target: [0, 60, 0] },
+    view: { visible: s4, highlight: ['lid', 'ref_button', 'pins_asm'], explode: 0.45, camera: [260, 300, 400], target: [0, 60, 0] },
     html: `<ol>
 <li>Push the 16 mm snooze button through the front hole of the lid and tighten its nut.</li>
 <li>Glue the LDR into the small hole at the front-left corner, with its face flush with the top.</li>
 <li>Thread the LED, LCD and ring leads up through the lid openings before closing it.</li>
-<li>Screw the lid to the four corner posts with M3 × 10 countersunk screws.</li></ol>`,
+<li>Set the lid on the base and push a snap pin into each corner hole until it clicks and the head sits flush. To open the case later, pull the pins with pliers; they're reusable, and there are spares.</li></ol>`,
   },
   {
     title: 'Mount the projector tower',
     view: { visible: s5, highlight: ['tower'], explode: 0.4, camera: [320, 320, 480], target: [0, 120, 0] },
     html: `<ol>
 <li>Set the tower over the square opening, with the flange flat on the lid.</li>
-<li>Fix it with four M3 × 12 screws through the counterbored flange holes into the lid.</li>
+<li>Push a snap pin through each of the four flange holes. The barb clicks in under the lid.</li>
 <li>Check the vents near the bottom face left and right. They let air flow past the LED.</li></ol>`,
   },
   {
@@ -102,7 +103,7 @@ export const STEPS = [
 <li>Drop the 50 mm lens into the round seat at the top of the sleeve.</li>
 <li>Glue the lens cap on top with three small dots of glue. Keep glue off the glass.</li>
 <li>Slide the sleeve, lens end up, into the top of the tower.</li>
-<li>Put an M3 screw loosely into the hole near the top of the tower. You'll tighten it after focusing.</li></ol>`,
+<li>Leave the focus pin out for now; it goes in after focusing.</li></ol>`,
   },
   {
     title: 'Sunrise light',
@@ -110,7 +111,7 @@ export const STEPS = [
     html: `<ol>
 <li>Solder three leads (5V, GND, DIN) to the ring's input pads and feed them down through the centre hole of the holder and the lid.</li>
 <li>Press the ring LEDs-up into the holder pocket.</li>
-<li>Screw the holder to the lid with three M3 × 8 screws.</li>
+<li>Fix the holder to the lid with three snap pins through the holes inside the ring.</li>
 <li>Press the dome into the groove around the holder. A dab of glue holds it if it's loose.</li></ol>`,
   },
   {
@@ -118,7 +119,7 @@ export const STEPS = [
     view: { visible: s8, highlight: [], explode: 0, ...ISO },
     html: `<ol>
 <li>Plug in the 5 V supply. The projector shows <code>WIFI SETUP</code> until you connect it (see <a href="firmware.html">Firmware</a>).</li>
-<li>Darken the room. Slide the lens sleeve up and down until the digits on the ceiling are sharp, then tighten the focus screw.</li>
+<li>Darken the room. Slide the lens sleeve up and down until the digits on the ceiling are sharp, then push the tapered focus pin into the hole near the top of the tower to lock the sleeve.</li>
 <li>If the time reads mirrored or upside down, fix it with <b>Mirror left/right</b> and <b>Flip upside down</b> on the settings page.</li>
 <li>Adjust <b>LCD contrast</b> until the background is as dark as it gets without the digits fading.</li></ol>
 <p>With a 100 mm lens and a 1.8 m throw (8 ft ceiling, nightstand height), expect an image about 50 cm wide.</p>`,

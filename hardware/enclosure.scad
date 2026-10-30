@@ -4,7 +4,8 @@
 // z = 0 at the bottom of the feet, front of the clock faces -Y.
 //
 // Render one part:   openscad -D 'part="base"' -D 'print=true' -o base.stl enclosure.scad
-// Parts: base lid tower carrier sleeve lens_cap ring_holder dome
+// Parts: base lid tower carrier sleeve lens_cap ring_holder dome pins (plate of snap pins + focus pins)
+// No screws: the lid, tower and ring holder are held by printed snap pins; the circuit board snaps under hooks.
 // Reference (not printed, for the 3D viewer): ref_esp32 ref_perfboard ref_lcd ref_led ref_lens
 //   ref_ring ref_speaker ref_tm1637 ref_amp ref_rtc ref_mosfet ref_button ref_usbc
 
@@ -20,7 +21,13 @@ wall = 2.5;   corner_r = 6;
 base_top = 56;                      // top edge of the base walls
 lid_t = 3;
 lid_top = base_top + lid_t;         // 59
-post_xy = [69 - wall/2, 49 - wall/2];  // lid screw posts (x, y)
+post_xy = [69 - wall/2, 49 - wall/2];  // lid posts (x, y)
+
+// snap pins: split shaft with a barb. All joints use the same pin (grip = clamped thickness).
+pin_d = 4.0;  pin_hole = 4.25;  pin_barb = 0.45;  pin_tip = 2.6;  pin_slot = 1.1;
+pin_head_d = 7.5;  pin_head_t = 1.2;  pin_recess = 8.1;   // counterbore for the head
+pin_catch = 4;                                         // how far the pin enters a lid post
+pin_grip = lid_t - pin_head_t + pin_catch;             // 5.8 mm, same for every joint
 
 // tower / optics
 tower_xy = [30, 8];
@@ -33,7 +40,7 @@ lens_d = 50.5;  lens_seat = 3;  lens_clear = 46;
 lens_z = 201;                            // lens height for a 100 mm lens (slide to focus)
 
 // other lid features
-ring_xy = [-42, 5];   ring_od = 44.5; ring_id = 31.5;  dome_d = 60;  dome_h = 32;
+ring_xy = [-42, 5];   ring_pin_r = 11;   ring_od = 44.5; ring_id = 31.5;  dome_d = 60;  dome_h = 32;
 button_xy = [0, -42]; button_hole = 16.2;
 ldr_xy = [-65, -45];
 // front display: TM1637 4-digit module. Set to "0.36" (42 x 24 mm board, default) or "0.56" (~50 mm display).
@@ -44,8 +51,10 @@ tm_w = tm_disp[0] + 1; tm_h = tm_disp[1] + 1; tm_z = 32;          // front windo
 tm_pcb_y = -box_d/2 + wall + tm_disp[2];                          // PCB plane (display face against the wall)
 // rear panel
 usbc_x = -45;  btnb_x = -25;  rear_z = 20;
-// perfboard bosses (70 x 50 board, 66 x 46 hole spacing)
-pb_xy = [22, 0];  pb_hole = [66, 46];  pb_boss_h = 6;
+// circuit board: 70 x 50 mm perfboard resting on 4 pads, held by 4 snap hooks
+pb_xy = [22, 0];  pb_size = [70, 50];  pb_hole = [66, 46];  pb_boss_h = 12;
+pb_top = feet_h + floor_t + pb_boss_h + 1.6;           // top surface of the board
+hook_t = 1.4;  hook_lip = 0.9;  hook_w = 8;
 // speaker (40 mm), facing down through the floor
 spk_xy = [-42, 5];  spk_d = 40.5;
 
@@ -70,10 +79,11 @@ module base() {
       // lid screw posts
       for (sx = [-1, 1], sy = [-1, 1])
         translate([sx * post_xy[0], sy * post_xy[1], feet_h]) cylinder(r = 4.5, h = base_top - feet_h);
-      // perfboard bosses
+      // circuit board support pads (under the corners) and snap hooks (on the long edges)
       for (sx = [-1, 1], sy = [-1, 1])
         translate([pb_xy[0] + sx * pb_hole[0]/2, pb_xy[1] + sy * pb_hole[1]/2, feet_h])
           cylinder(d = 7, h = floor_t + pb_boss_h);
+      for (sy = [-1, 1], dx = [-20, 20]) board_hook(pb_xy[0] + dx, sy);
       // speaker retaining ring
       translate([spk_xy[0], spk_xy[1], feet_h]) difference() {
         cylinder(d = spk_d + 4, h = floor_t + 5);
@@ -88,12 +98,11 @@ module base() {
       // small cradle for the USB-C breakout
       translate([usbc_x - 9, box_d/2 - wall - 14, feet_h]) cube([18, 14, floor_t + rear_z - 3.5 - feet_h - 1.6]);
     }
-    // lid screw pilot holes (M3 self-tapping)
-    for (sx = [-1, 1], sy = [-1, 1])
-      translate([sx * post_xy[0], sy * post_xy[1], base_top - 12]) cylinder(d = 2.5, h = 13);
-    // perfboard pilot holes
-    for (sx = [-1, 1], sy = [-1, 1])
-      translate([pb_xy[0] + sx * pb_hole[0]/2, pb_xy[1] + sy * pb_hole[1]/2, feet_h + 1]) cylinder(d = 2.5, h = 20);
+    // lid pin holes: straight bore, then a wider pocket the barb snaps into
+    for (sx = [-1, 1], sy = [-1, 1]) translate([sx * post_xy[0], sy * post_xy[1], 0]) {
+      translate([0, 0, base_top - pin_catch - eps]) cylinder(d = pin_hole, h = pin_catch + 1);
+      translate([0, 0, base_top - pin_catch - pin_tip - 0.8]) cylinder(d = pin_d + 2 * pin_barb + 0.5, h = pin_tip + 0.8);
+    }
     // front display window
     translate([-tm_w/2, -box_d/2 - 1, tm_z - tm_h/2]) cube([tm_w, wall + 2, tm_h]);
     // rear: USB-C, button B, vents
@@ -109,24 +118,34 @@ module base() {
   }
 }
 
+// Snap hook on a long edge of the circuit board (side = +1 back, -1 front)
+module board_hook(x, side) {
+  edge_y = pb_xy[1] + side * (pb_size[1]/2 + 0.25);
+  z0 = feet_h + floor_t - eps;
+  translate([x - hook_w/2, side > 0 ? edge_y : edge_y - hook_t, z0]) cube([hook_w, hook_t, pb_top + 2.6 - z0]);
+  // lip: flat catch on the underside, ramp on top
+  translate([x - hook_w/2, edge_y, 0]) rotate([90, 0, 90]) linear_extrude(hook_w)
+    polygon([[0, pb_top + 0.15], [-side * hook_lip, pb_top + 0.15], [-side * hook_lip, pb_top + 0.75], [0, pb_top + 2.6]]);
+}
+
 // ---------------------------------------------------------------- lid
 module lid() {
   difference() {
     translate([0, 0, base_top]) rrect(box_w, box_d, lid_t, corner_r);
-    // screw holes, countersunk
+    // pin holes with a recess so the pin heads sit flush
     for (sx = [-1, 1], sy = [-1, 1]) translate([sx * post_xy[0], sy * post_xy[1], base_top - 1]) {
-      cylinder(d = 3.4, h = 10);
-      translate([0, 0, 1 + lid_t - 1.8]) cylinder(d1 = 3.4, d2 = 6.6, h = 1.8 + eps);
+      cylinder(d = pin_hole, h = 10);
+      translate([0, 0, 1 + lid_t - pin_head_t]) cylinder(d = pin_recess, h = 10);
     }
     // tower opening and flange screws
     translate([tower_xy[0], tower_xy[1], base_top - 1]) {
       rsquare(tower_in - 2*lip, 10, 3);
-      for (sx = [-1, 1], sy = [-1, 1]) translate([sx * flange_hole, sy * flange_hole, 0]) cylinder(d = 2.5, h = 10);
+      for (sx = [-1, 1], sy = [-1, 1]) translate([sx * flange_hole, sy * flange_hole, 0]) cylinder(d = pin_hole, h = 10);
     }
     // sunrise ring: wire hole + holder screws
     translate([ring_xy[0], ring_xy[1], base_top - 1]) {
       cylinder(d = 10, h = 10);
-      for (a = [90, 210, 330]) rotate(a) translate([dome_d/2 - 4, 0, 0]) cylinder(d = 2.5, h = 10);
+      for (a = [90, 210, 330]) rotate(a) translate([ring_pin_r, 0, 0]) cylinder(d = pin_hole, h = 10);
     }
     translate([button_xy[0], button_xy[1], base_top - 1]) cylinder(d = button_hole, h = 10);
     translate([ldr_xy[0], ldr_xy[1], base_top - 1]) cylinder(d = 5.2, h = 10);
@@ -144,13 +163,13 @@ module tower() {
     translate([0, 0, lip]) rsquare(tower_in, tower_h, 2);
     // lip opening (light + wires pass through to the base)
     translate([0, 0, -1]) rsquare(tower_in - 2*lip, lip + 2, 2);
-    // flange screws, counterbored
+    // flange pin holes, recessed for the pin heads
     for (sx = [-1, 1], sy = [-1, 1]) translate([sx * flange_hole, sy * flange_hole, -1]) {
-      cylinder(d = 3.4, h = 10);
-      translate([0, 0, flange_t - 1.5 + 1]) cylinder(d = 6.5, h = 10);
+      cylinder(d = pin_hole, h = 10);
+      translate([0, 0, 1 + flange_t - pin_head_t]) cylinder(d = pin_recess, h = 10);
     }
-    // focus lock screw (M3) near the top, on the +X side
-    translate([tower_out/2 - 4, 0, tower_h - 12]) rotate([0, 90, 0]) cylinder(d = 2.5, h = 10);
+    // focus lock: a tapered printed pin pushed through this hole presses on the lens sleeve
+    translate([tower_out/2 - 4, 0, tower_h - 12]) rotate([0, 90, 0]) cylinder(d = pin_hole, h = 10);
     // vents at the LED level
     for (sx = [-1, 1]) for (i = [-1, 0, 1])
       translate([sx * tower_out/2, i * 12, 10]) cube([10, 4, 14], center = true);
@@ -204,9 +223,9 @@ module ring_holder() {
     cylinder(d = dome_d, h = 5);
     translate([0, 0, 1.5]) difference() { cylinder(d = ring_od + 0.6, h = 10); cylinder(d = ring_id - 0.6, h = 10); }
     translate([0, 0, -1]) cylinder(d = 10, h = 10);
-    for (a = [90, 210, 330]) rotate(a) translate([dome_d/2 - 4, 0, -1]) {
-      cylinder(d = 3.4, h = 10);
-      translate([0, 0, 4]) cylinder(d = 6.5, h = 10);
+    for (a = [90, 210, 330]) rotate(a) translate([ring_pin_r, 0, -1]) {
+      cylinder(d = pin_hole, h = 10);
+      translate([0, 0, 1 + lid_t - pin_head_t + pin_catch - lid_t]) cylinder(d = pin_recess, h = 10);  // floor 2.8 mm up
     }
     // dome locating groove
     translate([0, 0, 3.5]) difference() { cylinder(d = dome_d - 8 + 0.6, h = 5); cylinder(d = dome_d - 8 - 3, h = 5); }
@@ -222,8 +241,47 @@ module dome() {
   }
 }
 
+// ---------------------------------------------------------------- snap pins
+// Modelled along +z with the head below z = 0. Flats on two sides so it prints lying down
+// (layers run along the pin, which makes it far stronger than printing it upright).
+module snap_pin() {
+  flat = pin_d / 2 - 0.5;                 // pin is 3 mm thick across the flats
+  intersection() {
+    difference() {
+      union() {
+        translate([0, 0, -pin_head_t]) cylinder(d = pin_head_d, h = pin_head_t, $fn = 48);
+        cylinder(d = pin_d, h = pin_grip, $fn = 40);
+        translate([0, 0, pin_grip]) cylinder(d1 = pin_d + 2 * pin_barb, d2 = pin_d - 0.8, h = pin_tip, $fn = 40);
+      }
+      // split so the barb can squeeze through the hole
+      translate([-pin_slot/2, -pin_d, pin_grip + pin_tip - (pin_tip + 3.6)]) cube([pin_slot, 2 * pin_d, pin_tip + 4]);
+    }
+    translate([-50, -flat, -50]) cube([100, 2 * flat, 100]);
+  }
+}
+
+// Focus lock: tapered so it wedges in the tower hole; the tip presses on the lens sleeve.
+module focus_pin() {
+  flat = pin_d / 2 - 0.5;
+  intersection() {
+    union() {
+      translate([0, 0, -2]) cylinder(d = 9, h = 2, $fn = 48);            // finger tab
+      cylinder(d1 = pin_hole + 0.35, d2 = pin_d - 0.2, h = wall_tower() + 1.2, $fn = 40);
+    }
+    translate([-50, -flat, -50]) cube([100, 2 * flat, 100]);
+  }
+}
+function wall_tower() = (tower_out - tower_in) / 2;
+
+// Print plate: 14 snap pins (11 needed + spares) and 2 focus pins, lying on their flats.
+module pin_plate() {
+  flat = pin_d / 2 - 0.5;
+  for (i = [0:13]) translate([(i % 7) * 11, floor(i / 7) * 16, flat]) rotate([90, 0, 0]) translate([0, 0, 0]) snap_pin();
+  for (i = [0:1]) translate([i * 13, 34, flat]) rotate([90, 0, 0]) focus_pin();
+}
+
 // ---------------------------------------------------------------- reference components (not printed)
-module ref_esp32()     translate([pb_xy[0] - 31.5, pb_xy[1] - 12.75, feet_h + floor_t + pb_boss_h + 1.6 + 8]) cube([63, 25.5, 1.6]);
+module ref_esp32()     translate([pb_xy[0] - 31.5, pb_xy[1] - 12.75, pb_top + 8]) cube([63, 25.5, 1.6]);
 module ref_perfboard() translate([pb_xy[0], pb_xy[1], feet_h + floor_t + pb_boss_h + 0.8]) cube([70, 50, 1.6], center = true);
 module ref_lcd() {
   z = lid_top + lip + carrier_h - 6;
@@ -256,6 +314,8 @@ module show(p) {
   else if (p == "lens_cap") lens_cap();
   else if (p == "ring_holder") ring_holder();
   else if (p == "dome") dome();
+  else if (p == "pins") pin_plate();
+  else if (p == "pin") snap_pin();
   else if (p == "ref_esp32") ref_esp32();
   else if (p == "ref_perfboard") ref_perfboard();
   else if (p == "ref_lcd") ref_lcd();
@@ -300,3 +360,18 @@ if (part == "assembly") {
 } else {
   show(part);
 }
+
+// ---------------------------------------------------------------- pins in their assembled positions (viewer / checks)
+module assembled_pins() {
+  // lid -> base posts
+  for (sx = [-1, 1], sy = [-1, 1])
+    translate([sx * post_xy[0], sy * post_xy[1], lid_top - pin_head_t]) rotate([180, 0, 0]) snap_pin();
+  // tower flange -> lid
+  for (sx = [-1, 1], sy = [-1, 1])
+    translate([tower_xy[0] + sx * flange_hole, tower_xy[1] + sy * flange_hole, lid_top + flange_t - pin_head_t]) rotate([180, 0, 0]) snap_pin();
+  // ring holder -> lid
+  for (a = [90, 210, 330]) translate([ring_xy[0], ring_xy[1], 0]) rotate(a)
+    translate([ring_pin_r, 0, lid_top + 1 + lid_t - pin_head_t + pin_catch - lid_t - 1]) rotate([180, 0, 0]) snap_pin();
+}
+if (part == "pins_asm") assembled_pins();
+if (part == "joint_check") { base(); lid(); assembled_pins(); }

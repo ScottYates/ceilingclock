@@ -15,7 +15,7 @@ A Wi-Fi ceiling projection alarm clock built on an ESP32-S3.
 | Folder | Contents |
 | --- | --- |
 | `firmware/` | PlatformIO project for the ESP32-S3 |
-| `hardware/` | OpenSCAD enclosure source (`enclosure.scad`), printable STLs (`stl/`), wiring diagram generator |
+| `hardware/` | OpenSCAD enclosure source (`enclosure.scad`), printable STLs (`stl/`), wiring diagram generator. The case needs no screws: printed snap pins and clips hold it together. |
 | `docs/` | Project website: 3D assembly viewer, build steps, wiring, parts list |
 
 ## Build the firmware
@@ -35,7 +35,7 @@ g++ -std=c++17 -Ifirmware/src firmware/test/test_alarm_logic.cpp && ./a.out
 
 ```
 cd hardware
-for p in base lid tower carrier sleeve lens_cap ring_holder dome; do
+for p in base lid tower carrier sleeve lens_cap ring_holder dome pins; do
   openscad -D "part=\"$p\"" -D print=true -o stl/$p.stl enclosure.scad
 done
 ```

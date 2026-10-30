@@ -8,6 +8,7 @@ export const PARTS = {
   sleeve:        { label: 'Lens sleeve',            kind: 'print', color: 0x8f99a6, explode: [0, 0, 235] },
   lens_cap:      { label: 'Lens cap',               kind: 'print', color: 0xe8743b, explode: [0, 0, 270] },
   ring_holder:   { label: 'Sunrise ring holder',    kind: 'print', color: 0x8f99a6, explode: [0, 0, 85] },
+  pins_asm:      { label: 'Snap pins (11)',          kind: 'print', color: 0xe8743b, explode: [0, 0, 112] },
   dome:          { label: 'Diffuser dome',          kind: 'print', color: 0xf4f1ea, explode: [0, 0, 125], opacity: 0.7 },
   ref_perfboard: { label: 'Perfboard',              kind: 'part',  color: 0x2f8f5b, explode: [0, 0, 18] },
   ref_esp32:     { label: 'ESP32-S3 board',         kind: 'part',  color: 0x1f4e8c, explode: [0, 0, 32] },
