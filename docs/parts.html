@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Parts &amp; cart · Ceiling Clock</title>
+<title>Parts list · Ceiling Clock</title>
 <link rel="stylesheet" href="style.css">
 </head><body>
 <header class="site"><div class="in">
 <a class="brand" href="index.html"><span class="dot"></span>Ceiling Clock</a>
-<nav><a href="index.html">3D model</a><a href="assembly.html">Assembly</a><a href="wiring.html">Wiring</a><a href="parts.html" class="on">Parts &amp; cart</a><a href="firmware.html">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
+<nav><a href="index.html">3D model</a><a href="assembly.html">Assembly</a><a href="wiring.html">Wiring</a><a href="parts.html" class="on">Parts</a><a href="firmware.html">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
 </div></header>
 <main>
 <h1>Parts list</h1>
-<p class="lead">Untick anything you already have, then press the button to put the rest in your Amazon cart in one go. Most parts come in multi-packs, so you'll have spares (or enough for a second clock).</p>
+<p class="lead">Untick anything you already have, then press the button to open every selected item on Amazon, each in its own tab, ready for Add to Cart. Most parts come in multi-packs, so you'll have spares (or enough for a second clock).</p>
 
-<div class="note">These listings came from Amazon search results and weren't checked on the product pages. Listings change, so look over each one in your cart before checking out.<br>
-<b>If the big button shows an Amazon error page</b>, one listing has probably been removed, and that makes Amazon reject the whole link. Use the <b>Add</b> button on each row instead; the row that errors is the culprit. Untick it and use its "alt" link.</div>
+<div class="note">These listings came from Amazon search results and weren't checked on the product pages. Listings change, so check each one before adding it.<br>
+<b>Pop-ups:</b> the first time you press the button, your browser will probably block all but one tab. Allow pop-ups for this site, then press it again.</div>
 
 <div class="cartbar">
-  <a class="btn" id="cart" href="#" target="_blank" rel="noopener">Add selected to Amazon cart</a>
+  <button class="btn" id="open">Open selected on Amazon</button>
   <span class="sum" id="sum"></span>
   <button class="btn ghost" id="all" style="padding:6px 10px;font-size:.85rem">Select all</button>
   <button class="btn ghost" id="none" style="padding:6px 10px;font-size:.85rem">Select none</button>
@@ -49,7 +49,6 @@
 import { BOM } from './js/bom.js';
 const tb = document.querySelector('#bom tbody');
 const dp = (a) => `https://www.amazon.com/dp/${a}`;
-const one = (a) => `https://www.amazon.com/gp/aws/cart/add.html?ASIN.1=${a}&Quantity.1=1`;
 tb.innerHTML = BOM.map((b, i) => `
 <tr data-i="${i}">
 <td class="chk"><input type="checkbox" id="c${i}" ${b.on === false ? '' : 'checked'} aria-label="Include ${b.part}"></td>
@@ -58,19 +57,23 @@ tb.innerHTML = BOM.map((b, i) => `
 <td><a href="${dp(b.asin)}" target="_blank" rel="noopener">${b.listing}</a>${(b.alt || []).map(([t, a]) => `<div class="alt">alt: <a href="${dp(a)}" target="_blank" rel="noopener">${t}</a></div>`).join('')}</td>
 <td>${b.pack}</td>
 <td>${b.why}</td>
-<td><a class="btn ghost" style="padding:4px 10px;font-size:.8rem;white-space:nowrap" href="${one(b.asin)}" target="_blank" rel="noopener">Add</a></td></tr>`).join('');
+<td><a class="btn ghost" style="padding:4px 10px;font-size:.8rem;white-space:nowrap" href="${dp(b.asin)}" target="_blank" rel="noopener">Open</a></td></tr>`).join('');
 
 function update() {
   const sel = BOM.filter((_, i) => document.getElementById('c' + i).checked);
   tb.querySelectorAll('tr').forEach((tr) => tr.classList.toggle('off', !document.getElementById('c' + tr.dataset.i).checked));
-  const q = sel.map((b, k) => `ASIN.${k + 1}=${b.asin}&Quantity.${k + 1}=1`).join('&');
-  const a = document.getElementById('cart');
-  a.href = 'https://www.amazon.com/gp/aws/cart/add.html?' + q;
-  a.style.opacity = sel.length ? 1 : .4;
-  a.style.pointerEvents = sel.length ? '' : 'none';
-  document.getElementById('sum').textContent = `${sel.length} of ${BOM.length} items selected, 1 of each listing`;
+  const btn = document.getElementById('open');
+  btn.disabled = !sel.length;
+  btn.style.opacity = sel.length ? 1 : .4;
+  document.getElementById('sum').textContent = `${sel.length} of ${BOM.length} items selected · add 1 of each listing`;
 }
 tb.addEventListener('change', update);
+document.getElementById('open').onclick = () => {
+  const sel = BOM.filter((_, i) => document.getElementById('c' + i).checked);
+  let blocked = 0;
+  for (const b of sel) { const w = window.open(dp(b.asin), '_blank'); if (!w) blocked++; else w.opener = null; }
+  if (blocked) document.getElementById('sum').textContent = `Your browser blocked ${blocked} tab(s). Allow pop-ups for this site and press the button again, or use the Open links in each row.`;
+};
 document.getElementById('all').onclick = () => { BOM.forEach((_, i) => document.getElementById('c' + i).checked = true); update(); };
 document.getElementById('none').onclick = () => { BOM.forEach((_, i) => document.getElementById('c' + i).checked = false); update(); };
 update();
