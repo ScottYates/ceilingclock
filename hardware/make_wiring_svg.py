@@ -7,7 +7,7 @@ left = [
   ("Nokia 5110 LCD (projector)", "#b03030", [("RST", g("PIN_LCD_RST")), ("CE", g("PIN_LCD_CE")), ("DC", g("PIN_LCD_DC")), ("DIN", g("PIN_LCD_DIN")), ("CLK", g("PIN_LCD_CLK"))], "VCC → 3V3 · GND · BL not connected"),
   ("MOSFET module (projector LED)", "#2a6f9e", [("SIG / PWM", g("PIN_PROJ_LED"))], "5V → VIN+ · OUT+ → 4.7 Ω 2 W → LED+ · LED− → OUT−"),
   ("TM1637 front display", "#c0392b", [("CLK", g("PIN_TM_CLK")), ("DIO", g("PIN_TM_DIO"))], "VCC → 3V3 · GND"),
-  ("Buttons (other leg to GND)", "#555", [("A · top snooze", g("PIN_BTN_A")), ("B · rear", g("PIN_BTN_B"))], "internal pull-ups, no resistors"),
+  ("Buttons (other leg to GND)", "#555", [("A · top snooze", g("PIN_BTN_A")), ("B · left side", g("PIN_BTN_B"))], "internal pull-ups, no resistors"),
   ("Light sensor", "#8a6d00", [("LDR / 10k junction", g("PIN_LDR"))], "LDR to 3V3 · 10 kΩ to GND"),
 ]
 right = [

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { PARTS, ALL, MATERIALS } from './parts.js?v=20261030n';
+import { PARTS, ALL, MATERIALS } from './parts.js?v=20261030p';
 
 // createViewer(container) -> { ready: Promise, setState({visible, highlight, explode, camera, target}), onPick }
 export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'models/clock.glb' } = {}) {
@@ -117,8 +117,8 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
   new ResizeObserver(resize).observe(container);
   resize();
 
-  camera.position.set(400, 380, 600);
-  controls.target.set(0, 130, 0);
+  camera.position.set(300, 250, 390);
+  controls.target.set(0, 40, 0);
 
   renderer.setAnimationLoop(() => {
     if (explodeAnim) {

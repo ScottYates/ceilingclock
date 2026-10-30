@@ -5,7 +5,7 @@ A Wi-Fi ceiling projection alarm clock built on an ESP32-S3.
 **Project site (3D model, assembly, wiring, parts list with Amazon links):** https://scottyates.github.io/ceilingclock/
 
 - Keeps time from internet time servers (NTP), with a DS3231 battery-backed clock for outages.
-- Projects the time onto the ceiling through a Nokia 5110 LCD lit by a 1 W LED and a 50 mm lens.
+- Projects the time onto the ceiling through a Nokia 5110 LCD lit by a 3 W LED. A 45° mirror folds the light path inside the base, so the clock is only about 9 cm tall.
 - Front 4-digit display that can be switched completely off.
 - Up to 8 alarms with per-alarm days, sound, volume fade-in, snooze, and sunrise light.
 - Upload your own MP3/WAV alarm sounds and change every setting from a phone at `http://ceilingclock.local/`.
@@ -43,7 +43,7 @@ g++ -std=c++17 -Ifirmware/src firmware/test/test_alarm_logic.cpp && ./a.out
 
 ```
 cd hardware
-for p in base lid tower carrier sleeve lens_cap ring_holder dome pins; do
+for p in base lid lightbox carriage lens_mount sleeve lens_cap ring_holder dome pins; do
   openscad -D "part=\"$p\"" -D print=true -o stl/$p.stl enclosure.scad
 done
 ```

@@ -8,7 +8,6 @@
 mat = "";
 module M(name) { if (mat == "" || mat == name) children(); }
 
-floor_top = feet_h + floor_t;            // 8.5
 inner_front = -box_d/2 + wall;           // -52.5
 inner_back = box_d/2 - wall;             //  52.5
 
@@ -52,10 +51,10 @@ module seg_digit(lit, h = 9.1, w = 4.9, t = 0.9) {
     else M("seg_off") translate([segs[i][0], 0, segs[i][1]]) cube([segs[i][2], 0.3, segs[i][3]]);
   }
 }
-module button16(len = 18) {     // 16 mm flush metal push button; axis +z = outward
+module button16(len = 18, panel = wall) {     // 16 mm flush metal push button; axis +z = outward
   M("metal") { translate([0, 0, 0]) cylinder(d = 19, h = 2, $fn = 48); translate([0, 0, -len]) cylinder(d = 15.8, h = len, $fn = 40); }
   M("alu") translate([0, 0, 2]) cylinder(d = 12, h = 0.3, $fn = 40);
-  M("metal_dark") translate([0, 0, -wall - 0.2 - 3]) cylinder(d = 22 / cos(30), h = 3, $fn = 6);
+  M("metal_dark") translate([0, 0, -panel - 0.2 - 3]) cylinder(d = 22 / cos(30), h = 3, $fn = 6);
   M("gold") for (s = [-1, 1]) translate([s * 3.5 - 1, -0.3, -len - 6]) cube([2, 0.6, 6]);
 }
 // wire along a quadratic Bezier from a to c with control point b
@@ -86,8 +85,8 @@ module ref_tm1637() translate([0, inner_front, tm_z]) {
 module ref_window() M("acrylic_red") translate([-tm_w/2 + 0.2, -box_d/2, tm_z - tm_h/2 + 0.2]) cube([tm_w - 0.4, wall, tm_h - 0.4]);
 
 // ---------------------------------------------------------------- buttons
-module ref_button()  translate([button_xy[0], button_xy[1], lid_top]) button16();
-module ref_buttonB() translate([btnb_x, box_d/2, rear_z]) rotate([-90, 0, 0]) button16();
+module ref_button()  translate([button_xy[0], button_xy[1], lid_top]) button16(panel = lid_t);
+module ref_buttonB() translate([-box_w/2, btnb_y, btnb_z]) rotate([0, -90, 0]) button16();   // left side wall
 
 // ---------------------------------------------------------------- light sensor (GL5528) in the lid
 module ref_ldr() translate([ldr_xy[0], ldr_xy[1], lid_top - 2]) {
@@ -117,7 +116,7 @@ module ref_perfboard() {
   translate([pb_xy[0] + 18, pb_xy[1] - 22.5, pb_top]) screw_terminal(2);
 }
 module ref_esp32() {
-  L = 62.7; W = 25.4; z0 = pb_top + 8.5;            // board sits on the headers
+  L = 62.7; W = 25.4; z0 = pb_top + 8.5 + 2.5;      // its pin strips sit on top of the female headers
   x0 = pb_xy[0] - L/2; y0 = pb_xy[1] - W/2;
   translate([x0, y0, z0]) {
     M("pcb_black") pcb(L, W);
@@ -137,20 +136,20 @@ module ref_esp32() {
 }
 
 // ---------------------------------------------------------------- modules on the floor
-module ref_amp() translate([-12, 31, floor_top]) {      // MAX98357A
+module ref_amp() translate([-22, -36, floor_top]) {      // MAX98357A
   M("pcb_purple") pcb(17.8, 17.8);
   M("black") translate([7, 6, 1.6]) cube([3, 3, 0.9]);
   M("black") translate([1, 15, 1.6]) cube([7 * 2.54, 2.54, 2.5]);
   M("gold") translate([1 + 1.27, 16.27, 1.6]) pin_row(7, 2.54, 8.5);
   translate([3.8, 0.5, 1.6]) screw_terminal(2);
 }
-module ref_rtc() translate([-15, -48, floor_top]) {      // DS3231 mini (Raspberry Pi style)
+module ref_rtc() translate([-43, -56, floor_top]) {      // DS3231 mini (Raspberry Pi style)
   M("pcb_black") pcb(14.5, 14);
   M("black") translate([2, 1.5, 1.6]) soic(10.3, 7.5, 2.5);
   M("metal") translate([7.25, 9.5, 1.6]) cylinder(d = 12.5, h = 2, $fn = 40);
   M("black") translate([0.6, 11.5, 1.6]) cube([5 * 2.54, 2.54, 8.5]);
 }
-module ref_mosfet() translate([30, -48, floor_top]) {   // dual AOD4184 trigger module
+module ref_mosfet() translate([-27, -56, floor_top]) {   // dual AOD4184 trigger module
   M("pcb_blue") pcb(34, 17);
   M("black") for (i = [0:1]) translate([12 + i * 8, 5, 1.6]) cube([6.5, 6, 2.3]);
   M("metal") for (i = [0:1]) translate([12 + i * 8 + 1.5, 10.8, 1.6]) cube([3.5, 1.5, 0.6]);
@@ -168,14 +167,14 @@ module ref_speaker() translate([spk_xy[0], spk_xy[1], floor_top]) {   // 40 mm, 
   M("metal") translate([0, 0, 12.5]) cylinder(d = 18, h = 0.6, $fn = 40);
   M("gold") for (s = [-1, 1]) translate([s * 15 - 1, -0.3, 2]) cube([2, 0.6, 3]);
 }
-module ref_usbc() translate([usbc_x - 7, inner_back - 12, rear_z - 3.5]) {
+module ref_usbc() translate([-box_w/2 + wall + 12.3, usb_y - 7, usb_z - 3.2]) rotate([0, 0, 90]) {   // socket faces out of the left wall
   M("pcb_green") pcb(14, 12);
   M("metal") translate([7 - 4.5, 12 - 7.3, 1.6]) cube([9, 7.6, 3.2]);
   M("gold") for (i = [0:3]) translate([1.5 + i * 3.2, 0.6, 1.6]) cube([1.8, 2.2, 0.05]);
 }
 
-// ---------------------------------------------------------------- projector parts
-module ref_led() translate([tower_xy[0], tower_xy[1], lid_top + lip + 1.5]) {   // 3 W LED on a 20 mm star
+// ---------------------------------------------------------------- projector parts (folded: light runs along +X, mirror turns it up)
+module ref_led() translate([led_x - 1, ax_y, z_ax]) rotate([0, 90, 0]) {   // 3 W LED on a 20 mm star, facing the LCD
   M("alu") difference() {
     cylinder(d = 20, h = 1.6, $fn = 60);
     for (a = [0:60:300]) rotate(a) translate([10.4, 0, -1]) cylinder(d = 3.4, h = 4, $fn = 20);
@@ -184,25 +183,35 @@ module ref_led() translate([tower_xy[0], tower_xy[1], lid_top + lip + 1.5]) {   
   M("led_yellow") translate([0, 0, 2.4]) cylinder(d = 2.8, h = 0.5, $fn = 24);
   M("copper") for (s = [-1, 1]) translate([s * 6 - 1.2, -1.5, 1.6]) cube([2.4, 3, 0.05]);
 }
-module ref_diffuser() M("diffuser") translate([tower_xy[0] - 25.5, tower_xy[1] - 25.5, lid_top + lip + 12.1]) cube([51, 51, 0.8]);
-module ref_lcd() {                                       // Nokia 5110 (backlight removed, window cut in the PCB)
-  z = lid_top + lip + carrier_h - 6;
-  translate([tower_xy[0], tower_xy[1], z]) {
-    M("pcb_red") difference() {
-      translate([-22.5, -22.5, 0]) cube([45, 45, 1.6]);
-      translate([-15, -11 - 2, -1]) cube([30, 22, 4]);
-      for (sx = [-1, 1], sy = [-1, 1]) translate([sx * 20, sy * 20, -1]) cylinder(d = 3, h = 4, $fn = 16);
-    }
-    M("alu") translate([0, -2, 1.6]) difference() {
-      translate([-21.5, -17.5, 0]) cube([43, 35, 3.4]);
-      translate([-18.5, -14, -1]) cube([37, 28, 6]);
-    }
-    M("lcd_glass") translate([-18.5, -16, 1.6]) cube([37, 28, 2.4]);
-    M("black") translate([-8 * 2.54 / 2, 18.2, 1.6]) cube([8 * 2.54, 2.54, 2.5]);
-    M("gold") translate([-7 * 2.54 / 2, 19.47, 1.6]) pin_row(8, 2.54, 8);
+module ref_diffuser() M("diffuser") translate([diff_x - 0.4, ax_y - 23, lb_floor_top + cg_floor]) cube([0.8, 46, 46]);
+module ref_lcd() translate([lcd_x - 3.05, ax_y, z_ax]) rotate([90, 0, 90]) {   // Nokia 5110, standing up, glass toward the mirror
+  // (backlight removed, window cut in the PCB)
+  M("pcb_red") difference() {
+    translate([-22.5, -22.5, 0]) cube([45, 45, 1.6]);
+    translate([-15, -11 - 2, -1]) cube([30, 22, 4]);
+    for (sx = [-1, 1], sy = [-1, 1]) translate([sx * 20, sy * 20, -1]) cylinder(d = 3, h = 4, $fn = 16);
+  }
+  M("alu") translate([0, -2, 1.6]) difference() {
+    translate([-21.5, -17.5, 0]) cube([43, 35, 3.4]);
+    translate([-18.5, -14, -1]) cube([37, 28, 6]);
+  }
+  M("lcd_glass") translate([-18.5, -16, 1.6]) cube([37, 28, 2.4]);
+  M("black") translate([-8 * 2.54 / 2, 18.2, 1.6]) cube([8 * 2.54, 2.54, 2.5]);
+  M("gold") translate([-7 * 2.54 / 2, 19.47, 1.6]) pin_row(8, 2.54, 8);
+}
+module ref_mirror() mirror_frame() {                    // 50 x 50 mm front-surface mirror on the 45 degree ramp
+  M("mirror") translate([-mirror_L/2, -mirror_W/2, -0.05]) cube([mirror_L, mirror_W, 0.05]);
+  M("glass") translate([-mirror_L/2, -mirror_W/2, -mirror_t]) cube([mirror_L, mirror_W, mirror_t - 0.05]);
+}
+// 50 mm biconvex lens, f = 100 (R about 100 mm, 1.5 mm edge), resting on the seat ledge
+module ref_lens() M("glass") translate([mx, ax_y, lens_z - lens_seat + 0.5]) {
+  R = 100; c = sqrt(R * R - 25 * 25);
+  intersection() {
+    translate([0, 0, 1.5 - c]) sphere(r = R, $fn = 160);
+    translate([0, 0, c]) sphere(r = R, $fn = 160);
+    translate([0, 0, -5]) cylinder(d = 50, h = 12, $fn = 96);
   }
 }
-module ref_lens() M("glass") translate([tower_xy[0], tower_xy[1], lens_z - lens_seat]) scale([1, 1, 0.16]) sphere(d = 50, $fn = 72);
 module ref_ring() translate([ring_xy[0], ring_xy[1], lid_top + 1.5]) {   // WS2812B 16-LED ring
   M("pcb_black") difference() { cylinder(d = ring_od, h = 1.6, $fn = 72); translate([0, 0, -1]) cylinder(d = ring_id, h = 4, $fn = 72); }
   r = (ring_od + ring_id) / 4;
@@ -215,29 +224,36 @@ module ref_ring() translate([ring_xy[0], ring_xy[1], lid_top + 1.5]) {   // WS28
 // ---------------------------------------------------------------- main wiring runs
 module ref_wires() {
   hz = pb_top + 0.5;
+  bx = pb_xy[0] - pb_size[0]/2 + 3;          // left edge of the board, where the off-board headers are
   // front display -> board
   for (k = [0:3]) M(["wire_red", "wire_black", "wire_yellow", "wire_white"][k])
-    wire([-tm_board[0]/2 + 1.9, inner_front + tm_disp[2] + 9, tm_z - 3.8 + k * 2.54], [-14, -36, 34], [pb_xy[0] - 30 + k * 2.54, -24, hz]);
-  // rear button and USB power -> board
-  M("wire_blue") wire([btnb_x - 3.5, inner_back - 26, rear_z], [-20, 30, 30], [pb_xy[0] - 32, 22, hz]);
-  M("wire_black") wire([btnb_x + 3.5, inner_back - 26, rear_z], [-14, 32, 30], [pb_xy[0] - 31, 23.5, hz]);
-  M("wire_red") wire([usbc_x - 3, inner_back - 11, rear_z - 1.8], [-36, 28, 30], [pb_xy[0] - 33, 20, hz]);
-  M("wire_black") wire([usbc_x + 3, inner_back - 11, rear_z - 1.8], [-30, 30, 32], [pb_xy[0] - 33, 18, hz]);
+    wire([-tm_board[0]/2 + 1.9, inner_front + tm_disp[2] + 9, tm_z - 3.8 + k * 2.54], [0, -40, 44], [bx + 4 + k * 2.54, pb_xy[1] - 20, hz]);
+  // button B and USB power (left wall) -> board
+  for (s = [-1, 1]) M(s < 0 ? "wire_blue" : "wire_black")
+    wire([-box_w/2 + 21, btnb_y, btnb_z + s * 3.5], [-20, -6, 48], [bx, pb_xy[1] + 18 + s * 1.3, hz]);
+  for (s = [-1, 1]) M(s < 0 ? "wire_red" : "wire_black")
+    wire([-box_w/2 + wall + 11.5, usb_y + s * 3, usb_z - 1.4], [-30, -50, 34], [bx + 1, pb_xy[1] - 6 + s * 1.3, hz]);
   // top button -> board
-  for (s = [-1, 1]) M(s < 0 ? "wire_green" : "wire_black") wire([button_xy[0] + s * 3.5, button_xy[1], lid_top - 24], [s * 4, -30, 30], [pb_xy[0] - 26 + s, -24, hz]);
+  for (s = [-1, 1]) M(s < 0 ? "wire_green" : "wire_black")
+    wire([button_xy[0] + s * 3.5, button_xy[1], lid_top - 24], [6, -30, 40], [bx + 3 + s, pb_xy[1] - 14, hz]);
   // speaker -> amplifier -> board
-  M("wire_red") wire([spk_xy[0] + 15, spk_xy[1], floor_top + 4], [-20, 30, 14], [-6, 32, floor_top + 7]);
-  M("wire_black") wire([spk_xy[0] - 15, spk_xy[1], floor_top + 4], [-30, 40, 16], [-4, 32, floor_top + 7]);
+  M("wire_red") wire([spk_xy[0] + 15, spk_xy[1], floor_top + 4], [-28, -30, 14], [-15.7, -35.5, floor_top + 7]);
+  M("wire_black") wire([spk_xy[0] + 8, spk_xy[1] - 12, floor_top + 4], [-26, -40, 16], [-10.6, -35.5, floor_top + 7]);
   for (k = [0:2]) M(["wire_yellow", "wire_green", "wire_blue"][k])
-    wire([-10.7 + k * 2.54, 47.3, floor_top + 10], [-8 + k * 2, 36, 30], [pb_xy[0] - 28 + k * 2.54, 24, hz]);
+    wire([-19.7 + k * 2.54, -19.7, floor_top + 10], [-4, -16, 32], [bx + k * 2.54, pb_xy[1] + 4, hz]);
   // sunrise ring -> down through the lid -> board
   for (k = [0:2]) M(["wire_red", "wire_black", "wire_green"][k])
-    wire([ring_xy[0] - 1 + k, ring_xy[1], lid_top + 1], [ring_xy[0] + 6, 10, 36], [pb_xy[0] - 33, 6 + k * 2.54, hz]);
-  // projector bundle: LCD + LED leads down the tower -> board
+    wire([ring_xy[0] - 1 + k, ring_xy[1], lid_top + 1], [-20, -12, 46], [bx + 2, pb_xy[1] + 10 + k * 2.54, hz]);
+  // inside the light box: LED and LCD leads up to the notch in the front wall
+  for (s = [-1, 1]) M(s < 0 ? "wire_red" : "wire_black")
+    wire([led_x + 1, ax_y + s * 6, z_ax + 3], [led_x + 4, ax_y, cg_top + 2], [lcd_x - 18 + s * 2, ax_y - lb_w/2 + 1.5, lb_top - 5]);
   for (k = [0:4]) M(["wire_white", "wire_blue", "wire_yellow", "wire_green", "wire_red"][k])
-    wire([tower_xy[0] - 4 + k * 2, tower_xy[1] + 18, lid_top + lip + 20], [36, 30, 40], [pb_xy[0] + 6 + k * 2.54, 24, hz]);
+    wire([lcd_x + 6.5, ax_y - 5 + k * 2.54, z_ax + 19.5], [lcd_x + 6, ax_y - 10, lb_top - 1], [lcd_x - 4 + k * 1.5, ax_y - lb_w/2 + 1.5, lb_top - 3]);
+  // projector bundle: from the notch down to the board
+  for (k = [0:6]) M(["wire_red", "wire_black", "wire_white", "wire_blue", "wire_yellow", "wire_green", "wire_red"][k])
+    wire([lcd_x - 20 + k * 2, ax_y - lb_w/2 - 1, lb_top - 5], [10, -2, 52], [bx + 8 + k * 2.54, pb_xy[1] + 22, hz]);
   // MOSFET module -> board, clock module -> board
-  for (k = [0:1]) M(["wire_red", "wire_black"][k]) wire([34 + k * 5.08, -46, floor_top + 6], [40, -30, 24], [pb_xy[0] + 20 + k * 2.54, -24, hz]);
+  for (k = [0:1]) M(["wire_red", "wire_black"][k]) wire([-24 + k * 5.08, -51.3, floor_top + 6], [-2, -50, 26], [bx + 8 + k * 2.54, pb_xy[1] - 21, hz]);
   for (k = [0:3]) M(["wire_red", "wire_black", "wire_blue", "wire_yellow"][k])
-    wire([-13.7 + k * 2.54, -35, floor_top + 8], [-8, -28, 28], [pb_xy[0] - 22 + k * 2.54, -24, hz]);
+    wire([-41.7 + k * 2.54, -43, floor_top + 8], [-14, -44, 30], [bx + 14 + k * 2.54, pb_xy[1] - 21, hz]);
 }
