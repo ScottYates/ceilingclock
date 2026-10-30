@@ -27,6 +27,14 @@
 #define FW_VERSION "1.0.0"
 #define HOSTNAME "ceilingclock"
 
+// What every output is doing right now, reported to the web page's live view.
+struct LiveState {
+  bool projOn = false;  uint8_t projPct = 0;
+  bool frontOn = false; uint8_t frontBright = 0;
+  uint8_t ring[3] = {0, 0, 0}; float sunrise = 0;
+  uint8_t vol = 0;
+} live;
+
 // ---------------------------------------------------------------- hardware
 Adafruit_PCD8544 lcd(PIN_LCD_CLK, PIN_LCD_DIN, PIN_LCD_DC, PIN_LCD_CE, PIN_LCD_RST);
 GFXcanvas1 canvas(84, 48);
@@ -93,9 +101,10 @@ void audioPlay(const String& path, uint8_t vol) {
   strlcpy(c.path, p.c_str(), sizeof(c.path));
   xQueueSend(audioQ, &c, 0);
   audioRunning = true;  // assume started until the task reports otherwise
+  live.vol = vol;
 }
 void audioStop() { AudioCmd c{AC_STOP, 0, {0}}; xQueueSend(audioQ, &c, 0); }
-void audioVolume(uint8_t v) { AudioCmd c{AC_VOL, v, {0}}; xQueueSend(audioQ, &c, 0); }
+void audioVolume(uint8_t v) { AudioCmd c{AC_VOL, v, {0}}; xQueueSend(audioQ, &c, 0); live.vol = v; }
 
 // Writes a short beep-beep WAV so there is always a sound, even before you upload any.
 void ensureDefaultSound() {
@@ -134,6 +143,7 @@ time_t lastCheck = 0;
 bool testPlaying = false;
 
 uint32_t peekUntilMs = 0;  // button A "show me the time" while displays are off
+
 uint8_t prevFrontMode = DM_ON, prevProjMode = DM_ON;
 
 void startRing(int i, uint32_t rampSec) {
@@ -273,7 +283,8 @@ String statusLine(const struct tm& lt, time_t now) {
   return out;
 }
 
-void renderProjector(const struct tm& lt, time_t now) {
+// Draws the clock face into the 84 x 48 canvas (also used by the web page's live view).
+void composeCanvas(const struct tm& lt, time_t now) {
   canvas.fillScreen(0);
   if (timeValid()) {
     int h = lt.tm_hour;
@@ -291,7 +302,10 @@ void renderProjector(const struct tm& lt, time_t now) {
   canvas.setTextColor(1);
   canvas.setCursor(0, 40);
   canvas.print(statusLine(lt, now));
+}
 
+// Copies the canvas to the LCD with mirroring.
+void pushLcd() {
   // Copy to the LCD with mirroring. On the LCD a "set" pixel is dark and blocks light.
   lcd.clearDisplay();
   for (int y = 0; y < 48; y++)
@@ -304,12 +318,15 @@ void renderProjector(const struct tm& lt, time_t now) {
 }
 
 void setProjectorLed(uint8_t pct) {
+  live.projPct = pct;
   uint32_t duty = (uint32_t)pct * pct * 1023 / 10000;  // rough perceptual curve
   ledcWrite(PIN_PROJ_LED, duty);
 }
 
 // ---------------------------------------------------------------- front display
 void renderFront(const struct tm& lt, bool visible, uint8_t bright) {
+  live.frontOn = visible;
+  live.frontBright = bright;
   static int lastKey = -2;
   int key = visible ? (lt.tm_hour * 60 + lt.tm_min) * 8 + bright + (timeValid() ? 0 : 100000) : -1;
   if (key == lastKey) return;
@@ -348,6 +365,7 @@ void renderRing(time_t now) {
   }
   static int lastLevel = -1;
   int level = (int)(p * 255);
+  live.sunrise = p;
   if (level == lastLevel) return;
   lastLevel = level;
   // deep red -> orange -> warm white, with a squared curve so it starts very dim
@@ -355,6 +373,7 @@ void renderRing(time_t now) {
   uint8_t r = 255 * b;
   uint8_t g = (p < 0.3f ? p / 0.3f * 40 : 40 + (p - 0.3f) / 0.7f * 140) * b;
   uint8_t bl = (p < 0.6f ? 0 : (p - 0.6f) / 0.4f * 70) * b;
+  live.ring[0] = r; live.ring[1] = g; live.ring[2] = bl;
   for (int i = 0; i < RING_COUNT; i++) ring.setPixelColor(i, r, g, bl);
   ring.show();
 }
@@ -452,6 +471,23 @@ void apiState() {
   d["fw"] = FW_VERSION;
   d["fsUsed"] = LittleFS.usedBytes();
   d["fsTotal"] = LittleFS.totalBytes();
+  JsonObject lv = d["live"].to<JsonObject>();
+  lv["projOn"] = live.projOn;
+  lv["projPct"] = live.projPct;
+  lv["frontOn"] = live.frontOn;
+  lv["frontBright"] = live.frontBright;
+  JsonArray rgb = lv["ring"].to<JsonArray>();
+  for (int i = 0; i < 3; i++) rgb.add(live.ring[i]);
+  lv["sunrise"] = live.sunrise;
+  lv["vol"] = (bool)audioRunning ? live.vol : 0;
+  lv["invert"] = cfg.projInvert;
+  // the 84 x 48 projector image, 1 bit per pixel, 11 bytes per row, as hex
+  static const char* hx = "0123456789abcdef";
+  const uint8_t* buf = canvas.getBuffer();
+  String lcd;
+  lcd.reserve(84 / 8 * 48 * 2 + 100);
+  for (int i = 0; i < 11 * 48; i++) { lcd += hx[buf[i] >> 4]; lcd += hx[buf[i] & 15]; }
+  lv["lcd"] = lcd;
   sendJson(d);
 }
 
@@ -672,8 +708,13 @@ void loop() {
     uint8_t projB = nightNow ? cfg.proj.nightBright : cfg.proj.dayBright;
     if (projOn && projB < 15 && (millis() < peekUntilMs || ringState != RS_IDLE)) projB = 15;
     setProjectorLed(projOn ? projB : 0);
+    live.projOn = projOn;
     static time_t lastRender = 0;
-    if (projOn && now != lastRender) { renderProjector(lt, now); lastRender = now; }
+    if (now != lastRender) {
+      composeCanvas(lt, now);
+      if (projOn) pushLcd();
+      lastRender = now;
+    }
 
     renderFront(lt, displayVisible(cfg.front), nightNow ? cfg.front.nightBright : cfg.front.dayBright);
     renderRing(now);

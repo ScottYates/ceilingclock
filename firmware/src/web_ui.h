@@ -25,6 +25,13 @@ button.p{background:var(--acc);color:#111;font-weight:600}button.d{background:tr
 .sw{flex-direction:row;align-items:center;gap:6px;color:var(--fg);font-size:14px}
 #ringbar{display:none;background:var(--acc);color:#111}#ringbar button{background:#111;color:var(--fg)}
 .pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;background:#2a2f37}.pill.ok{background:#173a2b;color:var(--ok)}.pill.bad{background:#3d1d1f;color:var(--bad)}
+#live{display:grid;grid-template-columns:1.5fr 1fr;gap:12px}
+#live .lbl{font-size:12px;color:var(--mut);margin:0 0 4px}
+#ceil{width:100%;height:auto;border-radius:8px;background:#07080b;display:block;image-rendering:pixelated}
+.panel2{background:#0f1114;border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:10px}
+#front svg,#ring svg{display:block;width:100%;height:auto}
+.vbar{height:6px;background:#2b3038;border-radius:3px;overflow:hidden;margin-top:6px}.vbar i{display:block;height:100%;background:var(--acc);width:0}
+@media(max-width:560px){#live{grid-template-columns:1fr}}
 #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#000;padding:8px 14px;border-radius:8px;display:none}
 </style></head><body><main>
 <h1>Ceiling Clock</h1>
@@ -42,6 +49,16 @@ button.p{background:var(--acc);color:#111;font-weight:600}button.d{background:tr
 <button onclick="act('peek')">Show 15 s</button>
 <button onclick="act('resync')">Resync time</button></div>
 </div>
+
+<div class="card"><h2>Right now</h2>
+<div id="live">
+ <div><p class="lbl" id="ceilLbl">On the ceiling</p><canvas id="ceil" width="336" height="192"></canvas></div>
+ <div>
+  <div class="panel2" id="front"><p class="lbl" id="frontLbl">Front display</p><svg viewBox="0 0 200 60" id="frontSvg"></svg></div>
+  <div class="panel2" id="ring"><p class="lbl" id="ringLbl">Sunrise light</p><svg viewBox="0 0 120 120" id="ringSvg" style="max-width:120px;margin:auto"></svg></div>
+  <div class="panel2"><p class="lbl">Sound</p><div id="spk">Silent</div><div class="vbar"><i id="vbar"></i></div></div>
+ </div>
+</div></div>
 
 <div class="card"><h2>Alarms</h2><div id="alarms"></div>
 <div class="row" style="margin-top:12px"><button onclick="addAlarm()">+ Add alarm</button><button class="p" onclick="save()">Save</button></div></div>
@@ -88,7 +105,31 @@ const hm=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2
 const mh=s=>{const[a,b]=s.split(':');return(+a)*60+(+b)};
 async function act(d,extra=''){await fetch('/api/action?do='+d+extra,{method:'POST'});poll()}
 function fmtT(ep){const d=new Date(ep*1000);return d.toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit',hour12:!C.hour24})}
-async function poll(){try{const s=await(await fetch('/api/state')).json();
+// ---- live view
+const SEG=[0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F];
+function segDigit(x,d,on,col){const P=[[4,0,26,5],[27,3,5,22],[27,30,5,22],[4,51,26,5],[0,30,5,22],[0,3,5,22],[4,25.5,26,5]];
+ const m=d<0?0:(d==10?0x40:SEG[d]);return P.map((p,i)=>`<rect x="${x+p[0]}" y="${4+p[1]}" width="${p[2]}" height="${p[3]}" rx="2" fill="${(m>>i)&1&&on?col:'#2a0d0d'}"/>`).join('')}
+function drawFront(s,lv){const d=new Date(s.now*1000);let h=d.getHours(),m=d.getMinutes();const h24=C&&C.hour24;
+ if(!h24){h%=12;if(!h)h=12}const on=lv.frontOn,col=`rgba(255,40,30,${0.35+0.65*lv.frontBright/7})`;
+ const dg=s.timeValid?[(h24||h>=10)?Math.floor(h/10):-1,h%10,Math.floor(m/10),m%10]:[10,10,10,10];
+ $('frontSvg').innerHTML=`<rect width="200" height="60" rx="6" fill="#0a0505"/>`+segDigit(14,dg[0],on,col)+segDigit(52,dg[1],on,col)+
+  `<circle cx="99" cy="22" r="3" fill="${on?col:'#2a0d0d'}"/><circle cx="99" cy="40" r="3" fill="${on?col:'#2a0d0d'}"/>`+segDigit(114,dg[2],on,col)+segDigit(152,dg[3],on,col);
+ $('frontLbl').textContent='Front display · '+(on?'on, brightness '+lv.frontBright+'/7':'off (dark)')}
+function drawRing(lv){const [r,g,b]=lv.ring,mx=Math.max(r,g,b);let dots='';
+ const col=mx?`rgb(${Math.round(r*255/mx)},${Math.round(g*255/mx)},${Math.round(b*255/mx)})`:'#1c1f24',op=mx?Math.max(.3,mx/255):1;
+ for(let i=0;i<16;i++){const a=i/16*2*Math.PI;dots+=`<circle cx="${60+42*Math.cos(a)}" cy="${60+42*Math.sin(a)}" r="7" fill="${col}" opacity="${op}"/>`}
+ $('ringSvg').innerHTML=(mx?`<circle cx="60" cy="60" r="50" fill="${col}" opacity="${op*0.25}"/>`:'')+dots;
+ $('ringLbl').textContent='Sunrise light · '+(mx?Math.round(lv.sunrise*100)+'% of sunrise':'off')}
+function drawCeil(lv){const c=$('ceil'),x=c.getContext('2d');x.fillStyle='#07080b';x.fillRect(0,0,336,192);
+ if(!lv.projOn||!lv.projPct){x.fillStyle='#4a4f57';x.font='15px system-ui';x.textAlign='center';x.fillText('Projector off',168,100);$('ceilLbl').textContent='On the ceiling · projector off';return}
+ const a=0.3+0.7*lv.projPct/100,h=lv.lcd||'';
+ for(let y=0;y<48;y++)for(let i=0;i<84;i++){const b=parseInt(h.substr((y*11+(i>>3))*2,2),16),bit=(b>>(7-(i&7)))&1,lit=lv.invert?bit:!bit;
+  if(lit){x.fillStyle=`rgba(255,214,150,${a})`;x.fillRect(i*4,y*4,4,4)}else if(lv.invert){x.fillStyle=`rgba(255,214,150,${a*0.05})`;x.fillRect(i*4,y*4,4,4)}}
+ $('ceilLbl').textContent='On the ceiling · '+lv.projPct+'% brightness'}
+function drawSpk(s,lv){const v=lv.vol||0;$('spk').textContent=s.playing?(s.ring=='ringing'?'Alarm sound playing':'Preview playing')+' · volume '+v+'/21':(s.ring=='snoozed'?'Snoozed':'Silent');
+ $('vbar').style.width=(s.playing?v/21*100:0)+'%'}
+function drawLive(s){if(!s.live)return;drawCeil(s.live);drawFront(s,s.live);drawRing(s.live);drawSpk(s,s.live)}
+async function poll(){try{const s=await(await fetch('/api/state')).json();drawLive(s);
  const d=new Date(s.now*1000);
  $('clock').textContent=s.timeValid?d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit',hour12:C?!C.hour24:true}):'--:--';
  $('date').textContent=s.timeValid?d.toDateString():'Waiting for time';
@@ -147,5 +188,5 @@ async function delSound(n){if(!confirm('Delete '+n+'?'))return;await fetch('/api
 async function fwUpdate(){const f=$('fwfile').files[0];if(!f)return;const fd=new FormData();fd.append('fw',f,f.name);toast('Updating, do not unplug…');
  const r=await fetch('/update',{method:'POST',body:fd});toast(await r.text())}
 async function load(){C=await(await fetch('/api/config')).json();await loadSounds();fill()}
-load().then(poll);setInterval(poll,2000);
+load().then(poll);setInterval(poll,1000);
 </script></body></html>)rawliteral";

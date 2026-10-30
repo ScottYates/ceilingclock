@@ -3,3 +3,5 @@
 *.o
 a.out
 node_modules/
+firmware/sim/build/
+firmware/sim/sim_fs/

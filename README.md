@@ -18,6 +18,14 @@ A Wi-Fi ceiling projection alarm clock built on an ESP32-S3.
 | `hardware/` | OpenSCAD enclosure source (`enclosure.scad`), printable STLs (`stl/`), wiring diagram generator. The case needs no screws: printed snap pins and clips hold it together. |
 | `docs/` | Project website: 3D assembly viewer, build steps, wiring, parts list |
 
+## Prebuilt firmware
+
+`docs/downloads/ceilingclock-esp32s3-factory.bin` is a complete image for a first flash at address 0x0 (for example with https://espressif.github.io/esptool-js/). `ceilingclock-esp32s3-update.bin` is for the web page's firmware update.
+
+## Try it without hardware
+
+`firmware/sim/` runs the same firmware code on a Linux or Mac computer with simulated hardware. See its README.
+
 ## Build the firmware
 
 1. Install VS Code and the PlatformIO IDE extension.
