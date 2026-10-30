@@ -37,7 +37,7 @@ ring_xy = [-42, 5];   ring_od = 44.5; ring_id = 31.5;  dome_d = 60;  dome_h = 32
 button_xy = [0, -42]; button_hole = 16.2;
 ldr_xy = [-65, -45];
 // front display window
-tm_w = 42; tm_h = 18; tm_z = 32;
+tm_w = 51; tm_h = 20; tm_z = 32;   // 0.56" 4-digit display is ~50.4 x 19 mm; rails take a 51-56 mm wide board
 // rear panel
 usbc_x = -45;  btnb_x = -25;  rear_z = 20;
 // perfboard bosses (70 x 50 board, 66 x 46 hole spacing)
@@ -233,8 +233,8 @@ module ref_lens() translate([tower_xy[0], tower_xy[1], lens_z - lens_seat]) scal
 module ref_ring() translate([ring_xy[0], ring_xy[1], lid_top + 1.5]) difference() { cylinder(d = ring_od, h = 1.6); translate([0, 0, -1]) cylinder(d = ring_id, h = 4); }
 module ref_speaker() translate([spk_xy[0], spk_xy[1], feet_h + floor_t]) { cylinder(d = 40, h = 2); translate([0, 0, 2]) cylinder(d1 = 34, d2 = 18, h = 8); }
 module ref_tm1637() translate([0, -box_d/2 + wall, tm_z]) {
-  translate([0, 7.5 / 2, 0]) cube([40, 7.5, 16], center = true);
-  translate([0, 7.5 + 0.8, 0]) cube([42, 1.6, 24], center = true);
+  translate([0, 7.5 / 2, 0]) cube([50.4, 7.5, 19], center = true);
+  translate([0, 7.5 + 0.8, 0]) cube([53, 1.6, 25], center = true);
 }
 module ref_amp()    translate([-15, 30, feet_h + floor_t]) cube([18, 18, 3]);
 module ref_rtc()    translate([-15, -35, feet_h + floor_t]) cube([22, 38, 3]);

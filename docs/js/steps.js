@@ -43,8 +43,8 @@ export const STEPS = [
     title: 'Front display and rear panel',
     view: { visible: s2, highlight: ['ref_tm1637', 'ref_usbc'], explode: 0.35, camera: [-200, 180, 380], target: [0, 30, 0] },
     html: `<ol>
-<li>Cut a 44 × 20 mm piece of red or smoked acrylic (or tinted film) and glue it behind the front window. This makes the digits darker and nicer at night.</li>
-<li>Solder a 4-pin lead to the TM1637 module, then slide its PCB down into the two slotted rails behind the window, digits facing out.</li>
+<li>Cut a 55 × 24 mm piece of red or smoked acrylic (or tinted film) and glue it behind the front window. This makes the digits darker and nicer at night.</li>
+<li>Solder a 4-pin lead to the TM1637 module, then slide its PCB down into the two slotted rails behind the window, digits facing out. The rails take boards 51–56 mm wide; if yours is narrower, centre it and hold it with hot glue.</li>
 <li>Glue the USB-C breakout onto its cradle so the socket lines up with the rear cutout. Solder red/black leads to VBUS/GND.</li>
 <li>Fit a second 16 mm button (button B) into the round hole on the rear wall.</li></ol>`,
   },

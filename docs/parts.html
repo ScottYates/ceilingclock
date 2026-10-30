@@ -12,7 +12,7 @@
 <h1>Parts list</h1>
 <p class="lead">Untick anything you already have, then press the button to open every selected item on Amazon, each in its own tab, ready for Add to Cart. Most parts come in multi-packs, so you'll have spares (or enough for a second clock).</p>
 
-<div class="note">These listings came from Amazon search results and weren't checked on the product pages. Listings change, so check each one before adding it.<br>
+<div class="note">These listings came from Amazon search results and weren't checked on the product pages. Listings change, so check each one before adding it. If an item shows as unavailable, use its <b>Search</b> link to pick an in-stock equivalent; the "Why" column says what matters.<br>
 <b>Pop-ups:</b> the first time you press the button, your browser will probably block all but one tab. Allow pop-ups for this site, then press it again.</div>
 
 <div class="cartbar">
@@ -40,7 +40,7 @@
 <h2>Not in the cart</h2>
 <ul>
 <li>Filament (PLA or PETG), if you don't have it.</li>
-<li>A 44 × 20 mm piece of red or smoked acrylic, or tinted window film, for the front display window.</li>
+<li>A 55 × 24 mm piece of red or smoked acrylic, or tinted window film, for the front display window.</li>
 <li>Frosted plastic or baking paper for the diffuser, black electrical tape, hot glue, thermal tape for the LED.</li>
 </ul>
 </main>
@@ -49,15 +49,17 @@
 import { BOM } from './js/bom.js';
 const tb = document.querySelector('#bom tbody');
 const dp = (a) => `https://www.amazon.com/dp/${a}`;
+const sq = (q) => `https://www.amazon.com/s?k=${encodeURIComponent(q)}`;
+const url = (b) => b.asin ? dp(b.asin) : sq(b.q);
 tb.innerHTML = BOM.map((b, i) => `
 <tr data-i="${i}">
 <td class="chk"><input type="checkbox" id="c${i}" ${b.on === false ? '' : 'checked'} aria-label="Include ${b.part}"></td>
 <td><label for="c${i}"><b>${b.part}</b></label></td>
 <td>${b.need || '—'}</td>
-<td><a href="${dp(b.asin)}" target="_blank" rel="noopener">${b.listing}</a>${(b.alt || []).map(([t, a]) => `<div class="alt">alt: <a href="${dp(a)}" target="_blank" rel="noopener">${t}</a></div>`).join('')}</td>
+<td><a href="${url(b)}" target="_blank" rel="noopener">${b.listing}</a>${(b.alt || []).map(([t, a]) => `<div class="alt">alt: <a href="${dp(a)}" target="_blank" rel="noopener">${t}</a></div>`).join('')}</td>
 <td>${b.pack}</td>
 <td>${b.why}</td>
-<td><a class="btn ghost" style="padding:4px 10px;font-size:.8rem;white-space:nowrap" href="${dp(b.asin)}" target="_blank" rel="noopener">Open</a></td></tr>`).join('');
+<td><a class="btn ghost" style="padding:4px 10px;font-size:.8rem;white-space:nowrap" href="${url(b)}" target="_blank" rel="noopener">Open</a><div class="alt" style="margin-top:4px"><a href="${sq(b.q)}" target="_blank" rel="noopener">Search</a></div></td></tr>`).join('');
 
 function update() {
   const sel = BOM.filter((_, i) => document.getElementById('c' + i).checked);
@@ -71,7 +73,7 @@ tb.addEventListener('change', update);
 document.getElementById('open').onclick = () => {
   const sel = BOM.filter((_, i) => document.getElementById('c' + i).checked);
   let blocked = 0;
-  for (const b of sel) { const w = window.open(dp(b.asin), '_blank'); if (!w) blocked++; else w.opener = null; }
+  for (const b of sel) { const w = window.open(url(b), '_blank'); if (!w) blocked++; else w.opener = null; }
   if (blocked) document.getElementById('sum').textContent = `Your browser blocked ${blocked} tab(s). Allow pop-ups for this site and press the button again, or use the Open links in each row.`;
 };
 document.getElementById('all').onclick = () => { BOM.forEach((_, i) => document.getElementById('c' + i).checked = true); update(); };
