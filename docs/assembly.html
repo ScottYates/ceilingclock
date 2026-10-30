@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Assembly · Ceiling Clock</title>
+<link rel="stylesheet" href="style.css">
+</head><body>
+<header class="site"><div class="in">
+<a class="brand" href="index.html"><span class="dot"></span>Ceiling Clock</a>
+<nav><a href="index.html">3D model</a><a href="assembly.html" class="on">Assembly</a><a href="wiring.html">Wiring</a><a href="parts.html">Parts &amp; cart</a><a href="firmware.html">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
+</div></header>
+<main>
+<h1>Assembly</h1>
+<p class="lead">Ten steps, from printed parts to a focused image on the ceiling. Allow an evening for the electronics and an hour for final assembly. Highlighted parts in each picture are the ones that step adds; "Open in 3D" shows the same view so you can rotate it.</p>
+
+<div class="note"><b>Test the optics on the bench first.</b> Before printing, hold the LED, a piece of baking paper, the LCD and the lens in a stack in a dark room and aim it at the ceiling. That's the quickest way to confirm the lens and LED brightness suit your room.</div>
+
+<p><b>Tools:</b> soldering iron, rotary tool or hobby knife (for the LCD window), hot glue, small Phillips screwdriver, wire strippers, black electrical tape.<br>
+<b>Hardware:</b> M3 screws: 4 × 10 mm countersunk (lid), 4 × 12 mm (tower), 3 × 8 mm (ring holder), 4 × 6 mm (perfboard), 1 × 10 mm (focus lock). These are in the M3 kit on the parts list.</p>
+
+<div id="steps"></div>
+</main>
+<footer>Ceiling Clock · <a href="https://github.com/ScottYates/ceilingclock/blob/main/hardware/enclosure.scad">edit the model in OpenSCAD</a></footer>
+<script type="module">
+import { STEPS } from './js/steps.js';
+document.getElementById('steps').innerHTML = STEPS.map((s, i) => `
+<section class="step" id="step-${i + 1}">
+  <div><img src="img/step-${i + 1}.png" alt="3D view of step ${i + 1}: ${s.title}" loading="lazy">
+  <p style="margin:6px 0 0;font-size:.85rem"><a href="index.html#step=${i}">Open in 3D →</a></p></div>
+  <div><div class="num">Step ${i + 1} of ${STEPS.length}</div><h2>${s.title}</h2>${s.html}</div>
+</section>`).join('');
+</script>
+</body></html>

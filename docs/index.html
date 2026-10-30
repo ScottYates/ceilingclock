@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ceiling Clock: a Wi-Fi ceiling projection alarm clock</title>
+<meta name="description" content="Build a Wi-Fi synced ceiling projection alarm clock with an ESP32-S3: 3D model, assembly steps, wiring and parts list.">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}</script>
+</head><body>
+<header class="site"><div class="in">
+<a class="brand" href="index.html"><span class="dot"></span>Ceiling Clock</a>
+<nav><a href="index.html" class="on">3D model</a><a href="assembly.html">Assembly</a><a href="wiring.html">Wiring</a><a href="parts.html">Parts &amp; cart</a><a href="firmware.html">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
+</div></header>
+<main>
+<h1>A ceiling projection alarm clock that sets itself</h1>
+<p class="lead">An ESP32-S3 keeps time from internet time servers and projects it onto the ceiling. A battery-backed clock chip keeps it running through outages. Alarms, sounds, sunrise light and the displays are all set from your phone.</p>
+
+<div class="viewer-wrap">
+  <div class="viewer" id="viewer"><div class="loading" id="loading">Loading 3D model…</div><div class="hint">Drag to rotate · scroll to zoom · click a part</div></div>
+  <div class="panel">
+    <label class="range" for="explode">Explode view</label>
+    <input type="range" id="explode" min="0" max="100" value="0">
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <button class="btn ghost" id="bAsm" style="padding:6px 10px;font-size:.85rem">Assembled</button>
+      <button class="btn ghost" id="bExp" style="padding:6px 10px;font-size:.85rem">Exploded</button>
+      <button class="btn ghost" id="bClr" style="padding:6px 10px;font-size:.85rem">Clear</button>
+    </div>
+    <ul class="legend" id="legend"></ul>
+  </div>
+</div>
+
+<div class="grid3">
+  <div class="card"><h3>Always on time</h3>Syncs with NTP every hour and handles daylight saving automatically. A DS3231 keeps time when Wi-Fi or power drops, so alarms still fire.</div>
+  <div class="card"><h3>Alarms your way</h3>Up to 8 alarms with their own days, sound, fade-in, snooze, sunrise lead and auto-stop. "Skip next" handles days off.</div>
+  <div class="card"><h3>Dark when you want</h3>The front display and the projector can each be always on, fully off, night-only or day-only, with separate day and night brightness.</div>
+</div>
+
+<h2>Build it</h2>
+<div class="grid3">
+  <a class="card" href="parts.html" style="text-decoration:none;color:inherit"><h3>1. Order the parts →</h3>One button adds everything to your Amazon cart. Most items come in multi-packs, so expect roughly $150–250 including spares (prices weren't checked).</a>
+  <a class="card" href="assembly.html" style="text-decoration:none;color:inherit"><h3>2. Print and assemble →</h3>Eight 3D-printed parts and ten illustrated steps.</a>
+  <a class="card" href="firmware.html" style="text-decoration:none;color:inherit"><h3>3. Flash and set up →</h3>PlatformIO firmware, Wi-Fi setup from your phone, then everything is set at <code>ceilingclock.local</code>.</a>
+</div>
+
+<h2>Download</h2>
+<p>Printable STL files: <a href="https://github.com/ScottYates/ceilingclock/tree/main/hardware/stl">hardware/stl</a> · Parametric source: <a href="https://github.com/ScottYates/ceilingclock/blob/main/hardware/enclosure.scad">enclosure.scad</a> (OpenSCAD) · Firmware: <a href="https://github.com/ScottYates/ceilingclock/tree/main/firmware">firmware/</a></p>
+</main>
+<footer>Ceiling Clock · open hardware and firmware · <a href="https://github.com/ScottYates/ceilingclock">source on GitHub</a></footer>
+
+<script type="module">
+import { createViewer } from './js/viewer.js';
+import { PARTS } from './js/parts.js';
+import { STEPS } from './js/steps.js';
+
+const v = createViewer(document.getElementById('viewer'));
+const ex = document.getElementById('explode');
+const legend = document.getElementById('legend');
+let selected = null;
+
+const groups = [['Printed parts', 'print'], ['Electronics & optics', 'part']];
+for (const [title, kind] of groups) {
+  const h = document.createElement('h4'); h.textContent = title; legend.appendChild(h);
+  for (const [name, p] of Object.entries(PARTS)) {
+    if (p.kind !== kind) continue;
+    const li = document.createElement('li');
+    li.dataset.name = name;
+    li.innerHTML = `<span class="sw" style="background:#${p.color.toString(16).padStart(6, '0')}"></span>${p.label}` +
+      (kind === 'print' ? `<a class="k" href="https://github.com/ScottYates/ceilingclock/blob/main/hardware/stl/${name}.stl" title="View STL" onclick="event.stopPropagation()">STL</a>` : '');
+    li.onclick = () => select(selected === name ? null : name);
+    legend.appendChild(li);
+  }
+}
+function select(name) {
+  selected = name;
+  v.setState({ highlight: name ? [name] : [] });
+  legend.querySelectorAll('li').forEach((li) => li.classList.toggle('on', li.dataset.name === name));
+}
+v.onPick((name) => select(name && name !== selected ? name : null));
+ex.oninput = () => v.setState({ explode: ex.value / 100 });
+const anim = (to) => { v.setState({ explode: to, animate: true }); ex.value = to * 100; };
+document.getElementById('bAsm').onclick = () => anim(0);
+document.getElementById('bExp').onclick = () => anim(1);
+document.getElementById('bClr').onclick = () => select(null);
+
+v.ready.then(() => {
+  document.getElementById('loading').remove();
+  // index.html#step=N shows assembly step N (used by the assembly page's "Open in 3D" links)
+  const m = location.hash.match(/step=(\d+)/);
+  if (m && STEPS[+m[1]]) { const s = STEPS[+m[1]].view; v.setState(s); ex.value = s.explode * 100; }
+  else setTimeout(() => anim(0.6), 400);
+  window.__viewerReady = true;
+}).catch((e) => { document.getElementById('loading').textContent = 'Could not load the 3D model: ' + e.message; });
+window.__viewer = v;
+window.__steps = STEPS;
+</script>
+</body></html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Parts &amp; cart · Ceiling Clock</title>
+<link rel="stylesheet" href="style.css">
+</head><body>
+<header class="site"><div class="in">
+<a class="brand" href="index.html"><span class="dot"></span>Ceiling Clock</a>
+<nav><a href="index.html">3D model</a><a href="assembly.html">Assembly</a><a href="wiring.html">Wiring</a><a href="parts.html" class="on">Parts &amp; cart</a><a href="firmware.html">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
+</div></header>
+<main>
+<h1>Parts list</h1>
+<p class="lead">Untick anything you already have, then press the button to put the rest in your Amazon cart in one go. Most parts come in multi-packs, so you'll have spares (or enough for a second clock).</p>
+
+<div class="note">These listings came from Amazon search results and weren't checked on the product pages. Listings change, so look over each one in your cart before checking out. If an item is missing or wrong, use the "alt" link next to it.</div>
+
+<div class="cartbar">
+  <a class="btn" id="cart" href="#" target="_blank" rel="noopener">Add selected to Amazon cart</a>
+  <span class="sum" id="sum"></span>
+  <button class="btn ghost" id="all" style="padding:6px 10px;font-size:.85rem">Select all</button>
+  <button class="btn ghost" id="none" style="padding:6px 10px;font-size:.85rem">Select none</button>
+</div>
+
+<table id="bom"><thead><tr><th></th><th>Part</th><th>Need</th><th>Amazon listing</th><th>Pack</th><th>Why</th></tr></thead><tbody></tbody></table>
+
+<h2>Printed parts</h2>
+<p>About 350 g of filament. Print settings for each part are in <a href="assembly.html#step-1">assembly step 1</a>. Download from <a href="https://github.com/ScottYates/ceilingclock/tree/main/hardware/stl">hardware/stl</a>.</p>
+<table><thead><tr><th>File</th><th>Size (mm)</th><th>Colour</th></tr></thead><tbody>
+<tr><td><a href="https://github.com/ScottYates/ceilingclock/raw/main/hardware/stl/base.stl">base.stl</a></td><td>150 × 110 × 56</td><td>Dark</td></tr>
+<tr><td><a href="https://github.com/ScottYates/ceilingclock/raw/main/hardware/stl/lid.stl">lid.stl</a></td><td>150 × 110 × 3</td><td>Dark</td></tr>
+<tr><td><a href="https://github.com/ScottYates/ceilingclock/raw/main/hardware/stl/tower.stl">tower.stl</a></td><td>74 × 74 × 140</td><td>Black, opaque</td></tr>
+<tr><td><a href="https://github.com/ScottYates/ceilingclock/raw/main/hardware/stl/carrier.stl">carrier.stl</a></td><td>55.4 × 55.4 × 36</td><td>Any (PETG preferred)</td></tr>
+<tr><td><a href="https://github.com/ScottYates/ceilingclock/raw/main/hardware/stl/sleeve.stl">sleeve.stl</a></td><td>55.4 × 55.4 × 60</td><td>Black</td></tr>
+<tr><td><a href="https://github.com/ScottYates/ceilingclock/raw/main/hardware/stl/lens_cap.stl">lens_cap.stl</a></td><td>55.4 × 55.4 × 3</td><td>Any</td></tr>
+<tr><td><a href="https://github.com/ScottYates/ceilingclock/raw/main/hardware/stl/ring_holder.stl">ring_holder.stl</a></td><td>60 × 60 × 5</td><td>Any</td></tr>
+<tr><td><a href="https://github.com/ScottYates/ceilingclock/raw/main/hardware/stl/dome.stl">dome.stl</a></td><td>52 × 52 × 32</td><td>White / natural</td></tr>
+</tbody></table>
+
+<h2>Not in the cart</h2>
+<ul>
+<li>Filament (PLA or PETG), if you don't have it.</li>
+<li>A 44 × 20 mm piece of red or smoked acrylic, or tinted window film, for the front display window.</li>
+<li>Frosted plastic or baking paper for the diffuser, black electrical tape, hot glue, thermal tape for the LED.</li>
+</ul>
+</main>
+<footer>Ceiling Clock · parts list data: <a href="https://github.com/ScottYates/ceilingclock/blob/main/docs/js/bom.js">docs/js/bom.js</a></footer>
+<script type="module">
+import { BOM } from './js/bom.js';
+const tb = document.querySelector('#bom tbody');
+const dp = (a) => `https://www.amazon.com/dp/${a}`;
+tb.innerHTML = BOM.map((b, i) => `
+<tr data-i="${i}">
+<td class="chk"><input type="checkbox" id="c${i}" ${b.on === false ? '' : 'checked'} aria-label="Include ${b.part}"></td>
+<td><label for="c${i}"><b>${b.part}</b></label></td>
+<td>${b.need || '—'}</td>
+<td><a href="${dp(b.asin)}" target="_blank" rel="noopener">${b.listing}</a>${(b.alt || []).map(([t, a]) => `<div class="alt">alt: <a href="${dp(a)}" target="_blank" rel="noopener">${t}</a></div>`).join('')}</td>
+<td>${b.pack}</td>
+<td>${b.why}</td></tr>`).join('');
+
+function update() {
+  const sel = BOM.filter((_, i) => document.getElementById('c' + i).checked);
+  tb.querySelectorAll('tr').forEach((tr) => tr.classList.toggle('off', !document.getElementById('c' + tr.dataset.i).checked));
+  const q = sel.map((b, k) => `ASIN.${k + 1}=${b.asin}&Quantity.${k + 1}=1`).join('&');
+  const a = document.getElementById('cart');
+  a.href = 'https://www.amazon.com/gp/aws/cart/add.html?' + q;
+  a.style.opacity = sel.length ? 1 : .4;
+  a.style.pointerEvents = sel.length ? '' : 'none';
+  document.getElementById('sum').textContent = `${sel.length} of ${BOM.length} items selected, 1 of each listing`;
+}
+tb.addEventListener('change', update);
+document.getElementById('all').onclick = () => { BOM.forEach((_, i) => document.getElementById('c' + i).checked = true); update(); };
+document.getElementById('none').onclick = () => { BOM.forEach((_, i) => document.getElementById('c' + i).checked = false); update(); };
+update();
+</script>
+</body></html>

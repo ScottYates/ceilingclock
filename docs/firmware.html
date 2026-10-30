@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Firmware &amp; use · Ceiling Clock</title>
+<link rel="stylesheet" href="style.css">
+</head><body>
+<header class="site"><div class="in">
+<a class="brand" href="index.html"><span class="dot"></span>Ceiling Clock</a>
+<nav><a href="index.html">3D model</a><a href="assembly.html">Assembly</a><a href="wiring.html">Wiring</a><a href="parts.html">Parts &amp; cart</a><a href="firmware.html" class="on">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
+</div></header>
+<main>
+<h1>Firmware &amp; everyday use</h1>
+<p class="lead">Flash once over USB. After that, updates, alarms, sounds and display settings all happen from your phone.</p>
+
+<h2>Flash the firmware</h2>
+<ol>
+<li>Install <a href="https://code.visualstudio.com/">VS Code</a> and the <b>PlatformIO IDE</b> extension.</li>
+<li>Download the repository (<a href="https://github.com/ScottYates/ceilingclock/archive/refs/heads/main.zip">zip</a>) and open the <code>firmware/</code> folder in VS Code.</li>
+<li>Connect the ESP32-S3 by its port marked <b>USB</b>, with the 5 V supply unplugged.</li>
+<li>Click the PlatformIO <b>Upload</b> arrow. The first build downloads the toolchain and libraries, which takes a few minutes. If it can't connect, hold <b>BOOT</b>, tap <b>RST</b>, release BOOT, and try again.</li>
+<li>Open the serial monitor (115200 baud) to watch it start.</li>
+</ol>
+
+<h2>Connect it to Wi-Fi</h2>
+<ol>
+<li>On first boot the projector shows <code>WIFI SETUP</code>.</li>
+<li>On your phone, join the Wi-Fi network <b>CeilingClock-Setup</b>. A setup page opens (or go to <code>192.168.4.1</code>). Pick your home network and enter its password.</li>
+<li>Once it's connected, open <b>http://ceilingclock.local/</b>. On Android, use the IP address shown in the serial monitor or your router, and reserve it in the router so it doesn't change.</li>
+</ol>
+<p><b>Later updates:</b> build with <code>pio run</code>, then upload <code>.pio/build/esp32s3/firmware.bin</code> in the page's <b>Firmware update</b> box. Alarms and sounds are kept.</p>
+
+<h2>Settings page</h2>
+<table><thead><tr><th>Setting</th><th>What it does</th></tr></thead><tbody>
+<tr><td>Alarms (up to 8)</td><td>Time, days (none = one-time), sound, volume 0–21, fade-in seconds, sunrise minutes, snooze minutes, auto-stop minutes. Each alarm also has <b>Skip next</b> and <b>Ring now</b>.</td></tr>
+<tr><td>Front display / projector mode</td><td><b>Always on</b>, <b>Always off</b> (fully dark), <b>Only at night</b>, <b>Only in daytime</b>, with separate day and night brightness.</td></tr>
+<tr><td>Turn displays on while an alarm rings</td><td>Overrides "off" while an alarm is going off. Untick it to keep them dark.</td></tr>
+<tr><td>Night hours / light sensor</td><td>Choose the night window. You can also treat a dark room as night; the page shows the live sensor reading to help you set the threshold.</td></tr>
+<tr><td>Mirror / flip / bright digits on dark / LCD contrast</td><td>Make the ceiling image read correctly and look as clean as possible.</td></tr>
+<tr><td>Sounds</td><td>Upload MP3, WAV, M4A/AAC, FLAC or OGG (about 9.9 MB of space). The built-in beep can't be deleted, so there's always a fallback.</td></tr>
+<tr><td>Time zone / NTP server</td><td>Defaults to US Central (<code>CST6CDT,M3.2.0,M11.1.0</code>) and pool.ntp.org. Other zones: <a href="https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv">POSIX TZ list</a>.</td></tr>
+<tr><td>Web password</td><td>Blank means no login. If set, the user name is <code>admin</code>.</td></tr>
+</tbody></table>
+
+<h2>Buttons</h2>
+<table><thead><tr><th>Button</th><th>Press</th><th>While ringing</th><th>Hold</th></tr></thead><tbody>
+<tr><td>A (top)</td><td>Show the time for 15 s</td><td>Snooze</td><td>2 s: dismiss</td></tr>
+<tr><td>B (rear)</td><td>Front display off / on</td><td>—</td><td>3 s: projector off / on · 10 s: forget Wi-Fi</td></tr>
+</tbody></table>
+
+<h2>Troubleshooting</h2>
+<table><thead><tr><th>Symptom</th><th>Fix</th></tr></thead><tbody>
+<tr><td>Build error mentioning <code>Audio</code>, <code>setVolume</code> or <code>connecttoFS</code></td><td>The ESP32-audioI2S library changes often. Pin a release by adding <code>#&lt;tag&gt;</code> from its GitHub releases page to the library URL in <code>platformio.ini</code>.</td></tr>
+<tr><td>Build error on <code>ledcAttach</code></td><td>Old Arduino core 2.x. Update the espressif32 platform in PlatformIO.</td></tr>
+<tr><td>Build error on <code>sntp_set_sync_interval</code> or <code>sntp_restart</code></td><td>Use the <code>esp_sntp_…</code> names instead.</td></tr>
+<tr><td>Projector shows <code>NO TIME YET</code></td><td>No Wi-Fi and no RTC time yet. Check the DS3231 wiring; the page should say "RTC backup ok".</td></tr>
+<tr><td>Bright rectangle with dark digits</td><td>Tick <b>Bright digits on dark</b>, raise LCD contrast, and tape over the glass border.</td></tr>
+<tr><td>LCD turns black or blotchy</td><td>It's too hot. Lower the projector brightness and check the tower vents aren't blocked.</td></tr>
+<tr><td>No sound</td><td>Check the amplifier has 5 V and the speaker is connected, then press Play on beep.wav. If your own file won't play, re-save it as 44.1 kHz MP3.</td></tr>
+<tr><td>Resets when the alarm starts</td><td>The power supply is too weak or the wires too thin. Lower the sunrise max brightness.</td></tr>
+</tbody></table>
+<p class="note">The firmware hasn't been compiled yet. Its scheduling logic is unit tested (<code>firmware/test</code>), but expect to fix one or two library-version errors on the first build. The table above lists the likely ones.</p>
+</main>
+<footer>Ceiling Clock · <a href="https://github.com/ScottYates/ceilingclock/tree/main/firmware">firmware source</a></footer>
+</body></html>
