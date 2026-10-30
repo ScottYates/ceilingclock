@@ -1,0 +1,5 @@
+.pio/
+.vscode/
+*.o
+a.out
+node_modules/
