@@ -21,6 +21,12 @@ make run
 
 Then open http://localhost:8080/. On Windows, use WSL.
 
+## Browser build (live demo)
+
+`make wasm` compiles the same firmware to WebAssembly with the system clang, using Ubuntu's wasm32 libraries (`apt install wasi-libc libc++-18-dev-wasm32 libc++abi-18-dev-wasm32 libclang-rt-18-dev-wasm32`). It writes `docs/demo/ceilingclock.wasm` and regenerates `docs/demo/index.html` from `src/web_ui.h`. `docs/demo/sim.js` runs the firmware in the page and answers the page's `/api/...` requests from it.
+
+Differences in the browser: files are kept in memory (lost on reload), local time comes from the browser's time zone, and the audio work runs from `loop()` because there are no threads (`SIM_NO_THREADS`).
+
 ## Simulator-only controls
 
 | Request | Effect |

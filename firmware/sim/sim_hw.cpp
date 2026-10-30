@@ -8,16 +8,19 @@
 
 #include <chrono>
 #include <deque>
-#include <mutex>
-#include <thread>
+#include <map>
 #include <cstdarg>
 #include <sys/stat.h>
+#ifndef SIM_WASM
+#include <mutex>
+#include <thread>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <poll.h>
-#ifndef MSG_NOSIGNAL
+#endif
+#if !defined(MSG_NOSIGNAL) && !defined(SIM_WASM)
 #define MSG_NOSIGNAL 0   // macOS: SIGPIPE is ignored in main() instead
 #endif
 
@@ -51,8 +54,12 @@ static const auto t0 = std::chrono::steady_clock::now();
 unsigned long millis() {
   return (unsigned long)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
 }
+#ifdef SIM_WASM
+void delay(unsigned long) {}          // the browser calls loop() on a timer instead
+#else
 void delay(unsigned long ms) { usleep(ms * 1000); }
-extern "C" time_t sim_time(time_t* t) noexcept {
+#endif
+extern "C" time_t sim_time(time_t* t) SIM_NOEXCEPT {
   time_t v = ::time(nullptr) + sim::timeOffset;
   if (t) *t = v;
   return v;
@@ -68,7 +75,9 @@ static void fakeSync() {
 bool sntp_restart() { fakeSync(); return true; }
 void configTzTime(const char* tz, const char*, const char*, const char*) {
   setenv("TZ", tz, 1);
+#ifndef SIM_WASM
   tzset();
+#endif
   fakeSync();   // the simulator's "NTP server" answers immediately with the host clock
 }
 void EspClass::restart() { printf("ESP.restart()\n"); exit(0); }
@@ -88,26 +97,38 @@ bool ledcAttach(int, int, int) { return true; }
 void ledcWrite(int, uint32_t duty) { sim::hw.projDuty = duty; }
 
 // ---------------------------------------------------------------- FreeRTOS
+#ifdef SIM_WASM
+struct NoLock { void lock() {} void unlock() {} };   // single-threaded in the browser
+#define SIM_LOCK(q)
+struct SimQueue { std::deque<std::vector<uint8_t>> q; size_t item; int cap; };
+#else
+#define SIM_LOCK(q) std::lock_guard<std::mutex> l((q)->m)
 struct SimQueue { std::mutex m; std::deque<std::vector<uint8_t>> q; size_t item; int cap; };
+#endif
 QueueHandle_t xQueueCreate(int len, size_t itemSize) { auto* q = new SimQueue; q->item = itemSize; q->cap = len; return q; }
 BaseType_t xQueueSend(QueueHandle_t h, const void* item, int) {
-  auto* q = (SimQueue*)h; std::lock_guard<std::mutex> l(q->m);
+  auto* q = (SimQueue*)h; SIM_LOCK(q);
   if ((int)q->q.size() >= q->cap) return pdFALSE;
   q->q.emplace_back((const uint8_t*)item, (const uint8_t*)item + q->item);
   return pdTRUE;
 }
 BaseType_t xQueueReceive(QueueHandle_t h, void* item, int) {
-  auto* q = (SimQueue*)h; std::lock_guard<std::mutex> l(q->m);
+  auto* q = (SimQueue*)h; SIM_LOCK(q);
   if (q->q.empty()) return pdFALSE;
   memcpy(item, q->q.front().data(), q->item);
   q->q.pop_front();
   return pdTRUE;
 }
+#ifdef SIM_WASM
+void vTaskDelay(int) {}
+BaseType_t xTaskCreatePinnedToCore(void (*)(void*), const char*, int, void*, int, TaskHandle_t*, int) { return pdFALSE; }
+#else
 void vTaskDelay(int ticks) { usleep(ticks * 1000); }
 BaseType_t xTaskCreatePinnedToCore(void (*fn)(void*), const char*, int, void* arg, int, TaskHandle_t*, int) {
   std::thread(fn, arg).detach();
   return pdTRUE;
 }
+#endif
 
 // ---------------------------------------------------------------- TM1637
 static const uint8_t DIGIT_SEG[10] = {0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f, 0x6f};
@@ -151,6 +172,7 @@ void GFXcanvas1::drawChar(char c) {
   cx_ += 6 * size_;
 }
 
+#ifndef SIM_WASM
 // ---------------------------------------------------------------- LittleFS on a folder
 static std::string fsRoot() { const char* e = getenv("SIM_FS_DIR"); return e ? e : "sim_fs"; }
 std::string fs::FS::real(const char* path) { return fsRoot() + (path[0] == '/' ? "" : "/") + path; }
@@ -199,19 +221,84 @@ File File::openNextFile() {
   return File();
 }
 
+#else
+// ---------------------------------------------------------------- LittleFS in memory (browser build)
+namespace memfs {
+std::map<std::string, std::vector<uint8_t>> files;
+bool isDir(const std::string& p) {
+  std::string pre = p + (p.size() && p.back() == '/' ? "" : "/");
+  for (auto& kv : files) if (kv.first.rfind(pre, 0) == 0) return true;
+  return p == "/" || p == "/sounds";
+}
+}
+std::string fs::FS::real(const char* path) { return path; }
+bool fs::FS::begin(bool) { return true; }
+File fs::FS::open(const char* path, const char* mode) { return File(path, mode); }
+bool fs::FS::exists(const char* path) { return memfs::files.count(path) || memfs::isDir(path); }
+bool fs::FS::remove(const char* path) { return memfs::files.erase(path) > 0; }
+bool fs::FS::rename(const char* a, const char* b) {
+  auto it = memfs::files.find(a); if (it == memfs::files.end()) return false;
+  memfs::files[b] = std::move(it->second); memfs::files.erase(a); return true;
+}
+bool fs::FS::mkdir(const char*) { return true; }
+size_t fs::FS::usedBytes() { size_t t = 0; for (auto& kv : memfs::files) t += kv.second.size(); return t; }
+
+File::File(const std::string& path, const char* mode) : path_(path) {
+  auto slash = path.rfind('/');
+  name_ = slash == std::string::npos ? path : path.substr(slash + 1);
+  if (mode[0] == 'r' && !memfs::files.count(path) && memfs::isDir(path)) {
+    mdir_ = true; mopen_ = true;
+    std::string pre = path + (path.back() == '/' ? "" : "/");
+    for (auto& kv : memfs::files)
+      if (kv.first.rfind(pre, 0) == 0 && kv.first.find('/', pre.size()) == std::string::npos) mlist_.push_back(kv.first);
+    return;
+  }
+  if (mode[0] == 'w') { memfs::files[path].clear(); mopen_ = true; }
+  else if (mode[0] == 'a') { mopen_ = true; mpos_ = memfs::files[path].size(); }
+  else mopen_ = memfs::files.count(path) > 0;
+}
+File& File::operator=(File&& o) noexcept {
+  if (this != &o) {
+    path_ = o.path_; name_ = o.name_; mopen_ = o.mopen_; mdir_ = o.mdir_; mpos_ = o.mpos_; midx_ = o.midx_; mlist_ = std::move(o.mlist_);
+    o.mopen_ = false;
+  }
+  return *this;
+}
+const char* File::name() const { return name_.c_str(); }
+size_t File::size() const { auto it = memfs::files.find(path_); return it == memfs::files.end() ? 0 : it->second.size(); }
+void File::close() { mopen_ = false; }
+int File::available() { return mopen_ && !mdir_ ? (int)(size() - mpos_) : 0; }
+int File::read() { if (!available()) return -1; return memfs::files[path_][mpos_++]; }
+size_t File::readBytes(char* b, size_t n) {
+  size_t k = std::min(n, (size_t)available());
+  if (k) memcpy(b, memfs::files[path_].data() + mpos_, k);
+  mpos_ += k; return k;
+}
+size_t File::write(uint8_t c) { return write(&c, 1); }
+size_t File::write(const uint8_t* b, size_t n) {
+  if (!mopen_ || mdir_) return 0;
+  auto& v = memfs::files[path_]; v.insert(v.end(), b, b + n); mpos_ = v.size(); return n;
+}
+File File::openNextFile() {
+  if (!mdir_ || midx_ >= mlist_.size()) return File();
+  return File(mlist_[midx_++], "r");
+}
+
+#endif
+
 // ---------------------------------------------------------------- Audio (simulated playback)
 void Audio::setVolume(uint8_t v) { sim::hw.audioVol = v; }
 bool Audio::connecttoFS(fs::FS& f, const char* path) {
-  std::string real = f.real(path);
-  FILE* fp = fopen(real.c_str(), "rb");
+  File fp = f.open(path, "r");
   if (!fp) { playing_ = false; sim::hw.audioPlaying = false; return false; }
-  fseek(fp, 0, SEEK_END); long size = ftell(fp);
+  long size = (long)fp.size();
   durMs_ = 3000;
   if (strstr(path, ".wav") && size > 44) {
-    uint32_t byteRate = 0; fseek(fp, 28, SEEK_SET);
-    if (fread(&byteRate, 4, 1, fp) == 1 && byteRate) durMs_ = (unsigned long)((size - 44) * 1000ULL / byteRate);
+    char hdr[32]; uint32_t byteRate = 0;
+    if (fp.readBytes(hdr, 32) == 32) memcpy(&byteRate, hdr + 28, 4);
+    if (byteRate) durMs_ = (unsigned long)((size - 44) * 1000ULL / byteRate);
   }
-  fclose(fp);
+  fp.close();
   playing_ = true; start_ = millis();
   sim::hw.audioPlaying = true; sim::hw.audioFile = path;
   return true;
@@ -248,6 +335,20 @@ static std::string b64decode(const std::string& in) {
   return out;
 }
 
+void WebServer::handleRequest(const std::string& method, const std::string& target, const std::string& ctype,
+                              const std::string& body, const std::string& auth) {
+  std::map<std::string, std::string> h;
+  if (!ctype.empty()) h["content-type"] = ctype;
+  if (!auth.empty()) h["authorization"] = auth;
+  h["content-length"] = std::to_string(body.size());
+  respCode = 0; respType.clear(); respBody.clear();
+  dispatch(-1, method, target, body, h);
+}
+
+#ifdef SIM_WASM
+void WebServer::begin() { printf("[sim] web server running inside the browser page\n"); }
+void WebServer::handleClient() {}
+#else
 void WebServer::begin() {
   const char* e = getenv("SIM_PORT");
   int port = e ? atoi(e) : 8080;
@@ -287,6 +388,8 @@ void WebServer::handleClient() {
   dispatch(fd, method, target, body, headers);
   close(fd);
 }
+
+#endif
 
 void WebServer::dispatch(int fd, const std::string& method, const std::string& target, const std::string& body,
                          const std::map<std::string, std::string>& headers) {
@@ -330,10 +433,16 @@ void WebServer::send(int code, const char* type, const String& b) {
   if (sent_) return;
   sent_ = true;
   const char* reason = code == 200 ? "OK" : code == 401 ? "Unauthorized" : code == 404 ? "Not Found" : code == 400 ? "Bad Request" : "Error";
+  if (client_ < 0) {   // in-page request (browser build)
+    respCode = code; respType = type; respBody = b.s;
+    return;
+  }
+#ifndef SIM_WASM
   std::string out = "HTTP/1.1 " + std::to_string(code) + " " + reason + "\r\nContent-Type: " + type +
                     "\r\nContent-Length: " + std::to_string(b.length()) + "\r\nCache-Control: no-store\r\nConnection: close\r\n" + extraHeaders_ + "\r\n" + b.s;
   size_t off = 0;
   while (off < out.size()) { ssize_t n = ::send(client_, out.data() + off, out.size() - off, MSG_NOSIGNAL); if (n <= 0) break; off += n; }
+#endif
 }
 String WebServer::arg(const char* name) { auto it = args_.find(name); return it == args_.end() ? String() : String(it->second); }
 bool WebServer::authenticate(const char* user, const char* pass) {

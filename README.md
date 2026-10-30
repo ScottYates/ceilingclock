@@ -24,7 +24,7 @@ A Wi-Fi ceiling projection alarm clock built on an ESP32-S3.
 
 ## Try it without hardware
 
-`firmware/sim/` runs the same firmware code on a Linux or Mac computer with simulated hardware. See its README.
+Live demo in the browser: https://scottyates.github.io/ceilingclock/demo/ (the real firmware compiled to WebAssembly). `firmware/sim/` also builds it as a Linux or Mac program. See its README.
 
 ## Build the firmware
 

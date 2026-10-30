@@ -23,9 +23,27 @@ $(OUT)/ceilingclock-sim: $(OUT)/main.o $(OUT)/settings.o $(OUT)/sim_hw.o $(OUT)/
 $(OUT):
 	mkdir -p $(OUT)
 
+# ---- browser build (WebAssembly) with the system clang + Ubuntu's wasm32 libraries:
+#      apt install wasi-libc libc++-18-dev-wasm32 libc++abi-18-dev-wasm32 libclang-rt-18-dev-wasm32
+WASM_CXX   ?= clang++
+WASM_FLAGS := --target=wasm32-wasi --sysroot=/usr -std=gnu++17 -Oz -fno-exceptions \
+              -DSIM_WASM -DSIM_NO_THREADS -DARDUINO=10819 -DARDUINOJSON_ENABLE_PROGMEM=0 \
+              -Ishim -I$(FW) -I$(AJ) -Wno-unused-function
+WASM_OUT   := ../../docs/demo/ceilingclock.wasm
+
+wasm: $(WASM_OUT)
+$(WASM_OUT): $(FW)/main.cpp $(FW)/settings.cpp $(FW)/*.h sim_hw.cpp sim_wasm.cpp shim/*.h
+	mkdir -p $(OUT)/wasm $(dir $(WASM_OUT))
+	$(WASM_CXX) $(WASM_FLAGS) -Dtime=sim_time -Dlocaltime_r=sim_localtime_r -Dmktime=sim_mktime -c $(FW)/main.cpp -o $(OUT)/wasm/main.o
+	$(WASM_CXX) $(WASM_FLAGS) -c $(FW)/settings.cpp -o $(OUT)/wasm/settings.o
+	$(WASM_CXX) $(WASM_FLAGS) -c sim_hw.cpp -o $(OUT)/wasm/sim_hw.o
+	$(WASM_CXX) $(WASM_FLAGS) -c sim_wasm.cpp -o $(OUT)/wasm/sim_wasm.o
+	$(WASM_CXX) $(WASM_FLAGS) -mexec-model=reactor $(OUT)/wasm/*.o -lc++abi -Wl,--strip-all -o $@
+	python3 make_demo_page.py
+
 run: all
 	./$(OUT)/ceilingclock-sim
 
 clean:
 	rm -rf $(OUT)
-.PHONY: all run clean
+.PHONY: all run clean wasm

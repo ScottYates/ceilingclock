@@ -71,25 +71,36 @@ struct AudioCmd { AudioCmdType type; uint8_t vol; char path[72]; };
 QueueHandle_t audioQ;
 volatile bool audioRunning = false;
 
-void audioTask(void*) {
-  Audio* audio = new Audio();
-  audio->setPinout(PIN_I2S_BCLK, PIN_I2S_LRC, PIN_I2S_DOUT);
-  audio->setVolume(0);
+Audio* audioPlayer = nullptr;
+
+void audioInit() {
+  audioPlayer = new Audio();
+  audioPlayer->setPinout(PIN_I2S_BCLK, PIN_I2S_LRC, PIN_I2S_DOUT);
+  audioPlayer->setVolume(0);
+}
+
+// Handles queued commands and feeds the decoder; called continuously by the audio task.
+void audioStep() {
   AudioCmd c;
-  for (;;) {
-    while (xQueueReceive(audioQ, &c, 0) == pdTRUE) {
-      if (c.type == AC_PLAY) {
-        audio->stopSong();
-        audio->setVolume(c.vol);
-        audio->connecttoFS(LittleFS, c.path);
-      } else if (c.type == AC_STOP) {
-        audio->stopSong();
-      } else {
-        audio->setVolume(c.vol);
-      }
+  while (xQueueReceive(audioQ, &c, 0) == pdTRUE) {
+    if (c.type == AC_PLAY) {
+      audioPlayer->stopSong();
+      audioPlayer->setVolume(c.vol);
+      audioPlayer->connecttoFS(LittleFS, c.path);
+    } else if (c.type == AC_STOP) {
+      audioPlayer->stopSong();
+    } else {
+      audioPlayer->setVolume(c.vol);
     }
-    audio->loop();
-    audioRunning = audio->isRunning();
+  }
+  audioPlayer->loop();
+  audioRunning = audioPlayer->isRunning();
+}
+
+void audioTask(void*) {
+  audioInit();
+  for (;;) {
+    audioStep();
     vTaskDelay(1);
   }
 }
@@ -667,7 +678,11 @@ void setup() {
   }
 
   audioQ = xQueueCreate(8, sizeof(AudioCmd));
+#ifdef SIM_NO_THREADS   // browser simulator has no threads: audio work runs from loop() instead
+  audioInit();
+#else
   xTaskCreatePinnedToCore(audioTask, "audio", 8192, nullptr, 3, nullptr, 0);
+#endif
 
   WiFi.setHostname(HOSTNAME);
   wm.setConfigPortalBlocking(false);
@@ -678,6 +693,9 @@ void setup() {
 }
 
 void loop() {
+#ifdef SIM_NO_THREADS
+  audioStep();
+#endif
   wm.process();
   // Wait for the setup portal (also on port 80) to close before starting our server.
   if (!serverStarted && WiFi.status() == WL_CONNECTED && !(WiFi.getMode() & WIFI_AP)) setupServer();

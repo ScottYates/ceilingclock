@@ -16,6 +16,12 @@
 #include <unistd.h>
 
 #define NATIVE_SIM 1
+// glibc declares time() noexcept; wasi-libc (browser build) does not. sim_time must match.
+#ifdef __wasi__
+#define SIM_NOEXCEPT
+#else
+#define SIM_NOEXCEPT noexcept
+#endif
 #ifndef PI
 #define PI 3.14159265358979f
 #endif
@@ -118,7 +124,16 @@ int analogRead(int pin);
 void analogReadResolution(int bits);
 bool ledcAttach(int pin, int freq, int res);
 void ledcWrite(int pin, uint32_t duty);
-extern "C" time_t sim_time(time_t* t) noexcept;
+extern "C" time_t sim_time(time_t* t) SIM_NOEXCEPT;
+#ifdef SIM_WASM
+// wasi-libc has no time zones, so the browser build asks the browser (see sim_wasm.cpp).
+extern "C" struct tm* sim_localtime_r(const time_t* t, struct tm* out);
+extern "C" time_t sim_mktime(struct tm* tm);
+#endif
+#ifdef __wasi__
+inline void tzset() {}                                                    // time zones come from the browser
+inline int settimeofday(const struct timeval*, const void*) { return 0; } // no RTC to load time from
+#endif
 void configTzTime(const char* tz, const char* s1, const char* s2 = nullptr, const char* s3 = nullptr);
 
 struct EspClass { [[noreturn]] void restart(); };

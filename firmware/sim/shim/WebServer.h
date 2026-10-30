@@ -31,6 +31,13 @@ class WebServer {
   void requestAuthentication();
   HTTPUpload& upload() { return upload_; }
 
+  // Runs one request through the firmware's handlers. The response is captured in resp*
+  // (used by the browser build, where there are no sockets).
+  void handleRequest(const std::string& method, const std::string& target, const std::string& ctype,
+                     const std::string& body, const std::string& auth = "");
+  int respCode = 0;
+  std::string respType, respBody;
+
  private:
   struct Route { std::string uri; HTTPMethod m; Handler h, up; };
   void dispatch(int fd, const std::string& method, const std::string& path, const std::string& body,

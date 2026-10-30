@@ -3,12 +3,12 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ceiling Clock: a Wi-Fi ceiling projection alarm clock</title>
 <meta name="description" content="Build a Wi-Fi synced ceiling projection alarm clock with an ESP32-S3: 3D model, assembly steps, wiring and parts list.">
-<link rel="stylesheet" href="style.css?v=20261030l">
+<link rel="stylesheet" href="style.css?v=20261030m">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}</script>
 </head><body>
 <header class="site"><div class="in">
 <a class="brand" href="index.html"><span class="dot"></span>Ceiling Clock</a>
-<nav><a href="index.html" class="on">3D model</a><a href="assembly.html">Assembly</a><a href="wiring.html">Wiring</a><a href="parts.html">Parts</a><a href="firmware.html">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
+<nav><a href="index.html" class="on">3D model</a><a href="assembly.html">Assembly</a><a href="wiring.html">Wiring</a><a href="parts.html">Parts</a><a href="demo/">Live demo</a><a href="firmware.html">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
 </div></header>
 <main>
 <h1>A ceiling projection alarm clock that sets itself</h1>
@@ -34,6 +34,8 @@
   <div class="card"><h3>Dark when you want</h3>The front display and the projector can each be always on, fully off, night-only or day-only, with separate day and night brightness.</div>
 </div>
 
+<p style="margin:18px 0"><a class="btn" href="demo/">Try the clock's web page live →</a> <span style="color:var(--mut);font-size:.95rem">The real firmware runs in your browser: set an alarm, fast-forward time, press the buttons.</span></p>
+
 <h2>Build it</h2>
 <div class="grid3">
   <a class="card" href="parts.html" style="text-decoration:none;color:inherit"><h3>1. Order the parts →</h3>One button opens every part on Amazon, ready to add to your cart. Most items come in multi-packs, so expect roughly $150–250 including spares (prices weren't checked).</a>
@@ -47,9 +49,9 @@
 <footer>Ceiling Clock · open hardware and firmware · <a href="https://github.com/ScottYates/ceilingclock">source on GitHub</a></footer>
 
 <script type="module">
-import { createViewer } from './js/viewer.js?v=20261030l';
-import { PARTS } from './js/parts.js?v=20261030l';
-import { STEPS } from './js/steps.js?v=20261030l';
+import { createViewer } from './js/viewer.js?v=20261030m';
+import { PARTS } from './js/parts.js?v=20261030m';
+import { STEPS } from './js/steps.js?v=20261030m';
 
 const v = createViewer(document.getElementById('viewer'));
 const ex = document.getElementById('explode');

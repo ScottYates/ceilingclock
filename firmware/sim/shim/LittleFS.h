@@ -12,7 +12,11 @@ class File : public Stream {
   File(File&& o) noexcept { *this = std::move(o); }
   File& operator=(File&& o) noexcept;
   ~File() { close(); }
+#ifdef SIM_WASM
+  explicit operator bool() const { return mopen_; }
+#else
   explicit operator bool() const { return fp_ || dir_; }
+#endif
   const char* name() const;
   size_t size() const;
   void close();
@@ -26,6 +30,12 @@ class File : public Stream {
   FILE* fp_ = nullptr;
   DIR* dir_ = nullptr;
   std::string path_, name_;
+#ifdef SIM_WASM
+  // browser build: files live in memory (see sim_hw.cpp)
+  bool mopen_ = false, mdir_ = false;
+  size_t mpos_ = 0, midx_ = 0;
+  std::vector<std::string> mlist_;
+#endif
 };
 
 namespace fs {
