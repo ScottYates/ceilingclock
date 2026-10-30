@@ -11,7 +11,8 @@ enum DispMode : uint8_t { DM_ON = 0, DM_OFF = 1, DM_NIGHT_ONLY = 2, DM_DAY_ONLY 
 struct AlarmCfg {
   AlarmTime t;
   String label = "Alarm";
-  String sound = "/sounds/beep.wav";
+  String sound = "/sounds/beep.wav";  // file to play; also the backup when a stream can't play
+  String stream = "";       // optional http(s) URL: internet radio, an audio file, or a podcast feed (newest episode)
   uint8_t volume = 12;      // 0-21
   uint16_t rampSec = 60;    // fade-in time for the sound
   uint8_t sunriseMin = 15;  // light ramps up this many minutes before; 0 = off

@@ -39,6 +39,7 @@ void configToJson(const Config& c, JsonDocument& doc) {
     JsonObject o = arr.add<JsonObject>();
     o["enabled"] = a.t.enabled; o["hour"] = a.t.hour; o["minute"] = a.t.minute;
     o["days"] = a.t.days; o["skipNext"] = a.t.skipNext; o["label"] = a.label; o["sound"] = a.sound;
+    o["stream"] = a.stream;
     o["volume"] = a.volume; o["rampSec"] = a.rampSec; o["sunriseMin"] = a.sunriseMin;
     o["snoozeMin"] = a.snoozeMin; o["maxRingMin"] = a.maxRingMin;
   }
@@ -72,6 +73,9 @@ bool configFromJson(Config& c, JsonVariantConst v) {
       a.t.skipNext = o["skipNext"] | false;
       a.label = o["label"] | "Alarm";
       a.sound = o["sound"] | "/sounds/beep.wav";
+      a.stream = o["stream"] | "";
+      a.stream.trim();
+      if (a.stream.length() > 280 || !(a.stream.startsWith("http://") || a.stream.startsWith("https://"))) a.stream = "";
       a.volume = constrain((int)(o["volume"] | 12), 0, 21);
       a.rampSec = constrain((int)(o["rampSec"] | 60), 0, 1800);
       a.sunriseMin = constrain((int)(o["sunriseMin"] | 15), 0, 60);

@@ -33,7 +33,12 @@ Differences in the browser: files are kept in memory (lost on reload), local tim
 | --- | --- |
 | `GET /sim/hw` | What the firmware is sending to each piece of hardware (LCD pixels, LED PWM, display segments, ring colours, audio) |
 | `POST /sim/time?add=600` | Fast-forward the clock by 600 seconds. Keep steps under 300 s when you want alarms to fire: the firmware treats bigger jumps as a clock correction |
-| `POST /sim/button?b=A&ms=150` | Press button A (top) or B (back) for that many milliseconds; `ms=2500` is a long press |
+| `POST /sim/button?b=A&ms=150` | Press button A (top) or B (side) for that many milliseconds; `ms=2500` is a long press |
 | `POST /sim/ldr?v=300` | Set the light-sensor reading (0–4095) |
+| `POST /sim/net?ok=0` | Turn the simulated internet off (`ok=1` on): streams stop and feeds can't be read, so the backup sound rings |
+| `POST /sim/streamfail` | Report that the stream couldn't be played (the browser demo sends this when its player fails) |
+| `GET /sim/file?path=/sounds/beep.wav` | A sound file's bytes, so the browser demo can play it |
+
+Streams are simulated: the firmware's stream "plays" until it's stopped or the internet goes off. Podcast feeds are really fetched: with `curl` in the PC build, and by the page in the browser build (where the browser only allows feeds from sites that permit it; `docs/demo/sample-feed.xml` always works).
 
 Example: `curl -X POST "localhost:8080/sim/time?add=240"`

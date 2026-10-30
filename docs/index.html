@@ -3,7 +3,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ceiling Clock: a Wi-Fi ceiling projection alarm clock</title>
 <meta name="description" content="Build a Wi-Fi synced ceiling projection alarm clock with an ESP32-S3: 3D model, assembly steps, wiring and parts list.">
-<link rel="stylesheet" href="style.css?v=20261030q">
+<link rel="stylesheet" href="style.css?v=20261030r">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}</script>
 </head><body>
 <header class="site"><div class="in">
@@ -21,6 +21,13 @@
     <input type="range" id="explode" min="0" max="100" value="0">
     <label class="range" for="tilt" style="margin-top:12px">Projector tilt: <b id="tiltv">0°</b> <span style="font-weight:400;color:var(--mut)">(moves the time forward on the ceiling)</span></label>
     <input type="range" id="tilt" min="-5" max="30" step="5" value="0">
+    <label class="range" for="focus" style="margin-top:12px">Lens focus: <b id="focusv">0 mm</b> <span style="font-weight:400;color:var(--mut)">(slide the lens sleeve)</span></label>
+    <input type="range" id="focus" min="-5" max="5" step="0.5" value="0">
+    <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+      <button class="btn ghost" id="bBeam" style="padding:6px 10px;font-size:.85rem">Show light on the ceiling</button>
+      <button class="btn ghost" id="bFocus" style="padding:6px 10px;font-size:.85rem">Show focusing</button>
+    </div>
+    <p id="optics" style="font-size:.85rem;color:var(--mut);margin:6px 0 0"></p>
     <div style="display:flex;gap:6px;margin-top:8px">
       <button class="btn ghost" id="bAsm" style="padding:6px 10px;font-size:.85rem">Assembled</button>
       <button class="btn ghost" id="bExp" style="padding:6px 10px;font-size:.85rem">Exploded</button>
@@ -51,9 +58,10 @@
 <footer>Ceiling Clock · open hardware and firmware · <a href="https://github.com/ScottYates/ceilingclock">source on GitHub</a></footer>
 
 <script type="module">
-import { createViewer } from './js/viewer.js?v=20261030q';
-import { PARTS } from './js/parts.js?v=20261030q';
-import { STEPS } from './js/steps.js?v=20261030q';
+import { createViewer } from './js/viewer.js?v=20261030r';
+import { PARTS } from './js/parts.js?v=20261030r';
+import { STEPS } from './js/steps.js?v=20261030r';
+import { optics } from './js/optics.js?v=20261030r';
 
 const v = createViewer(document.getElementById('viewer'));
 const ex = document.getElementById('explode');
@@ -81,8 +89,41 @@ function select(name) {
 v.onPick((name) => select(name && name !== selected ? name : null));
 ex.oninput = () => v.setState({ explode: ex.value / 100 });
 const tl = document.getElementById('tilt'), tv = document.getElementById('tiltv');
-const showTilt = (d) => { tl.value = d; tv.textContent = d + '°'; };
+const fo = document.getElementById('focus'), fv = document.getElementById('focusv');
+function showOptics() {
+  const o = optics(v.focus, v.tilt);
+  document.getElementById('optics').textContent = `Lens ${o.v.toFixed(1)} mm from the LCD: sharp at ${(o.sharpAt / 1000).toFixed(2)} m. ` +
+    `The ceiling is ${(o.D / 1000).toFixed(2)} m away, so the time is ${o.verdict}` + (v.tilt ? ` and lands ${Math.round(o.forward / 10)} cm forward.` : '.');
+  document.getElementById('bBeam').textContent = v.beam ? 'Hide the light' : 'Show light on the ceiling';
+}
+const showTilt = (d) => { tl.value = d; tv.textContent = d + '°'; showOptics(); };
+const showFocus = (f) => { fo.value = f; fv.textContent = (f > 0 ? '+' : '') + f + ' mm'; showOptics(); };
 tl.oninput = () => { v.setState({ tilt: +tl.value }); showTilt(+tl.value); };
+fo.oninput = () => { v.setState({ focus: +fo.value }); showFocus(+fo.value); };
+const BEAM_CAM = { camera: [2500, 450, 2900], target: [0, 1000, 250] };
+document.getElementById('bBeam').onclick = () => {
+  const on = !v.beam;
+  v.setState(on ? { beam: true, explode: 0, ...BEAM_CAM } : { beam: false, camera: [300, 250, 390], target: [0, 40, 0] });
+  ex.value = 0; showOptics();
+};
+// Show focusing: the light on the ceiling, then the sleeve slides from blurry to sharp
+let focusAnim = null;
+document.getElementById('bFocus').onclick = () => {
+  cancelAnimationFrame(focusAnim);
+  v.setState({ beam: true, explode: 0, ...BEAM_CAM }); ex.value = 0;
+  const path = [[0, 4], [1400, -3], [2600, 1.5], [3500, -0.8], [4200, 0]];   // overshoot and settle, like turning by hand
+  const t0 = performance.now();
+  const step = () => {
+    const t = performance.now() - t0;
+    let f = 0;
+    for (let i = 1; i < path.length; i++) if (t <= path[i][0]) { const [ta, fa] = path[i - 1], [tb, fb] = path[i]; const k = (t - ta) / (tb - ta); f = fa + (fb - fa) * (0.5 - Math.cos(Math.PI * k) / 2); break; }
+    if (t > path[path.length - 1][0]) f = 0;
+    f = Math.round(f * 10) / 10;
+    v.setState({ focus: f }); showFocus(f);
+    if (t <= path[path.length - 1][0]) focusAnim = requestAnimationFrame(step);
+  };
+  step();
+};
 const anim = (to) => { v.setState({ explode: to, animate: true }); ex.value = to * 100; };
 document.getElementById('bAsm').onclick = () => anim(0);
 document.getElementById('bExp').onclick = () => anim(1);
@@ -92,8 +133,8 @@ v.ready.then(() => {
   document.getElementById('loading').remove();
   // index.html#step=N shows assembly step N (used by the assembly page's "Open in 3D" links)
   const m = location.hash.match(/step=(\d+)/);
-  if (m && STEPS[+m[1]]) { const s = STEPS[+m[1]].view; v.setState({ tilt: 0, ...s }); ex.value = s.explode * 100; showTilt(s.tilt || 0); }
-  else setTimeout(() => anim(0.4), 400);
+  if (m && STEPS[+m[1]]) { const s = STEPS[+m[1]].view; v.setState({ tilt: 0, focus: 0, beam: false, ...s }); ex.value = s.explode * 100; showTilt(s.tilt || 0); showFocus(s.focus || 0); }
+  else { showOptics(); setTimeout(() => anim(0.4), 400); }
   window.__viewerReady = true;
 }).catch((e) => { document.getElementById('loading').textContent = 'Could not load the 3D model: ' + e.message; });
 window.__viewer = v;

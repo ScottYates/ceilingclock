@@ -115,11 +115,11 @@ export const STEPS = [
   },
   {
     title: 'Focus, aim and finish',
-    view: { visible: s8, highlight: [], explode: 0, tilt: 20, camera: [330, 230, 400], target: [0, 45, 0] },
+    view: { visible: s8, highlight: [], explode: 0, tilt: 20, beam: true, camera: [2500, 450, 2900], target: [0, 1000, 250] },
     html: `<ol>
 <li>Plug in the 5 V supply. The projector shows <code>WIFI SETUP</code> until you connect it (see <a href="firmware.html">Firmware</a>).</li>
 <li><b>Aim:</b> hold the lens mount and roll the barrel toward the front. It clicks every 5°, from 5° back to 30° forward; the grooves on the barrel's right end show the steps. The picture turns with the barrel, so the time stays straight.</li>
-<li><b>Focus:</b> darken the room, slide the lens sleeve up or down (about ±5 mm) until the digits are sharp, then push the tapered focus pin into the hole at the front of the lens mount. Tilting further sends the light further, so refocus after a big change.</li>
+<li><b>Focus:</b> darken the room and slide the lens sleeve up or down (about ±5 mm) until the digits are sharp. Sliding it up focuses closer; sliding it down focuses further away. Push the tapered focus pin into the hole at the front of the lens mount to hold it. Tilting further sends the light further, so refocus after a big change. On the <a href="index.html">3D model</a> page, "Show focusing" plays this.</li>
 <li>The mirror flips the image once. If the time reads mirrored or upside down, fix it with <b>Mirror left/right</b> and <b>Flip upside down</b> on the settings page.</li>
 <li>Adjust <b>LCD contrast</b> until the background is as dark as it gets without the digits fading.</li></ol>
 <table><thead><tr><th>Tilt</th><th>0°</th><th>10°</th><th>15°</th><th>20°</th><th>25°</th><th>30°</th></tr></thead><tbody>

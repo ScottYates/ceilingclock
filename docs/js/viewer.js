@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { PARTS, ALL, MATERIALS, AXIS } from './parts.js?v=20261030q';
+import { PARTS, ALL, MATERIALS, AXIS } from './parts.js?v=20261030r';
+import { optics, LENS, CEILING } from './optics.js?v=20261030r';
 
-// createViewer(container) -> { ready: Promise, setState({visible, highlight, explode, tilt, camera, target}), onPick }
+// createViewer(container) -> { ready: Promise, setState({visible, highlight, explode, tilt, focus, beam, camera, target}), onPick }
 export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'models/clock.glb' } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -38,7 +39,7 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
   root.add(pivot);
 
   const meshes = {};
-  const state = { visible: ALL, highlight: [], explode: 0, tilt: 0 };
+  const state = { visible: ALL, highlight: [], explode: 0, tilt: 0, focus: 0, beam: false };
   let explodeAnim = null;
   const listeners = [];
 
@@ -79,7 +80,8 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
       for (const m of list) {
         const mt = m.userData.mt, e = p.explode;
         m.visible = vis;
-        m.position.set(m.userData.base.x + e[0] * state.explode, m.userData.base.y + e[1] * state.explode, m.userData.base.z + e[2] * state.explode);
+        m.position.set(m.userData.base.x + e[0] * state.explode, m.userData.base.y + e[1] * state.explode,
+                       m.userData.base.z + e[2] * state.explode + (p.focuses ? state.focus : 0));
         m.material.color.setHex(dim ? 0xc9c5bc : mt.color);
         m.material.emissive.setHex(dim ? 0x000000 : (mt.emissive ?? 0x000000));
         m.material.transparent = dim || !!mt.opacity;
@@ -89,10 +91,89 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
     }
   }
 
+  // ---- light beam and ceiling: where the time lands, and how sharp it is for the lens position
+  const beam = new THREE.Group();          // in the pivot's frame, so it tilts with the barrel
+  pivot.add(beam);
+  const beamMat = new THREE.MeshBasicMaterial({ color: 0xffd28a, transparent: true, opacity: 0.10, side: THREE.DoubleSide, depthWrite: false });
+  const beamMesh = new THREE.Mesh(new THREE.BufferGeometry(), beamMat);
+  beam.add(beamMesh);
+  const ceil = new THREE.Group();          // fixed in the room
+  root.add(ceil);
+  const ceilZ = AXIS.z + LENS.rL + CEILING;
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(1800, 1500), new THREE.MeshBasicMaterial({ color: 0x2a2d33, side: THREE.DoubleSide }));
+  plane.position.set(0, -350, ceilZ + 1);   // a patch of dark ceiling over the clock and in front of it
+  ceil.add(plane);
+  const texCanvas = document.createElement('canvas');
+  texCanvas.width = 512; texCanvas.height = 290;
+  const tex = new THREE.CanvasTexture(texCanvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const imgMesh = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide, depthWrite: false, depthTest: false }));
+  imgMesh.renderOrder = 2;   // the picture shows through the beam's haze
+  ceil.add(imgMesh);
+  let beamText = '12:30';
+
+  function drawCeilingImage(o) {
+    const c = texCanvas.getContext('2d');
+    c.clearRect(0, 0, 512, 290);
+    c.fillStyle = 'rgba(255,214,150,0.10)';
+    c.fillRect(0, 0, 512, 290);
+    c.filter = o.blurPx > 0.25 ? `blur(${Math.min(30, o.blurPx * 3.2).toFixed(1)}px)` : 'none';
+    c.fillStyle = '#ffd696';
+    c.font = 'bold 150px ui-monospace, Menlo, Consolas, monospace';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(beamText, 256, 150);
+    c.filter = 'none';
+    tex.needsUpdate = true;
+  }
+  function updateBeam() {
+    beam.visible = ceil.visible = state.beam;
+    if (!state.beam) return;
+    const o = optics(state.focus, state.tilt);
+    const t = state.tilt * Math.PI / 180;
+    // lens centre in the pivot frame; image corners: x across (long side), y forward/back
+    const lx = 38, lz = LENS.rL + state.focus;
+    const L = CEILING / Math.cos(t), hw = o.width / 2, hh = o.height / 2, a = LENS.aperture / 2 * 0.8;
+    const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+    // beam: from the lens aperture to the image, as a four-sided frustum (length along the tilted axis;
+    // the far ends get clipped visually by the ceiling, close enough to show where the light goes)
+    const pos = [];
+    const near = corners.map(([sx, sy]) => [lx + sx * a, sy * a, lz]);
+    const far = corners.map(([sx, sy]) => {
+      // ray from the lens centre through the image corner, in the pivot frame, then out to the ceiling
+      const dir = new THREE.Vector3(sx * hw, sy * hh, L).normalize();
+      const w = dir.clone().applyAxisAngle(new THREE.Vector3(1, 0, 0), t);   // to room frame
+      const k = (CEILING) / w.z;
+      return [lx + dir.x * k, dir.y * k, lz + dir.z * k];
+    });
+    for (let i = 0; i < 4; i++) {
+      const j = (i + 1) % 4;
+      pos.push(...near[i], ...near[j], ...far[j], ...near[i], ...far[j], ...far[i]);
+    }
+    beamMesh.geometry.dispose();
+    beamMesh.geometry = new THREE.BufferGeometry();
+    beamMesh.geometry.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    // the picture on the ceiling: the same corners in the room frame
+    const toRoom = (p) => new THREE.Vector3(...p).applyAxisAngle(new THREE.Vector3(1, 0, 0), t).add(new THREE.Vector3(0, AXIS.y, AXIS.z));
+    const fc = far.map(toRoom);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute([...fc[0].toArray(), ...fc[1].toArray(), ...fc[2].toArray(), ...fc[3].toArray()].map((v, i) => i % 3 === 2 ? ceilZ : v), 3));
+    // the mirror flips the picture once; the clock's Mirror setting puts it right, so show it the right way round
+    g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 1, 1, 1, 1, 0, 0, 0], 2));   // reads upright from in front of the clock
+    g.setIndex([0, 1, 2, 0, 2, 3]);
+    imgMesh.geometry.dispose();
+    imgMesh.geometry = g;
+    drawCeilingImage(o);
+  }
+  updateBeam();
+
   function setState(s = {}) {
     if (s.visible) state.visible = s.visible;
     if (s.highlight) state.highlight = s.highlight;
     if (s.tilt !== undefined) { state.tilt = s.tilt; pivot.rotation.x = s.tilt * Math.PI / 180; }
+    if (s.focus !== undefined) state.focus = s.focus;
+    if (s.beam !== undefined) state.beam = s.beam;
+    if (s.text !== undefined) beamText = s.text;
+    if (s.tilt !== undefined || s.focus !== undefined || s.beam !== undefined || s.text !== undefined) updateBeam();
     if (s.camera) camera.position.set(...s.camera);
     if (s.target) controls.target.set(...s.target);
     if (s.explode !== undefined) {
@@ -142,5 +223,5 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
     renderer.render(scene, camera);
   });
 
-  return { ready, setState, onPick: (f) => listeners.push(f), get explode() { return state.explode; }, get tilt() { return state.tilt; } };
+  return { ready, setState, onPick: (f) => listeners.push(f), get explode() { return state.explode; }, get tilt() { return state.tilt; }, get focus() { return state.focus; }, get beam() { return state.beam; } };
 }

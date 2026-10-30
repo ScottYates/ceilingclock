@@ -299,15 +299,56 @@ bool Audio::connecttoFS(fs::FS& f, const char* path) {
     if (byteRate) durMs_ = (unsigned long)((size - 44) * 1000ULL / byteRate);
   }
   fp.close();
-  playing_ = true; start_ = millis();
-  sim::hw.audioPlaying = true; sim::hw.audioFile = path;
+  playing_ = true; streaming_ = false; start_ = millis();
+  sim::hw.audioPlaying = true; sim::hw.audioFile = path; sim::hw.audioUrl.clear(); sim::hw.audioSeq++;
   return true;
 }
-void Audio::stopSong() { playing_ = false; sim::hw.audioPlaying = false; }
+bool Audio::connecttohost(const char* url, const char*, const char*) {
+  stopSong();
+  if (!sim::hw.netOk || !url || strncmp(url, "http", 4) != 0) return false;
+  playing_ = streaming_ = true; start_ = millis();
+  sim::hw.streamDrop = false;
+  sim::hw.audioPlaying = true; sim::hw.audioFile.clear(); sim::hw.audioUrl = url; sim::hw.audioSeq++;
+  return true;
+}
+void Audio::stopSong() { playing_ = streaming_ = false; sim::hw.audioPlaying = false; }
 bool Audio::isRunning() {
-  if (playing_ && millis() - start_ >= durMs_) { playing_ = false; sim::hw.audioPlaying = false; }
+  if (playing_ && streaming_ && (!sim::hw.netOk || sim::hw.streamDrop)) stopSong();
+  if (playing_ && !streaming_ && millis() - start_ >= durMs_) stopSong();
   return playing_;
 }
+
+// ---------------------------------------------------------------- netFetch (podcast feed lookup)
+#include "net_fetch.h"
+#ifdef SIM_WASM
+// The page fetches it (synchronous request; the browser's cross-origin rules apply).
+extern "C" __attribute__((import_module("env"), import_name("js_http_get"))) int js_http_get(const char* url, char* buf, int max);
+bool netFetch(const char* url, std::string& contentType, const std::function<bool(const char*, size_t)>& sink) {
+  if (!sim::hw.netOk) return false;
+  static std::vector<char> buf(512 * 1024);
+  int n = js_http_get(url, buf.data(), (int)buf.size());
+  if (n < 0) return false;
+  contentType.clear();
+  for (int p = 0; p < n; p += 4096) if (!sink(buf.data() + p, std::min(4096, n - p))) break;
+  return true;
+}
+#else
+// Uses curl. Reads at most 512 KB, so a radio stream doesn't download forever.
+bool netFetch(const char* url, std::string& contentType, const std::function<bool(const char*, size_t)>& sink) {
+  if (!sim::hw.netOk) return false;
+  for (const char* c = url; *c; c++)
+    if (*c <= ' ' || *c == '\'' || *c == '"' || *c == '\\' || *c == '`') return false;
+  std::string cmd = std::string("curl -sfL --max-time 12 -A CeilingClock/1.0 '") + url + "' 2>/dev/null | head -c 524288";
+  FILE* p = popen(cmd.c_str(), "r");
+  if (!p) return false;
+  contentType.clear();
+  char buf[4096];
+  size_t n, total = 0;
+  while ((n = fread(buf, 1, sizeof buf, p)) > 0) { total += n; if (!sink(buf, n)) break; }
+  pclose(p);
+  return total > 0;
+}
+#endif
 
 // ---------------------------------------------------------------- HTTP server
 static std::string urlDecode(const std::string& s) {
@@ -455,7 +496,13 @@ void WebServer::requestAuthentication() {
   send(401, "text/plain", "login required");
 }
 
-// Simulator-only endpoints: real hardware state, time travel, buttons, light level.
+static std::string jesc(const std::string& s) {
+  std::string o;
+  for (char c : s) { if (c == '"' || c == '\\') o += '\\'; if ((unsigned char)c >= 32) o += c; }
+  return o;
+}
+
+// Simulator-only endpoints: real hardware state, time travel, buttons, light level, internet, sound files.
 bool WebServer::simRoute(const std::string& path) {
   using sim::hw;
   if (path == "/sim/hw") {
@@ -469,7 +516,8 @@ bool WebServer::simRoute(const std::string& path) {
     j += "]},\"ring\":[";
     for (int i = 0; i < 16; i++) j += "[" + std::to_string(hw.ring[i][0]) + "," + std::to_string(hw.ring[i][1]) + "," + std::to_string(hw.ring[i][2]) + "]" + (i < 15 ? "," : "");
     j += "],\"audio\":{\"playing\":" + std::string(hw.audioPlaying ? "true" : "false") + ",\"vol\":" + std::to_string(hw.audioVol) +
-         ",\"file\":\"" + hw.audioFile + "\"},\"ldr\":" + std::to_string(hw.ldr) + "}";
+         ",\"file\":\"" + jesc(hw.audioFile) + "\",\"url\":\"" + jesc(hw.audioUrl) + "\",\"seq\":" + std::to_string(hw.audioSeq) +
+         "},\"net\":" + (hw.netOk ? "true" : "false") + ",\"ldr\":" + std::to_string(hw.ldr) + "}";
     send(200, "application/json", String(j));
     return true;
   }
@@ -481,5 +529,19 @@ bool WebServer::simRoute(const std::string& path) {
     send(200, "text/plain", "ok"); return true;
   }
   if (path == "/sim/ldr") { hw.ldr = atoi(arg("v").c_str()); send(200, "text/plain", "ok"); return true; }
+  if (path == "/sim/net") { hw.netOk = arg("ok") != "0"; send(200, "text/plain", "ok"); return true; }
+  if (path == "/sim/streamfail") { hw.streamDrop = true; send(200, "text/plain", "ok"); return true; }
+  if (path == "/sim/file") {   // a sound file's bytes, so the demo page can play it
+    std::string p = arg("path").c_str();
+    if (p.rfind("/sounds/", 0) != 0 || p.find("..") != std::string::npos) { send(400, "text/plain", "bad path"); return true; }
+    File f = LittleFS.open(p.c_str(), "r");
+    if (!f) { send(404, "text/plain", "not found"); return true; }
+    std::string data((size_t)f.size(), '\0');
+    f.readBytes(&data[0], data.size());
+    f.close();
+    const char* type = p.find(".wav") != std::string::npos ? "audio/wav" : p.find(".mp3") != std::string::npos ? "audio/mpeg" : "application/octet-stream";
+    send(200, type, String(data));
+    return true;
+  }
   return false;
 }

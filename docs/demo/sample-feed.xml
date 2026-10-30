@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+<channel>
+  <title>Ceiling Clock sample podcast</title>
+  <link>https://scottyates.github.io/ceilingclock/</link>
+  <description>A tiny feed for trying podcast alarms in the Ceiling Clock live demo. The newest episode is a 40-second chime.</description>
+  <language>en-us</language>
+  <item>
+    <title>Episode 2: Morning chimes</title>
+    <pubDate>Fri, 30 Oct 2026 07:00:00 -0500</pubDate>
+    <guid>ceilingclock-sample-2</guid>
+    <enclosure url="https://scottyates.github.io/ceilingclock/demo/sample-episode.mp3" length="245000" type="audio/mpeg"/>
+  </item>
+  <item>
+    <title>Episode 1: Older episode (not played)</title>
+    <pubDate>Thu, 29 Oct 2026 07:00:00 -0500</pubDate>
+    <guid>ceilingclock-sample-1</guid>
+    <enclosure url="https://scottyates.github.io/ceilingclock/demo/sample-episode.mp3" length="245000" type="audio/mpeg"/>
+  </item>
+</channel>
+</rss>

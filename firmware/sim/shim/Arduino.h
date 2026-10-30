@@ -68,6 +68,7 @@ class String {
   bool endsWith(const char* e) const { size_t n = strlen(e); return s.size() >= n && s.compare(s.size() - n, n, e) == 0; }
   bool startsWith(const char* e) const { return s.rfind(e, 0) == 0; }
   void toLowerCase() { for (auto& c : s) c = tolower((unsigned char)c); }
+  void trim() { size_t a = s.find_first_not_of(" \t\r\n"), b = s.find_last_not_of(" \t\r\n"); s = a == std::string::npos ? "" : s.substr(a, b - a + 1); }
   long toInt() const { return atol(s.c_str()); }
   char operator[](unsigned i) const { return i < s.size() ? s[i] : 0; }
   String& operator+=(const String& o) { s += o.s; return *this; }
@@ -160,6 +161,10 @@ struct Hw {
   bool tmOn = false; int tmBright = 0; uint8_t tmSegs[4] = {0};
   uint8_t ring[16][3] = {{0}};
   bool audioPlaying = false; int audioVol = 0; std::string audioFile;
+  std::string audioUrl;               // stream being played (empty = a file)
+  int audioSeq = 0;                   // counts every start, so the demo page can restart its player
+  bool netOk = true;                  // simulated internet connection
+  bool streamDrop = false;            // the demo page couldn't play the stream
   int ldr = 2000;
   bool btnDown[2] = {false, false};   // A, B
 };

@@ -1,6 +1,7 @@
 // Every mesh in models/clock.glb, with display info.
 // explode: [x, y, z] offset in mm (model coordinates, z up) at full explode.
 // tilts: true = rides in the barrel and turns with the tilt slider (about AXIS, parallel to X).
+// focuses: true = moves with the lens focus slider (along the lens axis).
 export const AXIS = { y: 30.5, z: 44.5 };
 export const PARTS = {
   base:          { label: 'Base',                   kind: 'print', color: 0x39404a, explode: [0, 0, 0] },
@@ -9,8 +10,8 @@ export const PARTS = {
   lcd_holder:    { label: 'LCD holder',             kind: 'print', color: 0xe8743b, explode: [-25, 0, 70], tilts: true },
   lid:           { label: 'Lid',                    kind: 'print', color: 0x55606e, explode: [0, 0, 40] },
   lens_mount:    { label: 'Lens mount',             kind: 'print', color: 0x434a55, explode: [0, 0, 110], tilts: true },
-  sleeve:        { label: 'Lens sleeve',            kind: 'print', color: 0x8f99a6, explode: [0, 0, 140], tilts: true },
-  lens_cap:      { label: 'Lens cap',               kind: 'print', color: 0xe8743b, explode: [0, 0, 170], tilts: true },
+  sleeve:        { label: 'Lens sleeve',            kind: 'print', color: 0x8f99a6, explode: [0, 0, 140], tilts: true, focuses: true },
+  lens_cap:      { label: 'Lens cap',               kind: 'print', color: 0xe8743b, explode: [0, 0, 170], tilts: true, focuses: true },
   ring_holder:   { label: 'Sunrise ring holder',    kind: 'print', color: 0x8f99a6, explode: [0, 0, 60] },
   pins_asm:      { label: 'Snap pins (8)',          kind: 'print', color: 0xe8743b, explode: [0, 0, 75], stl: 'pins' },
   pins_barrel:   { label: 'Snap pins on the barrel (2)', kind: 'print', color: 0xe8743b, explode: [0, 0, 125], stl: 'pins', tilts: true },
@@ -32,7 +33,7 @@ export const PARTS = {
   ref_mirror:    { label: '45° mirror',             kind: 'part',  color: 0xdfe8f0, explode: [0, 0, 95], tilts: true },
   ref_wires:     { label: 'Wiring',                 kind: 'part',  color: 0xd03030, explode: [0, 0, 0], hideExploded: true },
   ref_button:    { label: 'Snooze button',          kind: 'part',  color: 0xb8bec6, explode: [0, 0, 60] },
-  ref_lens:      { label: '50 mm lens (f = 100)',   kind: 'part',  color: 0x9fd3ff, explode: [0, 0, 155], opacity: 0.55, tilts: true },
+  ref_lens:      { label: '50 mm lens (f = 100)',   kind: 'part',  color: 0x9fd3ff, explode: [0, 0, 155], opacity: 0.55, tilts: true, focuses: true },
   ref_ring:      { label: 'WS2812B 16-LED ring',    kind: 'part',  color: 0x111111, explode: [0, 0, 70] },
 };
 

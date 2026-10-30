@@ -23,6 +23,8 @@
 #include "settings.h"
 #include "alarm_logic.h"
 #include "web_ui.h"
+#include "feed_scan.h"
+#include "net_fetch.h"
 
 #define FW_VERSION "1.0.0"
 #define HOSTNAME "ceilingclock"
@@ -65,18 +67,58 @@ void applyTimeConfig() {
 
 // ---------------------------------------------------------------- audio task
 // The Audio object lives on its own task so playback stays smooth while the
-// web server and displays are busy.
-enum AudioCmdType : uint8_t { AC_PLAY, AC_STOP, AC_VOL };
-struct AudioCmd { AudioCmdType type; uint8_t vol; char path[72]; };
+// web server and displays are busy. Looking up a podcast feed also happens there.
+enum AudioCmdType : uint8_t { AC_PLAY, AC_STREAM, AC_STOP, AC_VOL };
+struct AudioCmd { AudioCmdType type; uint8_t vol; char path[300]; };
 QueueHandle_t audioQ;
 volatile bool audioRunning = false;
 
+// Stream status, written by the audio task.
+enum StreamState : uint8_t { SS_IDLE, SS_CONNECTING, SS_PLAYING, SS_FAILED, SS_ENDED };
+volatile uint8_t streamState = SS_IDLE;
+char streamTitle[100] = "";   // podcast episode, or the station's "now playing"
+char streamNote[64] = "";     // why a stream failed
+uint32_t streamStartMs = 0;
+
 Audio* audioPlayer = nullptr;
+
+// Podcast feed URL -> the newest episode's audio URL (and its title). Radio streams and
+// links to audio files come back unchanged. False if it can't be reached or has no episodes.
+bool resolveStream(const char* url, std::string& out, std::string& title, std::string& err) {
+  out = url;
+  if (urlLooksLikeAudio(url)) return true;
+  FeedScan scan;
+  bool sniffed = false, isAudio = false;
+  size_t total = 0;
+  std::string ctype;
+  bool ok = netFetch(url, ctype, [&](const char* p, size_t n) {
+    if (!sniffed) {
+      sniffed = true;
+      std::string ct = ctype;
+      for (auto& ch : ct) ch = (char)tolower((unsigned char)ch);
+      if (ct.rfind("audio/", 0) == 0 || ct.find("mpegurl") != std::string::npos || ct.find("scpls") != std::string::npos ||
+          !FeedScan::looksLikeXml(p, n)) { isAudio = true; return false; }
+    }
+    scan.feed(p, n);
+    total += n;
+    return !scan.done() && total < 512 * 1024;
+  });
+  if (!ok) { err = "could not reach the URL"; return false; }
+  if (isAudio || !sniffed) return true;
+  if (!scan.found()) { err = "no episodes found in the feed"; return false; }
+  out = scan.url();
+  title = scan.title();
+  return true;
+}
 
 void audioInit() {
   audioPlayer = new Audio();
   audioPlayer->setPinout(PIN_I2S_BCLK, PIN_I2S_LRC, PIN_I2S_DOUT);
   audioPlayer->setVolume(0);
+  Audio::audio_info_callback = [](Audio::msg_t m) {
+    if (!m.msg || !*m.msg) return;
+    if (m.e == Audio::evt_streamtitle || (m.e == Audio::evt_name && !streamTitle[0])) strlcpy(streamTitle, m.msg, sizeof streamTitle);
+  };
 }
 
 // Handles queued commands and feeds the decoder; called continuously by the audio task.
@@ -87,6 +129,19 @@ void audioStep() {
       audioPlayer->stopSong();
       audioPlayer->setVolume(c.vol);
       audioPlayer->connecttoFS(LittleFS, c.path);
+    } else if (c.type == AC_STREAM) {
+      audioPlayer->stopSong();
+      audioPlayer->setVolume(c.vol);
+      std::string url, title, err;
+      streamTitle[0] = streamNote[0] = 0;
+      if (resolveStream(c.path, url, title, err) && audioPlayer->connecttohost(url.c_str())) {
+        strlcpy(streamTitle, title.c_str(), sizeof streamTitle);
+        streamStartMs = millis();
+        streamState = SS_PLAYING;
+      } else {
+        strlcpy(streamNote, err.empty() ? "the stream did not start" : err.c_str(), sizeof streamNote);
+        streamState = SS_FAILED;
+      }
     } else if (c.type == AC_STOP) {
       audioPlayer->stopSong();
     } else {
@@ -95,6 +150,13 @@ void audioStep() {
   }
   audioPlayer->loop();
   audioRunning = audioPlayer->isRunning();
+  static bool streamRan = false;
+  if (streamState != SS_PLAYING) streamRan = false;
+  else if (audioRunning) streamRan = true;
+  if (streamState == SS_PLAYING && !audioRunning && (streamRan || millis() - streamStartMs > 3000)) {
+    strlcpy(streamNote, "the stream stopped", sizeof streamNote);
+    streamState = SS_ENDED;
+  }
 }
 
 void audioTask(void*) {
@@ -110,12 +172,22 @@ void audioPlay(const String& path, uint8_t vol) {
   String p = path;
   if (!LittleFS.exists(p)) p = "/sounds/beep.wav";
   strlcpy(c.path, p.c_str(), sizeof(c.path));
+  streamState = SS_IDLE;
   xQueueSend(audioQ, &c, 0);
   audioRunning = true;  // assume started until the task reports otherwise
   live.vol = vol;
 }
-void audioStop() { AudioCmd c{AC_STOP, 0, {0}}; xQueueSend(audioQ, &c, 0); }
+void audioStream(const String& url, uint8_t vol) {
+  AudioCmd c{AC_STREAM, vol, {0}};
+  strlcpy(c.path, url.c_str(), sizeof(c.path));
+  streamState = SS_CONNECTING;
+  streamTitle[0] = streamNote[0] = 0;
+  xQueueSend(audioQ, &c, 0);
+  live.vol = vol;
+}
+void audioStop() { AudioCmd c{AC_STOP, 0, {0}}; streamState = SS_IDLE; xQueueSend(audioQ, &c, 0); }
 void audioVolume(uint8_t v) { AudioCmd c{AC_VOL, v, {0}}; xQueueSend(audioQ, &c, 0); live.vol = v; }
+bool soundPlaying() { return audioRunning || streamState == SS_PLAYING; }
 
 // Writes a short beep-beep WAV so there is always a sound, even before you upload any.
 void ensureDefaultSound() {
@@ -152,6 +224,17 @@ uint8_t lastSentVol = 255;
 time_t lastFired[MAX_ALARMS] = {0};
 time_t lastCheck = 0;
 bool testPlaying = false;
+// what the ringing alarm is playing: its sound file, its stream, or the sound file as a backup for a failed stream
+enum RingSrc : uint8_t { SRC_FILE, SRC_STREAM, SRC_BACKUP };
+RingSrc ringSrc = SRC_FILE;
+uint8_t streamTries = 0;
+const uint32_t STREAM_CONNECT_MS = 25000;  // give up on a stream that hasn't started by then
+
+void ringSound(const AlarmCfg& a, uint8_t vol) {
+  if (a.stream.length() && ringSrc != SRC_BACKUP) { ringSrc = SRC_STREAM; audioStream(a.stream, vol); }
+  else { if (!a.stream.length()) ringSrc = SRC_FILE; audioPlay(a.sound, vol); }
+  lastPlayMs = millis();
+}
 
 uint32_t peekUntilMs = 0;  // button A "show me the time" while displays are off
 
@@ -164,8 +247,9 @@ void startRing(int i, uint32_t rampSec) {
   ringStart = time(nullptr);
   ringRampSec = rampSec;
   lastSentVol = rampVolume(cfg.alarms[i].volume, 0, rampSec);
-  audioPlay(cfg.alarms[i].sound, lastSentVol);
-  lastPlayMs = millis();
+  ringSrc = SRC_FILE;
+  streamTries = 1;
+  ringSound(cfg.alarms[i], lastSentVol);
   testPlaying = false;
   Serial.printf("Alarm %d (%s) ringing\n", i, cfg.alarms[i].label.c_str());
 }
@@ -209,9 +293,18 @@ void serviceRing(time_t now) {
     uint32_t el = now - ringStart;
     uint8_t v = rampVolume(a.volume, el, ringRampSec);
     if (v != lastSentVol) { audioVolume(v); lastSentVol = v; }
-    if (!audioRunning && millis() - lastPlayMs > 1500) {  // loop the sound
-      audioPlay(a.sound, v);
-      lastPlayMs = millis();
+    if (ringSrc == SRC_STREAM) {
+      bool slow = streamState == SS_CONNECTING && millis() - lastPlayMs > STREAM_CONNECT_MS;
+      if (streamState == SS_ENDED && streamTries < 3 && millis() - lastPlayMs > 60000) {
+        streamTries++;  // it played for a while and dropped: reconnect
+        ringSound(a, v);
+      } else if (slow || streamState == SS_FAILED || streamState == SS_ENDED) {
+        Serial.printf("Stream didn't play (%s); ringing with the backup sound\n", slow ? "too slow to start" : streamNote);
+        ringSrc = SRC_BACKUP;  // so the alarm still wakes you
+        ringSound(a, v);
+      }
+    } else if (!audioRunning && millis() - lastPlayMs > 1500) {  // loop the sound file
+      ringSound(a, v);
     }
     if (el > (uint32_t)a.maxRingMin * 60) dismiss();
   } else if (ringState == RS_SNOOZED && now >= snoozeUntil) {
@@ -478,7 +571,14 @@ void apiState() {
   d["night"] = nightNow;
   d["frontOn"] = displayVisible(cfg.front);
   d["projOn"] = displayVisible(cfg.proj);
-  d["playing"] = (bool)audioRunning;
+  d["playing"] = soundPlaying();
+  d["source"] = ringState == RS_RINGING ? (ringSrc == SRC_STREAM ? "stream" : ringSrc == SRC_BACKUP ? "backup" : "file")
+                                        : (streamState != SS_IDLE ? "stream" : "file");
+  static const char* ssName[] = {"idle", "connecting", "playing", "failed", "ended"};
+  JsonObject st = d["stream"].to<JsonObject>();
+  st["state"] = ssName[streamState];
+  st["title"] = streamTitle;
+  st["note"] = streamNote;
   d["fw"] = FW_VERSION;
   d["fsUsed"] = LittleFS.usedBytes();
   d["fsTotal"] = LittleFS.totalBytes();
@@ -490,7 +590,7 @@ void apiState() {
   JsonArray rgb = lv["ring"].to<JsonArray>();
   for (int i = 0; i < 3; i++) rgb.add(live.ring[i]);
   lv["sunrise"] = live.sunrise;
-  lv["vol"] = (bool)audioRunning ? live.vol : 0;
+  lv["vol"] = soundPlaying() ? live.vol : 0;
   lv["invert"] = cfg.projInvert;
   // the 84 x 48 projector image, 1 bit per pixel, 11 bytes per row, as hex
   static const char* hx = "0123456789abcdef";
@@ -595,7 +695,10 @@ void apiAction() {
   else if (what == "skip" && id >= 0 && id < cfg.alarmCount) { cfg.alarms[id].t.skipNext = !cfg.alarms[id].t.skipNext; saveConfig(); }
   else if (what == "test") {
     if (ringState == RS_IDLE) {
-      audioPlay(server.arg("sound"), constrain(server.arg("vol").toInt(), 0, 21));
+      uint8_t v = constrain(server.arg("vol").toInt(), 0, 21);
+      String st = server.arg("stream");
+      if (st.startsWith("http://") || st.startsWith("https://")) audioStream(st, v);
+      else audioPlay(server.arg("sound"), v);
       testPlaying = true;
     }
   } else if (what == "stop") { if (ringState == RS_IDLE) audioStop(); testPlaying = false; }
@@ -712,7 +815,7 @@ void loop() {
   time_t now = time(nullptr);
   checkAlarms(now);
   serviceRing(now);
-  if (testPlaying && !audioRunning) testPlaying = false;
+  if (testPlaying && !soundPlaying() && streamState != SS_CONNECTING) testPlaying = false;
 
   static uint32_t lastFrame = 0;
   if (millis() - lastFrame >= 250) {

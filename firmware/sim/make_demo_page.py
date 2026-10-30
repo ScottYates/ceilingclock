@@ -9,7 +9,7 @@ src = open(os.path.join(here, '..', 'src', 'web_ui.h'), encoding='utf-8').read()
 html = re.search(r'R"rawliteral\((.*)\)rawliteral"', src, re.S).group(1)
 html = html.replace('<title>Ceiling Clock</title>', '<title>Ceiling Clock (live demo)</title>', 1)
 assert '<script>' in html
-html = html.replace('<script>', '<script src="sim.js?v=2"></script>\n<script>', 1)
+html = html.replace('<script>', '<script src="sim.js?v=3"></script>\n<script>', 1)
 out = os.path.join(here, '..', '..', 'docs', 'demo', 'index.html')
 open(out, 'w', encoding='utf-8').write(html)
 print('wrote', os.path.relpath(out, here), len(html), 'bytes')

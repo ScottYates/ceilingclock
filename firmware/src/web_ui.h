@@ -126,7 +126,12 @@ function drawCeil(lv){const c=$('ceil'),x=c.getContext('2d');x.fillStyle='#07080
  for(let y=0;y<48;y++)for(let i=0;i<84;i++){const b=parseInt(h.substr((y*11+(i>>3))*2,2),16),bit=(b>>(7-(i&7)))&1,lit=lv.invert?bit:!bit;
   if(lit){x.fillStyle=`rgba(255,214,150,${a})`;x.fillRect(i*4,y*4,4,4)}else if(lv.invert){x.fillStyle=`rgba(255,214,150,${a*0.05})`;x.fillRect(i*4,y*4,4,4)}}
  $('ceilLbl').textContent='On the ceiling · '+lv.projPct+'% brightness'}
-function drawSpk(s,lv){const v=lv.vol||0;$('spk').textContent=s.playing?(s.ring=='ringing'?'Alarm sound playing':'Preview playing')+' · volume '+v+'/21':(s.ring=='snoozed'?'Snoozed':'Silent');
+function drawSpk(s,lv){const v=lv.vol||0,st=s.stream||{};let t;
+ if(st.state=='connecting')t='Connecting to stream…';
+ else if(s.playing)t=(s.ring=='ringing'?(s.source=='backup'?'Backup sound playing':s.source=='stream'?'Alarm stream playing':'Alarm sound playing'):'Preview playing')+(s.source=='stream'&&st.title?' · '+st.title:'')+' · volume '+v+'/21';
+ else t=s.ring=='snoozed'?'Snoozed':s.ring=='idle'&&st.state=='failed'?'Stream failed: '+st.note:'Silent';
+ if(s.source=='backup'&&st.note)t+=' (stream: '+st.note+')';
+ $('spk').textContent=t;
  $('vbar').style.width=(s.playing?v/21*100:0)+'%'}
 function drawLive(s){if(!s.live)return;drawCeil(s.live);drawFront(s,s.live);drawRing(s.live);drawSpk(s,s.live)}
 async function poll(){try{const s=await(await fetch('/api/state')).json();drawLive(s);
@@ -151,18 +156,20 @@ function renderAlarms(){$('alarms').innerHTML=C.alarms.map((a,i)=>`<div class="a
 <input type="time" value="${hm(a.hour*60+a.minute)}" onchange="const m=mh(this.value);C.alarms[${i}].hour=Math.floor(m/60);C.alarms[${i}].minute=m%60"></div>
 <div class="row"><div class="days">${DN.map((n,b)=>`<span class="${a.days>>b&1?'on':''}" onclick="C.alarms[${i}].days^=${1<<b};renderAlarms()">${n}</span>`).join('')}</div>
 <span class="mut">${a.days?'':'One time'}</span></div>
-<div class="row"><label>Sound<select onchange="C.alarms[${i}].sound=this.value">${soundOpts(a.sound)}</select></label>
+<div class="row"><label style="flex:1">Stream or podcast URL (optional)<input type="url" placeholder="https://… internet radio, MP3 link or podcast feed" value="${(a.stream||'').replace(/"/g,'&quot;')}" onchange="C.alarms[${i}].stream=this.value.trim();renderAlarms()"></label></div>
+${a.stream?'<div class="mut" style="margin:-4px 0 6px">Plays this instead of the sound file. A podcast feed plays its newest episode. If the stream hasn\'t started within 25 seconds or drops out, the backup sound rings instead.</div>':''}
+<div class="row"><label>${a.stream?'Backup sound':'Sound'}<select onchange="C.alarms[${i}].sound=this.value">${soundOpts(a.sound)}</select></label>
 <label>Volume (0-21)<input type="number" min="0" max="21" value="${a.volume}" onchange="C.alarms[${i}].volume=+this.value"></label>
 <label>Fade-in (s)<input type="number" min="0" max="1800" value="${a.rampSec}" onchange="C.alarms[${i}].rampSec=+this.value"></label></div>
 <div class="row"><label>Sunrise (min before)<input type="number" min="0" max="60" value="${a.sunriseMin}" onchange="C.alarms[${i}].sunriseMin=+this.value"></label>
 <label>Snooze (min)<input type="number" min="1" max="60" value="${a.snoozeMin}" onchange="C.alarms[${i}].snoozeMin=+this.value"></label>
 <label>Auto-stop (min)<input type="number" min="1" max="120" value="${a.maxRingMin}" onchange="C.alarms[${i}].maxRingMin=+this.value"></label></div>
-<div class="row"><button onclick="testSound(${i})">Preview sound</button><button onclick="act('stop')">Stop</button>
+<div class="row"><button onclick="testSound(${i})">${a.stream?'Preview stream':'Preview sound'}</button><button onclick="act('stop')">Stop</button>
 <button onclick="save().then(()=>act('ring','&id=${i}'))">Ring now</button>
 <button onclick="save().then(()=>act('skip','&id=${i}')).then(load)">${a.skipNext?'Un-skip next':'Skip next'}</button>
 <button class="d" onclick="C.alarms.splice(${i},1);renderAlarms()">Delete</button></div></div>`).join('')||'<div class="mut">No alarms yet.</div>'}
-function addAlarm(){if(C.alarms.length>=8)return toast('Max 8 alarms');C.alarms.push({enabled:true,hour:7,minute:0,days:62,skipNext:false,label:'Alarm',sound:'/sounds/beep.wav',volume:12,rampSec:60,sunriseMin:15,snoozeMin:9,maxRingMin:30});renderAlarms()}
-function testSound(i){const a=C.alarms[i];act('test','&sound='+encodeURIComponent(a.sound)+'&vol='+a.volume)}
+function addAlarm(){if(C.alarms.length>=8)return toast('Max 8 alarms');C.alarms.push({enabled:true,hour:7,minute:0,days:62,skipNext:false,label:'Alarm',sound:'/sounds/beep.wav',stream:'',volume:12,rampSec:60,sunriseMin:15,snoozeMin:9,maxRingMin:30});renderAlarms()}
+function testSound(i){const a=C.alarms[i];act('test',(a.stream?'&stream='+encodeURIComponent(a.stream):'&sound='+encodeURIComponent(a.sound))+'&vol='+a.volume)}
 function fill(){const opt=MODES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');$('f_mode').innerHTML=opt;$('p_mode').innerHTML=opt;
  $('f_mode').value=C.front.mode;$('f_day').value=C.front.dayBright;$('f_night').value=C.front.nightBright;
  $('p_mode').value=C.proj.mode;$('p_day').value=C.proj.dayBright;$('p_night').value=C.proj.nightBright;
