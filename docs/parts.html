@@ -12,7 +12,8 @@
 <h1>Parts list</h1>
 <p class="lead">Untick anything you already have, then press the button to put the rest in your Amazon cart in one go. Most parts come in multi-packs, so you'll have spares (or enough for a second clock).</p>
 
-<div class="note">These listings came from Amazon search results and weren't checked on the product pages. Listings change, so look over each one in your cart before checking out. If an item is missing or wrong, use the "alt" link next to it.</div>
+<div class="note">These listings came from Amazon search results and weren't checked on the product pages. Listings change, so look over each one in your cart before checking out.<br>
+<b>If the big button shows an Amazon error page</b>, one listing has probably been removed, and that makes Amazon reject the whole link. Use the <b>Add</b> button on each row instead; the row that errors is the culprit. Untick it and use its "alt" link.</div>
 
 <div class="cartbar">
   <a class="btn" id="cart" href="#" target="_blank" rel="noopener">Add selected to Amazon cart</a>
@@ -21,7 +22,7 @@
   <button class="btn ghost" id="none" style="padding:6px 10px;font-size:.85rem">Select none</button>
 </div>
 
-<table id="bom"><thead><tr><th></th><th>Part</th><th>Need</th><th>Amazon listing</th><th>Pack</th><th>Why</th></tr></thead><tbody></tbody></table>
+<table id="bom"><thead><tr><th></th><th>Part</th><th>Need</th><th>Amazon listing</th><th>Pack</th><th>Why</th><th></th></tr></thead><tbody></tbody></table>
 
 <h2>Printed parts</h2>
 <p>About 350 g of filament. Print settings for each part are in <a href="assembly.html#step-1">assembly step 1</a>. Download from <a href="https://github.com/ScottYates/ceilingclock/tree/main/hardware/stl">hardware/stl</a>.</p>
@@ -48,6 +49,7 @@
 import { BOM } from './js/bom.js';
 const tb = document.querySelector('#bom tbody');
 const dp = (a) => `https://www.amazon.com/dp/${a}`;
+const one = (a) => `https://www.amazon.com/gp/aws/cart/add.html?ASIN.1=${a}&Quantity.1=1`;
 tb.innerHTML = BOM.map((b, i) => `
 <tr data-i="${i}">
 <td class="chk"><input type="checkbox" id="c${i}" ${b.on === false ? '' : 'checked'} aria-label="Include ${b.part}"></td>
@@ -55,7 +57,8 @@ tb.innerHTML = BOM.map((b, i) => `
 <td>${b.need || '—'}</td>
 <td><a href="${dp(b.asin)}" target="_blank" rel="noopener">${b.listing}</a>${(b.alt || []).map(([t, a]) => `<div class="alt">alt: <a href="${dp(a)}" target="_blank" rel="noopener">${t}</a></div>`).join('')}</td>
 <td>${b.pack}</td>
-<td>${b.why}</td></tr>`).join('');
+<td>${b.why}</td>
+<td><a class="btn ghost" style="padding:4px 10px;font-size:.8rem;white-space:nowrap" href="${one(b.asin)}" target="_blank" rel="noopener">Add</a></td></tr>`).join('');
 
 function update() {
   const sel = BOM.filter((_, i) => document.getElementById('c' + i).checked);
