@@ -2,7 +2,7 @@
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Wiring · Ceiling Clock</title>
-<link rel="stylesheet" href="style.css?v=20261030d">
+<link rel="stylesheet" href="style.css?v=20261030e">
 </head><body>
 <header class="site"><div class="in">
 <a class="brand" href="index.html"><span class="dot"></span>Ceiling Clock</a>
@@ -24,7 +24,7 @@
 </tbody></table>
 
 <h3>Projector LED circuit</h3>
-<p>5 V → MOSFET module VIN+ / VIN−. Module OUT+ → 6.8 Ω resistor (2 W or 3 W) → LED +. LED − → module OUT−. GPIO 13 → module SIG/PWM, module GND → GND. That gives roughly 300 mA, which runs the 3 W LED gently and keeps the LCD cool. A 4.7 Ω resistor gives about 400 mA if you need more brightness. The firmware dims it with 20 kHz PWM.</p>
+<p>5 V → MOSFET module VIN+ / VIN−. Module OUT+ → 6.8 Ω resistor (2 W or 3 W) → LED +. LED − → module OUT−. GPIO 13 → module SIG/PWM, module GND → GND. That gives roughly 300 mA, which runs the 3 W LED gently and keeps the LCD cool. A 4.7 Ω resistor gives about 400 mA if you need more brightness. The firmware dims it with 10 kHz PWM.</p>
 
 <div class="note"><b>Flashing while powered:</b> don't plug a computer into the ESP32's USB port while the 5 V supply is connected, unless your board has a protection diode on its 5V pin. Unplug the supply first, or after the first flash use the web page's firmware update instead.</div>
 

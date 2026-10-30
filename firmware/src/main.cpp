@@ -601,7 +601,7 @@ void setup() {
   pinMode(PIN_BTN_B, INPUT_PULLUP);
   analogReadResolution(12);
 
-  ledcAttach(PIN_PROJ_LED, 20000, 10);  // 20 kHz: no flicker, no coil whine
+  ledcAttach(PIN_PROJ_LED, 10000, 10);  // 10 kHz: no visible flicker, well inside the MOSFET module's 0-20 kHz rating
   ledcWrite(PIN_PROJ_LED, 0);
 
   ring.begin();
