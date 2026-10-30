@@ -40,4 +40,6 @@ for p in base lid tower carrier sleeve lens_cap ring_holder dome; do
 done
 ```
 
+For a 0.56" front display, add `-D 'tm_size="0.56"'` when exporting the base (the repo includes `stl/base_056.stl`).
+
 The web viewer loads `docs/models/clock.glb`, which holds every part in its assembled position.

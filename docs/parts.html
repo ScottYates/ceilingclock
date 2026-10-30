@@ -2,7 +2,7 @@
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Parts list · Ceiling Clock</title>
-<link rel="stylesheet" href="style.css?v=20261030c">
+<link rel="stylesheet" href="style.css?v=20261030d">
 </head><body>
 <header class="site"><div class="in">
 <a class="brand" href="index.html"><span class="dot"></span>Ceiling Clock</a>
@@ -27,7 +27,8 @@
 <h2>Printed parts</h2>
 <p>About 350 g of filament. Print settings for each part are in <a href="assembly.html#step-1">assembly step 1</a>. Download from <a href="https://github.com/ScottYates/ceilingclock/tree/main/hardware/stl">hardware/stl</a>.</p>
 <table><thead><tr><th>File</th><th>Size (mm)</th><th>Colour</th></tr></thead><tbody>
-<tr><td><a href="https://github.com/ScottYates/ceilingclock/raw/main/hardware/stl/base.stl">base.stl</a></td><td>150 × 110 × 56</td><td>Dark</td></tr>
+<tr><td><a href="https://github.com/ScottYates/ceilingclock/raw/main/hardware/stl/base.stl">base.stl</a></td><td>150 × 110 × 56</td><td>Dark · for the 0.36" display on this list</td></tr>
+<tr><td><a href="https://github.com/ScottYates/ceilingclock/raw/main/hardware/stl/base_056.stl">base_056.stl</a></td><td>150 × 110 × 56</td><td>Print instead of base.stl if you use a 0.56" display</td></tr>
 <tr><td><a href="https://github.com/ScottYates/ceilingclock/raw/main/hardware/stl/lid.stl">lid.stl</a></td><td>150 × 110 × 3</td><td>Dark</td></tr>
 <tr><td><a href="https://github.com/ScottYates/ceilingclock/raw/main/hardware/stl/tower.stl">tower.stl</a></td><td>74 × 74 × 140</td><td>Black, opaque</td></tr>
 <tr><td><a href="https://github.com/ScottYates/ceilingclock/raw/main/hardware/stl/carrier.stl">carrier.stl</a></td><td>55.4 × 55.4 × 36</td><td>Any (PETG preferred)</td></tr>
@@ -40,13 +41,13 @@
 <h2>Not in the cart</h2>
 <ul>
 <li>Filament (PLA or PETG), if you don't have it.</li>
-<li>A 55 × 24 mm piece of red or smoked acrylic, or tinted window film, for the front display window.</li>
+<li>A 36 × 20 mm piece of red or smoked acrylic, or tinted window film, for the front display window.</li>
 <li>Frosted plastic or baking paper for the diffuser, black electrical tape, hot glue, thermal tape for the LED.</li>
 </ul>
 </main>
 <footer>Ceiling Clock · parts list data: <a href="https://github.com/ScottYates/ceilingclock/blob/main/docs/js/bom.js">docs/js/bom.js</a></footer>
 <script type="module">
-import { BOM } from './js/bom.js?v=20261030c';
+import { BOM } from './js/bom.js?v=20261030d';
 const tb = document.querySelector('#bom tbody');
 const dp = (a) => `https://www.amazon.com/dp/${a}`;
 const sq = (q) => `https://www.amazon.com/s?k=${encodeURIComponent(q)}`;

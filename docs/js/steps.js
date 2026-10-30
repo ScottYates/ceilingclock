@@ -20,7 +20,7 @@ export const STEPS = [
     view: { visible: PRINTED, highlight: [], explode: 0.75, camera: [470, 400, 690], target: [0, 160, 0] },
     html: `<p>Print the eight parts in <code>hardware/stl/</code>. They are already in printing orientation.</p>
 <table><thead><tr><th>Part</th><th>Material</th><th>Notes</th></tr></thead><tbody>
-<tr><td>base.stl</td><td>PLA/PETG, black or dark grey</td><td>0.2 mm layers, 3 walls, 15% infill. The display rails need no supports.</td></tr>
+<tr><td>base.stl</td><td>PLA/PETG, black or dark grey</td><td>0.2 mm layers, 3 walls, 15% infill. The display rails need no supports. For a 0.56" display, print <code>base_056.stl</code> instead.</td></tr>
 <tr><td>lid.stl</td><td>Same as base</td><td>Prints flat, no supports.</td></tr>
 <tr><td>tower.stl</td><td><b>Black</b> PLA/PETG</td><td>Must be opaque, or the tower glows. Flange down, no supports.</td></tr>
 <tr><td>carrier.stl</td><td>PETG preferred</td><td>Sits near the LED, so PETG copes with the warmth better.</td></tr>
@@ -43,8 +43,8 @@ export const STEPS = [
     title: 'Front display and rear panel',
     view: { visible: s2, highlight: ['ref_tm1637', 'ref_usbc'], explode: 0.35, camera: [-200, 180, 380], target: [0, 30, 0] },
     html: `<ol>
-<li>Cut a 55 × 24 mm piece of red or smoked acrylic (or tinted film) and glue it behind the front window. This makes the digits darker and nicer at night.</li>
-<li>Solder a 4-pin lead to the TM1637 module, then slide its PCB down into the two slotted rails behind the window, digits facing out. The rails take boards 51–56 mm wide; if yours is narrower, centre it and hold it with hot glue.</li>
+<li>Cut a 36 × 20 mm piece of red or smoked acrylic (or tinted film) and glue it behind the front window. This makes the digits darker and nicer at night.</li>
+<li>Solder a 4-pin lead to the TM1637 module, then slide its PCB down into the two slotted rails behind the window, digits facing out. The rails fit the 42 × 24 mm board of a 0.36" module. If you're using a 0.56" module, print <code>base_056.stl</code> instead of <code>base.stl</code>.</li>
 <li>Glue the USB-C breakout onto its cradle so the socket lines up with the rear cutout. Solder red/black leads to VBUS/GND.</li>
 <li>Fit a second 16 mm button (button B) into the round hole on the rear wall.</li></ol>`,
   },
