@@ -59,7 +59,7 @@ export const STEPS = [
 <li>Add the 5 V and GND rails, the 1000 µF capacitor (for the LED ring) and the 100 µF capacitor (by the amplifier). Solder the 4.7 Ω 2 W LED resistor here too, standing a few millimetres off the board so air can reach it.</li>
 <li>The MAX98357A and DS3231 sit on the floor in front of the board, and the MOSFET module at the back left beside the LED cap, all on short leads.</li>
 <li>Bring every off-board connection to a pin header along the board's left edge: LCD, LED, ring, display, speaker, buttons, LDR, power. Then each wire plugs in during final assembly.</li>
-<li><b>Test before mounting:</b> flash the firmware (see <a href="firmware.html">Firmware</a>), check the web page loads and "Ring now" beeps.</li>
+<li><b>Test before mounting:</b> ideally build it all on a breadboard first (see <a href="breadboard.html">Breadboard test</a>). At least flash the firmware (see <a href="firmware.html">Firmware</a>), check the web page loads and "Ring now" beeps.</li>
 <li>Press the board down onto the four corner pads (front right of the base) until the four hooks on its short edges click over it. To remove it, ease the hooks outward with a fingernail.</li></ol>`,
   },
   {

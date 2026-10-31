@@ -2,17 +2,17 @@
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Assembly · Ceiling Clock</title>
-<link rel="stylesheet" href="style.css?v=20261030u">
+<link rel="stylesheet" href="style.css?v=20261030v">
 </head><body>
 <header class="site"><div class="in">
 <a class="brand" href="index.html"><span class="dot"></span>Ceiling Clock</a>
-<nav><a href="index.html">3D model</a><a href="assembly.html" class="on">Assembly</a><a href="wiring.html">Wiring</a><a href="parts.html">Parts</a><a href="demo/">Live demo</a><a href="firmware.html">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
+<nav><a href="index.html">3D model</a><a href="assembly.html" class="on">Assembly</a><a href="wiring.html">Wiring</a><a href="breadboard.html">Breadboard test</a><a href="parts.html">Parts</a><a href="demo/">Live demo</a><a href="firmware.html">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
 </div></header>
 <main>
 <h1>Assembly</h1>
 <p class="lead">Ten steps, from printed parts to a focused image on the ceiling. Allow an evening for the electronics and an hour for final assembly. Highlighted parts in each picture are the ones that step adds; "Open in 3D" shows the same view so you can rotate it.</p>
 
-<div class="note"><b>Test the optics on the bench first.</b> Before printing, hold the LED, a piece of baking paper, the LCD and the lens in a stack in a dark room and aim it at the ceiling. That's the quickest way to confirm the lens and LED brightness suit your room.</div>
+<div class="note"><b>Test on the bench first.</b> The <a href="breadboard.html">breadboard test</a> page walks through wiring and checking every module before you solder anything. <b>Test the optics too.</b> Before printing, hold the LED, a piece of baking paper, the LCD and the lens in a stack in a dark room and aim it at the ceiling. That's the quickest way to confirm the lens and LED brightness suit your room.</div>
 
 <p><b>Tools:</b> soldering iron, rotary tool or hobby knife (for the LCD window), hot glue, wire strippers, black electrical tape, small pliers (only for removing pins).<br>
 <b>Hardware:</b> none. The case goes together with printed quarter-turn lock pins and clips, no screws.</p>
@@ -22,7 +22,7 @@
 </main>
 <footer>Ceiling Clock · <a href="https://github.com/ScottYates/ceilingclock/blob/main/hardware/enclosure.scad">edit the model in OpenSCAD</a></footer>
 <script type="module">
-import { STEPS } from './js/steps.js?v=20261030u';
+import { STEPS } from './js/steps.js?v=20261030v';
 document.getElementById('steps').innerHTML = STEPS.map((s, i) => `
 <section class="step" id="step-${i + 1}">
   <div><img src="img/step-${i + 1}.png" alt="3D view of step ${i + 1}: ${s.title}" loading="lazy">

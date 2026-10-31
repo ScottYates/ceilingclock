@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Breadboard test · Ceiling Clock</title>
+<link rel="stylesheet" href="style.css?v=20261030v">
+</head><body>
+<header class="site"><div class="in">
+<a class="brand" href="index.html"><span class="dot"></span>Ceiling Clock</a>
+<nav><a href="index.html">3D model</a><a href="assembly.html">Assembly</a><a href="wiring.html">Wiring</a><a href="breadboard.html" class="on">Breadboard test</a><a href="parts.html">Parts</a><a href="demo/">Live demo</a><a href="firmware.html">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
+</div></header>
+<main>
+<h1>Breadboard test</h1>
+<p class="lead">Before soldering the perfboard or printing the case, wire everything up on a breadboard and check each part works. Add one module at a time and test it before adding the next, so if something doesn't work you know exactly where to look. It takes an evening, and every wire goes to the same pin as in the finished clock.</p>
+
+<div class="note"><b>Try the web page first.</b> The <a href="demo/">live demo</a> runs the same firmware in your browser, so you can learn the settings before any hardware is involved.</div>
+
+<h2>What you need</h2>
+<ul>
+<li>Everything on the <a href="parts.html">parts list</a> except the printed parts. The LCD can be tested before you cut its window.</li>
+<li><b>Two full-size breadboards</b> pushed side by side. The ESP32-S3 DevKitC-1 is too wide for one: it would cover all but one hole on one side. Straddle it across the gap between the two boards so each row of its pins has free holes beside it. A single wide "ESP32" breadboard also works.</li>
+<li>Jumper wires (male–male, plus a few male–female for modules with header pins).</li>
+<li>A USB-C data cable from your computer to the board's port marked <b>USB</b>. That's where the firmware sends its log; flashing works on either port.</li>
+<li>The 5 V 3 A supply and the USB-C breakout, for the LED, ring and amplifier.</li>
+<li>Something metal to sit the LED star on while it's lit (an old heatsink, a steel ruler, a can lid).</li>
+</ul>
+
+<h2>Power on the bench</h2>
+<p>While testing, the ESP32 runs from your computer's USB, so you can flash it and watch its log. The external 5 V supply feeds only the parts that need real current: the amplifier, the sunrise ring and the projector LED. The ESP32's own 3V3 pin feeds the logic modules on a separate rail.</p>
+<img src="img/breadboard.svg?v=1" alt="Bench power: the 5 V supply feeds a top rail for the amplifier, ring and MOSFET module; the ESP32's 3V3 pin feeds a bottom rail for the LCD, TM1637, DS3231 and light sensor; both GND rails are joined" style="width:100%;border:1px solid var(--line);border-radius:12px;background:var(--paper);margin:8px 0 4px">
+<p style="font-size:.85rem;color:var(--mut)">Generated from <code>firmware/src/pins.h</code> by <code>hardware/make_breadboard_svg.py</code>. The full signal diagram is on the <a href="wiring.html">wiring page</a>.</p>
+<div class="note"><b>Two rules:</b> join the two GND rails (otherwise the signals have no common reference and the ring and amplifier misbehave), and <b>don't connect the external 5 V to the ESP32's 5V pin</b> while the computer is plugged in. Two supplies would fight through the board. In the finished clock the 5 V supply does feed that pin, and the computer stays unplugged (updates go over Wi-Fi).</div>
+
+<h2>Build it up, one module at a time</h2>
+<p>Unplug the USB cable each time you add wires, then plug it back in to test. GPIO numbers are the labels printed on the board.</p>
+<table><thead><tr><th>#</th><th>Add</th><th>Wiring</th><th>Test</th></tr></thead><tbody>
+<tr><td>1</td><td><b>ESP32 on its own</b></td><td>Just the USB cable.</td><td>Flash the firmware (see <a href="firmware.html">Firmware</a>) and open a serial monitor at 115200 baud. On first boot, join the <code>CeilingClock-Setup</code> Wi-Fi from your phone and pick your network. Then <code>http://ceilingclock.local/</code> should load and show the time, "synced just now".</td></tr>
+<tr><td>2</td><td><b>Buttons</b></td><td>Button A: GPIO 6 to one leg, other leg to GND. Button B: GPIO 14 and GND. No resistors: the ESP32's pull-ups are used.</td><td>Press B: the web page's "Front display" button flips between on and off. Hold B for 3 s: "Projector" flips. Press A while an alarm rings: it snoozes.</td></tr>
+<tr><td>3</td><td><b>TM1637 front display</b></td><td>VCC to 3V3, GND to GND, CLK to GPIO 4, DIO to GPIO 5.</td><td>It shows the time within a second. Change the front display's day brightness on the settings page and it follows.</td></tr>
+<tr><td>4</td><td><b>Nokia 5110 LCD</b></td><td>VCC to 3V3, GND to GND, RST 8, CE 10, DC 9, DIN 11, CLK 12. To see it on the bench, light its backlight: BL to GND on most red boards (to 3V3 on some). In the clock BL stays unconnected.</td><td>It shows the time <b>back to front</b>: the firmware mirrors it for the projector. Untick <b>Mirror left/right</b> to read it directly, and tick it again before you test the optics. If it's blank or solid black, adjust <b>LCD contrast</b>. "Flip projection" turns it upside down.</td></tr>
+<tr><td>5</td><td><b>Light sensor</b></td><td>GL5528 from 3V3 to GPIO 7; 10 kΩ from GPIO 7 to GND.</td><td>The "sensor now" reading (next to "Dark below" in the night settings) goes up with a torch on it and down when you cover it.</td></tr>
+<tr><td>6</td><td><b>DS3231 clock module</b></td><td>VCC to 3V3, GND to GND, SDA to GPIO 1, SCL to GPIO 2. On a ZS-042 board with a CR2032, remove the charging resistor first (see <a href="wiring.html">Wiring</a>).</td><td>The page shows "RTC backup ok". Turn your router's Wi-Fi off and restart the ESP32: the time is still right.</td></tr>
+<tr><td>7</td><td><b>5 V supply</b></td><td>USB-C breakout VBUS to the top +5 V rail, GND to the top GND rail. Join the two GND rails. Plug the supply in.</td><td>3.3 V parts carry on as before. Measure about 5 V between the top rails.</td></tr>
+<tr><td>8</td><td><b>Amplifier and speaker</b></td><td>MAX98357A VIN to +5 V, GND to GND, BCLK 15, LRC 16, DIN 17. Speaker to its + and − terminals. 100 µF across VIN and GND, close to the module. Leave GAIN and SD unconnected.</td><td>Under Sounds, press <b>Play</b> on beep.wav. Then try an alarm's <b>Preview stream</b> with a radio or podcast URL.</td></tr>
+<tr><td>9</td><td><b>Sunrise ring</b></td><td>Ring 5V to +5 V, GND to GND, DIN through a 330 Ω resistor to GPIO 18. The 1000 µF capacitor across 5V and GND right at the ring, its − leg to GND. Keep the data wire short.</td><td>Give an alarm a sunrise time (e.g. 15 min) and press <b>Ring now</b>: the ring glows warm white until you press Dismiss.</td></tr>
+<tr><td>10</td><td><b>Projector LED</b></td><td>MOSFET module VIN+ to +5 V, VIN− to GND, SIG/PWM to GPIO 13 (and its GND to GND). OUT+ through the 4.7 Ω 2 W resistor to LED +, LED − to OUT−. Sit the LED star on metal.</td><td>Toggle <b>Projector</b> on the page: the LED lights; changing the projector brightness dims it. Don't look straight into it. Without a heatsink, don't leave it at 100% for more than a few seconds.</td></tr>
+</tbody></table>
+
+<h2>Test the projected image</h2>
+<p>Once the LCD has its window cut (assembly step 5), you can check the optics on the bench before printing:</p>
+<ol>
+<li>In a dark room, point the LED up. About 10 mm above it, hold a piece of baking paper; about 30 mm above the LED, hold the LCD, glass up.</li>
+<li>Hold the lens about 106 mm above the LCD and look at the ceiling. Move the lens up and down a little until the digits are sharp. That distance is what the threaded focus ring adjusts in the finished clock.</li>
+<li>Set <b>Mirror left/right</b> and <b>Flip projection</b> so it reads right from where you lie. In the clock the 45° mirror adds one more flip, so expect to change Mirror left/right once it's built.</li>
+</ol>
+
+<h2>If something doesn't work</h2>
+<table><thead><tr><th>Problem</th><th>Check</th></tr></thead><tbody>
+<tr><td>Nothing in the serial monitor</td><td>Use the port marked <b>USB</b>, at 115200 baud. Some USB-C cables only carry power.</td></tr>
+<tr><td>The ESP32 resets when the ring or LED turns on</td><td>The GND rails aren't joined, or the 5 V supply is weak. Check the 1000 µF capacitor at the ring.</td></tr>
+<tr><td>Front display blank</td><td>VCC must go to 3V3; CLK and DIO swapped?</td></tr>
+<tr><td>LCD blank or all black</td><td>LCD contrast on the settings page; check RST and CE. Breadboard contacts on cheap header pins can be loose: wiggle them.</td></tr>
+<tr><td>Ring flickers or shows wrong colours</td><td>Short data wire, the 330 Ω in series, the capacitor at the ring. If it persists, add a 74AHCT125 level shifter on the data line.</td></tr>
+<tr><td>No sound</td><td>The amplifier needs the 5 V supply plugged in. Check BCLK/LRC/DIN aren't swapped, and the speaker leads.</td></tr>
+<tr><td>"no RTC" on the page</td><td>SDA and SCL swapped, or the module on 5 V instead of 3V3.</td></tr>
+</tbody></table>
+<p>When everything passes, move the same connections onto the perfboard (<a href="assembly.html">assembly step 4</a>). In the clock, the 5 V rail also feeds the ESP32's 5V pin, so from then on leave the computer unplugged and update over Wi-Fi.</p>
+</main>
+<footer>Ceiling Clock · <a href="https://github.com/ScottYates/ceilingclock">source on GitHub</a></footer>
+</body></html>
