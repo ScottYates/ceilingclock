@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { PARTS, ALL, MATERIALS, AXIS } from './parts.js?v=20261030t';
-import { optics, LENS, CEILING } from './optics.js?v=20261030t';
+import { PARTS, ALL, MATERIALS, AXIS } from './parts.js?v=20261030u';
+import { optics, LENS, CEILING } from './optics.js?v=20261030u';
 
 // createViewer(container) -> { ready: Promise, setState({visible, highlight, explode, tilt, focus, beam, camera, target}), onPick }
 export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'models/clock.glb' } = {}) {

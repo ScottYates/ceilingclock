@@ -17,10 +17,10 @@ export const STEPS = [
   {
     title: 'Print the parts',
     view: { visible: PRINTED, highlight: [], explode: 0.75, camera: [420, 380, 560], target: [0, 100, 0] },
-    html: `<p>Print the eleven files in <code>hardware/stl/</code>. They are already in printing orientation. The case needs <b>no screws</b>: printed snap pins hold the lid, LED cap, lens mount and ring holder, and the circuit board snaps under printed hooks.</p>
+    html: `<p>Print the eleven files in <code>hardware/stl/</code>. They are already in printing orientation. The case needs <b>no screws</b>: printed quarter-turn lock pins hold the lid, LED cap, lens mount and ring holder, and the circuit board snaps under printed hooks.</p>
 <table><thead><tr><th>Part</th><th>Material</th><th>Notes</th></tr></thead><tbody>
 <tr><td>base.stl</td><td>PLA/PETG, black or dark grey</td><td>170 × 135 × 44 mm (56 mm at the bearing). 0.2 mm layers, 3 walls, 15% infill. No supports. For a 0.56" display, print <code>base_056.stl</code> instead.</td></tr>
-<tr><td>lid.stl</td><td>Same as base</td><td>Prints flat, no supports.</td></tr>
+<tr><td>lid.stl</td><td>Same as base</td><td>Prints flat, <b>top face down</b> (as exported): the pins' ramps are on its underside. The top gets the smooth bed finish.</td></tr>
 <tr><td>barrel.stl</td><td><b>Black</b> PLA/PETG</td><td>Must be opaque. Stands on its open end; the mirror ramp inside is a 45° slope, so no supports.</td></tr>
 <tr><td>lcd_holder.stl</td><td>Black</td><td>Prints flat.</td></tr>
 <tr><td>led_cap.stl</td><td>Black PETG preferred</td><td>Holds the LED, so PETG copes with the warmth better. Stands on its collar.</td></tr>
@@ -29,7 +29,7 @@ export const STEPS = [
 <tr><td>lens_cap.stl</td><td>Any</td><td>3 mm ring that traps the lens.</td></tr>
 <tr><td>ring_holder.stl</td><td>Any</td><td>—</td></tr>
 <tr><td>dome.stl</td><td>White or natural PLA</td><td>Vase mode or 2 walls, 0% infill, so it glows evenly.</td></tr>
-<tr><td>pins.stl</td><td><b>PETG</b> (or PLA)</td><td>12 snap pins (10 needed, 2 spares), lying on their flats. Use <b>100% infill</b> and 0.12–0.16 mm layers. PETG flexes without snapping.</td></tr>
+<tr><td>pins.stl</td><td><b>PETG</b> (or PLA)</td><td>Quarter-turn lock pins, heads down: 4 short (3 needed, for the lid corners) and 8 long (7 needed). Use <b>100% infill</b>, in PETG if you have it (it's tougher for the click). The small lug near each head is a 1.4 mm overhang, which prints fine.</td></tr>
 </tbody></table>
 <p>Total print time is about 12–15 hours. The base needs a bed of at least 180 × 145 mm; everything else is smaller.</p>`,
   },
@@ -82,7 +82,7 @@ export const STEPS = [
 <li>Peel the protective film off the mirror only now, holding it by the edges. The coating is on the front, so any fingerprint shows up on the ceiling.</li>
 <li>Put two short strips of thin double-sided tape on the 45° ramp inside the barrel's closed (right) end. Slide the mirror in from the open end, <b>shiny side up</b>, and press it onto the tape with its lower edge against the stop.</li>
 <li>Push the LCD holder into the open end, key at the bottom, until it's flush. Feed the LCD lead out through the slot low on the barrel's front side.</li>
-<li>Set the lens mount (the threaded collar) on top of the barrel, slotted tongue toward the back, and push a snap pin through each of its two tabs.</li>
+<li>Set the lens mount (the threaded collar) on top of the barrel, slotted tongue toward the back, and lock it with a long pin through each of its two tabs: push in with the head along the slot, turn a quarter turn until it clicks.</li>
 <li>Drop the 50 mm lens into the seat in the top of the focus ring, and glue the lens cap on with three small dots (keep glue off the glass).</li>
 <li>Screw the focus ring into the collar, clockwise, about three turns, until its grip is roughly 5 mm above the collar. That's close to focused for an 8 ft ceiling. The thread is coarse (3 mm per turn) so it starts easily; if it's stiff, run it in and out a few times.</li></ol>`,
   },
@@ -103,7 +103,7 @@ export const STEPS = [
 <li>Push the 16 mm snooze button through the hole near the front of the lid and tighten its nut.</li>
 <li>Glue the LDR into the small hole at the front-right corner, with its face flush with the top.</li>
 <li>Thread the ring leads up through the lid's centre hole on the left before closing it.</li>
-<li>Lay the lid on so the barrel and LED cap sit in its cut-out. Push a snap pin into each of the three corner holes, and two more through the LED cap's tabs, until they click.</li></ol>`,
+<li>Lay the lid on so the barrel and LED cap sit in its cut-out. Lock it with a short pin in each of the three corners and a long pin through each of the LED cap's two tabs: push the pin in with its wing head <b>along</b> the slot beside the hole, then turn the head a quarter turn either way until it lies <b>crosswise</b> and clicks.</li></ol>`,
   },
   {
     title: 'Sunrise light',
@@ -111,7 +111,7 @@ export const STEPS = [
     html: `<ol>
 <li>Solder three leads (5V, GND, DIN) to the ring's input pads and feed them down through the centre hole of the holder and the lid.</li>
 <li>Press the ring LEDs-up into the holder pocket.</li>
-<li>Fix the holder to the lid with three snap pins through the holes inside the ring.</li>
+<li>Fix the holder to the lid with three long lock pins through the holes inside the ring, turning each a quarter turn to lock. Do this before the ring goes in if your fingers need the room.</li>
 <li>Press the dome into the groove around the holder. A dab of glue holds it if it's loose.</li></ol>`,
   },
   {

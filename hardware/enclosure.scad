@@ -5,7 +5,7 @@
 //
 // Render one part:   openscad -D 'part="base"' -D 'print=true' -o base.stl enclosure.scad
 // Parts: base lid barrel lcd_holder led_cap lens_mount sleeve lens_cap ring_holder dome pins
-// No screws: printed snap pins hold the lid, LED cap, lens mount and ring holder; the circuit board snaps under hooks.
+// No screws: printed quarter-turn lock pins hold the lid, LED cap, lens mount and ring holder; the circuit board snaps under hooks.
 // Bought components (not printed, for the 3D viewer): see components.scad. Add -D 'mat="..."' to
 //   render one material of a component, e.g. -D 'part="ref_tm1637"' -D 'mat="led_red"'.
 //
@@ -32,12 +32,18 @@ floor_top = feet_h + floor_t;       // 8.5
 post_xy = [box_w/2 - 6 - wall/2, box_d/2 - 6 - wall/2];   // lid posts (x, y)
 posts = [[-1, -1], [1, -1], [-1, 1]];                      // the back-right corner is the barrel's bearing block
 
-// snap pins: split shaft with a barb. All joints use the same pin (grip = clamped thickness).
-pin_d = 4.0;  pin_hole = 4.25;  pin_barb = 0.45;  pin_tip = 2.6;  pin_slot = 1.1;
-pin_head_d = 7.5;  pin_head_t = 1.2;  pin_recess = 8.1;   // counterbore for the head
-pin_catch = 4;                                         // how far the pin enters a lid post
-pin_grip = lid_t - pin_head_t + pin_catch;             // 5.8 mm, same for every joint
-tab_t = 4;                                             // pinned tabs: 2.8 mm under the head + 3 mm below = grip
+// Quarter-turn lock pins, the same as on the VoiceLabels case: push the pin in with its wing head
+// lined up with the slot, then turn it a quarter turn either way. A lug on the shaft rides up a small
+// ramp on the inside face of the wall (pulling the head tight), clicks into a notch, and a stop keeps
+// it from turning further. The head shows the state: along the slot = open, crosswise = locked.
+PIN_D = 4.0;  PIN_HOLE_D = 4.3;
+PIN_HEAD_L = 12;  PIN_HEAD_W = 6;  PIN_HEAD_T = 2.4;     // wing head (VoiceLabels: 14 long; 12 here to turn beside the lens collar)
+LUG_R = 3.2;  LUG_W = 1.8;  LUG_T = 1.2;  LUG_GAP = 0.15;
+RAMP_H = 0.4;  NOTCH_H = 0.15;  STOP_H = 1.2;           // off the wall's inside face; lower RAMP_H if too stiff
+KEYWAY_W = 2.3;  KEYWAY_R = 3.6;  POCKET_R = 3.8;  POCKET_L = 2.2;
+GRIP_SHORT = lid_t;      // lid corners: through the lid, locking under it in a pocket in the post
+GRIP_LONG = 7;           // LED cap and ring holder (through them and the lid), lens collar (through it and the barrel wall)
+tab_t = 4;               // pinned tabs: tab + 3 mm below = GRIP_LONG
 
 // ---------------------------------------------------------------- tilting barrel optics
 // Barrel axis = optical axis: parallel to X through (ax_y, z_ax). r = distance from the axis.
@@ -46,7 +52,7 @@ z_ax = floor_top + 2 + br_R;                               // 44.5: the axis sit
 ax_y = box_d/2 - wall - 0.5 - br_R;                        // 30.5
 lens_v = 106;                    // lens-to-LCD distance for a 100 mm lens and ~1.8 m throw
 mirror_L = 50;  mirror_W = 50;  mirror_t = 1.1;            // 50 x 50 x 1.1 mm front-surface mirror
-mx = 38;                                                   // mirror centre x = lens x
+mx = 34;                                                   // mirror centre x = lens x
 rL = 54;                                                   // lens centre, radial distance above the axis (focus +/-5)
 lcd_x = mx - (lens_v - rL);                                // -21: LCD pixel plane
 mh = mirror_L / 2 / sqrt(2);
@@ -68,7 +74,7 @@ thr_P = 3;  thr_e = 0.8;  thr_R = 27.5;  thr_clr = 0.35;  // thread: pitch, dept
 focus_mm = 0;                                              // focus position for the assembled model (-5 .. +5)
 grip_h = 6;  grip_od = 61;  sl_thr = 17;                   // knurled grip, thread length below it
 lens_z = z_ax + rL + 1.75 + focus_mm;                      // top of the sleeve (lens seat)
-lm_od = 62;  lm_tab = lm_od/2 + 4;  lm_wall = lm_od/2 - thr_R - thr_clr;
+lm_od = 62;  lm_tab = lm_od/2 + PIN_HEAD_L/2 + 0.5;  lm_wall = lm_od/2 - thr_R - thr_clr;
 lm_top = rL - 5 + 1.75 - grip_h - 0.5;                     // r of the collar's top: the grip clears it at the lowest focus
 br_hole = 2 * thr_R + 1.5;                                 // the sleeve's thread passes through the barrel top
 // detents: notches on the barrel's right end, a springy tongue on the bearing block below the axis
@@ -78,7 +84,7 @@ lid_cut = [cap_x0 - 0.5, br_x1 + 0.5, ax_y - br_R - 0.5];   // x from, x to, y f
 blk_x = br_x1 + 0.5;                                       // right bearing block, x from here to the wall
 
 // other lid features
-ring_xy = [-50, -35];  ring_pin_r = 11;   ring_od = 44.5; ring_id = 31.5;  dome_d = 58;  dome_h = 20;
+ring_xy = [-50, -35];  ring_pin_r = 8;   ring_od = 44.5; ring_id = 31.5;  dome_d = 58;  dome_h = 20;
 button_xy = [0, -35]; button_hole = 16.2;
 ldr_xy = [60, -50];                      // clear of the corner pins, the dome and the barrel
 // front display: TM1637 4-digit module. Set to "0.36" (42 x 24 mm board, default) or "0.56" (~50 mm display).
@@ -148,10 +154,7 @@ module base() {
       bearing_block();
     }
     // lid pin holes: straight bore, then a wider pocket the barb snaps into
-    for (p = posts) translate([p[0] * post_xy[0], p[1] * post_xy[1], 0]) {
-      translate([0, 0, base_top - pin_catch - eps]) cylinder(d = pin_hole, h = pin_catch + 1);
-      translate([0, 0, base_top - pin_catch - pin_tip - 0.8]) cylinder(d = pin_d + 2 * pin_barb + 0.5, h = pin_tip + 0.8);
-    }
+    for (p = posts) translate([p[0] * post_xy[0], p[1] * post_xy[1], lid_top]) lp_bore(GRIP_SHORT);   // lug pocket in the post top
     // the barrel turns just clear of the back wall; its axle goes into the bearing block
     ax_cyl(br_R + 0.5, br_x0 - 1, br_x1 + 0.2);
     translate([blk_x - 1, ax_y, z_ax]) rotate([0, 90, 0]) cylinder(d = axle_d + 0.4, h = axle_l + 1.5, $fn = 40);
@@ -204,22 +207,21 @@ module lid() {
     // bevel the edge in front of the barrel so the lens mount clears it at full tilt
     translate([mx - lm_od/2 - 2, lid_cut[2], base_top]) rotate([0, 90, 0]) linear_extrude(lm_od + 4)
       polygon([[0.01, 0.01], [0.01, -2.5], [-lid_t - 0.01, -6], [-lid_t - 0.01, 0.01]]);
-    // pin holes with a recess so the pin heads sit flush
-    for (p = posts) translate([p[0] * post_xy[0], p[1] * post_xy[1], base_top - 1]) {
-      cylinder(d = pin_hole, h = 10);
-      translate([0, 0, 1 + lid_t - pin_head_t]) cylinder(d = pin_recess, h = 10);
-    }
-    // LED cap tab pins
-    for (s = [-1, 1]) translate([cap_tab_x, ax_y + s * cap_tab_dy, base_top - 1]) cylinder(d = pin_hole, h = 10);
-    // sunrise ring: wire hole + holder pins
-    translate([ring_xy[0], ring_xy[1], base_top - 1]) {
-      cylinder(d = 10, h = 10);
-      for (a = [90, 210, 330]) rotate(a) translate([ring_pin_r, 0, 0]) cylinder(d = pin_hole, h = 10);
-    }
+    lid_pins() lp_bore($grip);
+    translate([ring_xy[0], ring_xy[1], base_top - 1]) cylinder(d = 10, h = 10);   // sunrise ring wires
     translate([button_xy[0], button_xy[1], base_top - 1]) cylinder(d = button_hole, h = 10);
     translate([ldr_xy[0], ldr_xy[1], base_top - 1]) cylinder(d = 5.2, h = 10);
   }
+  lid_pins() lp_ramps($grip);   // on the lid's underside: the lid prints upside down
 }
+// Every lock pin that locks under the lid: frame at the pin's head seat, slot along local +x.
+module lid_pins() {
+  for (p = posts) translate([p[0] * post_xy[0], p[1] * post_xy[1], lid_top]) { $grip = GRIP_SHORT; children(); }
+  for (s = [-1, 1]) translate([cap_tab_x, ax_y + s * cap_tab_dy, lid_top + tab_t]) { $grip = GRIP_LONG; children(); }
+  for (a = ring_pin_a) translate([ring_xy[0], ring_xy[1], lid_top + tab_t]) rotate(a) translate([ring_pin_r, 0, 0]) { $grip = GRIP_LONG; children(); }
+}
+ring_pin_a = [90, 210, 330];
+module barrel_pin_frames() for (s = [-1, 1]) translate([mx + s * lm_tab, ax_y, z_ax + br_R + tab_t]) children();
 
 // ---------------------------------------------------------------- barrel (turns; carries the LCD holder, mirror and lens mount)
 module barrel() {
@@ -237,18 +239,16 @@ module barrel() {
           translate([-mirror_L/2 - 3, -100, -mirror_t - 1]) cube([3, 200, mirror_t + 3]);
         }
       }
-      // bosses under the lens mount's pins, so the pins grip 3 mm of barrel
+      // bosses under the lens mount's pins, so the pins lock behind 3 mm of barrel
       for (s = [-1, 1]) translate([mx + s * lm_tab, ax_y, z_ax + br_ri - 1]) cylinder(d = 9, h = 1.5);
+      barrel_pin_frames() lp_ramps(GRIP_LONG);
       // axle stub on the right end
       translate([br_x1 - eps, ax_y, z_ax]) rotate([0, 90, 0]) cylinder(d = axle_d, h = axle_l, $fn = 40);
     }
     // light hole in the top, under the lens
     translate([mx, ax_y, z_ax]) cylinder(d = br_hole, h = br_R + 5);
-    // lens mount pins, with a pocket for the barb where the pin ends up in the solid ramp
-    for (s = [-1, 1]) translate([mx + s * lm_tab, ax_y, z_ax + br_ri - 1 - pin_tip - 1]) {
-      cylinder(d = pin_hole, h = 10);
-      cylinder(d = pin_d + 2 * pin_barb + 0.5, h = pin_tip + 1);
-    }
+    // lens mount pins (the one at the right end turns in a pocket in the solid ramp)
+    barrel_pin_frames() lp_bore(GRIP_LONG);
     // key slot for the LCD holder (bottom of the left end)
     translate([br_x0 - 1, ax_y - 2.2, z_ax - br_R - 1]) cube([7, 4.4, 4]);
     // slot for the LCD leads, low on the front side (stays in the base at every tilt)
@@ -294,10 +294,7 @@ module led_cap() {
     // air holes in the back plate (above and below the star) and the LED lead hole
     for (sy = [-1, 1], sz = [-1, 1]) translate([cap_x0 - 1, ax_y + sy * 15, z_ax + sz * 15]) rotate([0, 90, 0]) cylinder(d = 7, h = 10);
     translate([cap_x0 - 1, ax_y, z_ax - 14]) rotate([0, 90, 0]) cylinder(d = 4, h = 10);
-    for (s = [-1, 1]) translate([cap_tab_x, ax_y + s * cap_tab_dy, lid_top - 1]) {
-      cylinder(d = pin_hole, h = 10);
-      translate([0, 0, 1 + tab_t - pin_head_t]) cylinder(d = pin_recess, h = 10);
-    }
+    for (s = [-1, 1]) translate([cap_tab_x, ax_y + s * cap_tab_dy, lid_top + tab_t]) lp_bore(GRIP_LONG);
   }
 }
 
@@ -319,10 +316,7 @@ module lens_mount() {
     }
     ax_cyl(br_R + 0.2, br_x0 - 50, br_x1 + 50);                                     // saddle on the barrel
     translate([mx, ax_y, 0]) helix(thr_R + thr_clr, z_ax + 12, z_ax + lm_top + 1);   // internal thread
-    for (s = [-1, 1]) translate([mx + s * lm_tab, ax_y, z_ax]) {
-      cylinder(d = pin_hole, h = 100);
-      translate([0, 0, br_R + tab_t - pin_head_t]) cylinder(d = pin_recess, h = 100);
-    }
+    barrel_pin_frames() lp_bore(GRIP_LONG);
     // springy tongue at the back of the collar: two slots
     for (s = [-1, 1]) translate([mx + s * 3.5 - 0.5, ax_y, z_ax + lm_top - 8]) cube([1, lm_od, 9]);
   }
@@ -362,10 +356,8 @@ module ring_holder() {
     cylinder(d = dome_d, h = 5);
     translate([0, 0, 1.5]) difference() { cylinder(d = ring_od + 0.6, h = 10); cylinder(d = ring_id - 0.6, h = 10); }
     translate([0, 0, -1]) cylinder(d = 10, h = 10);
-    for (a = [90, 210, 330]) rotate(a) translate([ring_pin_r, 0, -1]) {
-      cylinder(d = pin_hole, h = 10);
-      translate([0, 0, 1 + lid_t - pin_head_t + pin_catch - lid_t]) cylinder(d = pin_recess, h = 10);  // floor 2.8 mm up
-    }
+    for (a = ring_pin_a) rotate(a) translate([ring_pin_r, 0, tab_t]) lp_bore(GRIP_LONG);
+    translate([0, 0, tab_t]) cylinder(r = ring_id/2 - 0.5, h = 10);   // inner floor 4 mm: tab + lid = the long pins' grip
     // dome locating groove
     translate([0, 0, 3.5]) difference() { cylinder(d = dome_d - 8 + 0.6, h = 5); cylinder(d = dome_d - 8 - 3, h = 5); }
   }
@@ -380,29 +372,46 @@ module dome() {
   }
 }
 
-// ---------------------------------------------------------------- snap pins
-// Modelled along +z with the head below z = 0. Flats on two sides so it prints lying down
-// (layers run along the pin, which makes it far stronger than printing it upright).
-module snap_pin() {
-  flat = pin_d / 2 - 0.5;                 // pin is 3 mm thick across the flats
+// ---------------------------------------------------------------- quarter-turn lock pins
+function lp_len(grip) = grip + LUG_GAP + LUG_T + 1.2;      // shaft length under the head
+
+// The pin as printed: wing head flat on the bed, shaft up (+z). The lug (+x) lines up with the
+// head's long axis. Its flat underside is a 1.4 mm overhang, which prints fine.
+module lock_pin(grip) {
+  T = PIN_HEAD_T;  L = lp_len(grip);
+  hull() for (s = [-1, 1]) translate([s * (PIN_HEAD_L - PIN_HEAD_W) / 2, 0, 0]) cylinder(d = PIN_HEAD_W, h = T, $fn = 32);
+  translate([0, 0, T - 0.01]) cylinder(d = PIN_D, h = L - 0.6 + 0.01, $fn = 32);
+  translate([0, 0, T + L - 0.6]) cylinder(d1 = PIN_D, d2 = PIN_D - 1, h = 0.6, $fn = 32);
+  z0 = T + grip + LUG_GAP;
   intersection() {
-    difference() {
-      union() {
-        translate([0, 0, -pin_head_t]) cylinder(d = pin_head_d, h = pin_head_t, $fn = 48);
-        cylinder(d = pin_d, h = pin_grip, $fn = 40);
-        translate([0, 0, pin_grip]) cylinder(d1 = pin_d + 2 * pin_barb, d2 = pin_d - 0.8, h = pin_tip, $fn = 40);
-      }
-      // split so the barb can squeeze through the hole
-      translate([-pin_slot/2, -pin_d, pin_grip + pin_tip - (pin_tip + 3.6)]) cube([pin_slot, 2 * pin_d, pin_tip + 4]);
-    }
-    translate([-50, -flat, -50]) cube([100, 2 * flat, 100]);
+    translate([PIN_D / 2 - 0.3, -LUG_W / 2, z0]) cube([LUG_R - PIN_D / 2 + 0.3, LUG_W, LUG_T]);
+    translate([0, 0, z0 - 0.5]) cylinder(r = LUG_R, h = LUG_T + 1, $fn = 32);
   }
 }
+// Hole for a pin through a stack `grip` thick: the head seats at z = 0, the pin goes down (-z), the
+// slot the lug passes is along +x, and there is room below the stack for the lug to turn.
+module lp_bore(grip) {
+  translate([0, 0, -grip - POCKET_L - 1.2]) cylinder(d = PIN_HOLE_D, h = grip + POCKET_L + 3, $fn = 32);
+  translate([0, -KEYWAY_W / 2, -grip - 0.01]) cube([KEYWAY_R, KEYWAY_W, grip + 1.02]);
+  translate([0, 0, -grip - POCKET_L]) cylinder(r = POCKET_R, h = POCKET_L + 0.01, $fn = 40);
+}
+// Ramp, notch and stop on the stack's inside face (z = -grip), each side of the slot: thin sector
+// slabs the lug rides over. 24-66 degrees from the slot: ramp up to RAMP_H; 66-112: notch; 112-140: stop.
+module lp_ramps(grip) {
+  r0 = PIN_HOLE_D / 2 + 0.05;  r1 = LUG_R + 0.35;
+  for (side = [0, 1]) mirror([0, side, 0]) for (t = [24 : 3 : 137]) {
+    tm = t + 1.5;
+    h = tm < 66 ? RAMP_H * (tm - 24) / 42 + 0.02 : tm < 112 ? NOTCH_H : STOP_H;
+    rotate(t) translate([0, 0, -grip - h]) rotate_extrude(angle = 3.5, $fn = 120) translate([r0, 0]) square([r1 - r0, h + 0.01]);
+  }
+}
+// A pin in its hole: head on the surface at z = 0, locked = turned crosswise to the slot.
+module lp_place(grip, locked = true) translate([0, 0, PIN_HEAD_T]) rotate([180, 0, 0]) rotate(locked ? 90 : 0) lock_pin(grip);
 
-// Print plate: 12 snap pins (10 needed + spares), lying on their flats.
+// Print plate: 4 short pins (3 needed) and 8 long ones (7 needed), heads down.
 module pin_plate() {
-  flat = pin_d / 2 - 0.5;
-  for (i = [0:11]) translate([(i % 6) * 11, floor(i / 6) * 16, flat]) rotate([90, 0, 0]) snap_pin();
+  for (i = [0:3]) translate([i * 14, 0, 0]) lock_pin(GRIP_SHORT);
+  for (i = [0:7]) translate([(i % 4) * 14, 12 + floor(i / 4) * 12, 0]) lock_pin(GRIP_LONG);
 }
 
 // ---------------------------------------------------------------- bought components (viewer only, not printed)
@@ -422,7 +431,7 @@ module show(p) {
   else if (p == "ring_holder") ring_holder();
   else if (p == "dome") dome();
   else if (p == "pins") pin_plate();
-  else if (p == "pin") snap_pin();
+  else if (p == "pin") lock_pin(GRIP_LONG);
   else if (p == "ref_esp32") ref_esp32();
   else if (p == "ref_perfboard") ref_perfboard();
   else if (p == "ref_lcd") tilted() ref_lcd();
@@ -448,7 +457,7 @@ module show(p) {
 
 // Printing orientation: lay each part on the bed at z = 0.
 module print_pose(p) {
-  if (p == "lid")              translate([0, 0, -base_top]) children();
+  if (p == "lid")              translate([0, 0, lid_top]) mirror([0, 0, 1]) children();   // upside down: the pin ramps are on its underside
   // barrel stands on its open left end; the mirror ramp is then a 45 degree slope, no supports
   else if (p == "barrel")      rotate([0, -90, 0]) translate([-br_x0, -ax_y, -z_ax]) children();
   else if (p == "lcd_holder")  rotate([0, -90, 0]) translate([-br_x0, -ax_y, -z_ax]) children();
@@ -468,19 +477,8 @@ module show_print(p) {   // as show(), but untilted
 }
 
 // ---------------------------------------------------------------- pins in their assembled positions (viewer / checks)
-module barrel_pins() for (s = [-1, 1])     // lens mount -> barrel (these turn with the barrel)
-  translate([mx + s * lm_tab, ax_y, z_ax + br_R + tab_t - pin_head_t]) rotate([180, 0, 0]) snap_pin();
-module assembled_pins() {
-  // lid -> base posts
-  for (p = posts)
-    translate([p[0] * post_xy[0], p[1] * post_xy[1], lid_top - pin_head_t]) rotate([180, 0, 0]) snap_pin();
-  // LED cap tabs -> lid
-  for (s = [-1, 1])
-    translate([cap_tab_x, ax_y + s * cap_tab_dy, lid_top + tab_t - pin_head_t]) rotate([180, 0, 0]) snap_pin();
-  // ring holder -> lid
-  for (a = [90, 210, 330]) translate([ring_xy[0], ring_xy[1], 0]) rotate(a)
-    translate([ring_pin_r, 0, lid_top + 1 + lid_t - pin_head_t + pin_catch - lid_t - 1]) rotate([180, 0, 0]) snap_pin();
-}
+module barrel_pins() barrel_pin_frames() lp_place(GRIP_LONG);   // lens mount -> barrel (these turn with the barrel)
+module assembled_pins() lid_pins() lp_place($grip);   // lid corners, LED cap tabs, ring holder
 
 if (part == "assembly") {
   color("#3a3f47") base();

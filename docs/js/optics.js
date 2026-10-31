@@ -1,6 +1,6 @@
 // Projector optics for the 3D view (the live demo has the same numbers in demo/sim.js).
 // 100 mm lens, 106 mm from the LCD at nominal focus; focusMm moves the lens away from the LCD.
-export const LENS = { f: 100, nominal: 106, aperture: 46, rL: 54, pixel: 0.36, lcdW: 30, lcdH: 17, x: 38, pitch: 3 };
+export const LENS = { f: 100, nominal: 106, aperture: 46, rL: 54, pixel: 0.36, lcdW: 30, lcdH: 17, x: 34, pitch: 3 };
 export const CEILING = 1800;   // lens to ceiling, mm (8 ft ceiling, clock on a nightstand)
 
 export function optics(focusMm, tiltDeg, ceiling = CEILING) {

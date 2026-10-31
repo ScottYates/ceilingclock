@@ -2,7 +2,7 @@
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Assembly · Ceiling Clock</title>
-<link rel="stylesheet" href="style.css?v=20261030t">
+<link rel="stylesheet" href="style.css?v=20261030u">
 </head><body>
 <header class="site"><div class="in">
 <a class="brand" href="index.html"><span class="dot"></span>Ceiling Clock</a>
@@ -15,13 +15,14 @@
 <div class="note"><b>Test the optics on the bench first.</b> Before printing, hold the LED, a piece of baking paper, the LCD and the lens in a stack in a dark room and aim it at the ceiling. That's the quickest way to confirm the lens and LED brightness suit your room.</div>
 
 <p><b>Tools:</b> soldering iron, rotary tool or hobby knife (for the LCD window), hot glue, wire strippers, black electrical tape, small pliers (only for removing pins).<br>
-<b>Hardware:</b> none. The case goes together with printed snap pins and clips, no screws.</p>
+<b>Hardware:</b> none. The case goes together with printed quarter-turn lock pins and clips, no screws.</p>
+<p><b>The lock pins</b> work like a camera lens: push the pin in with its wing head <b>along</b> the slot beside the hole, then turn the head a quarter turn either way until it lies <b>crosswise</b> and clicks. Behind the wall a lug on the pin rides up a small ramp, which pulls the head tight, drops into a notch, and a stop keeps it from turning further. The head shows at a glance which pins are locked. To remove one, turn it back along the slot (it takes a firm twist) and pull it out. They're the same as the pins on the VoiceLabels case. If a pin is too stiff to turn, lower <code>RAMP_H</code> (0.4 mm) in <code>enclosure.scad</code>; if it doesn't click firmly, raise it a little, or print the pins in PETG.</p>
 
 <div id="steps"></div>
 </main>
 <footer>Ceiling Clock · <a href="https://github.com/ScottYates/ceilingclock/blob/main/hardware/enclosure.scad">edit the model in OpenSCAD</a></footer>
 <script type="module">
-import { STEPS } from './js/steps.js?v=20261030t';
+import { STEPS } from './js/steps.js?v=20261030u';
 document.getElementById('steps').innerHTML = STEPS.map((s, i) => `
 <section class="step" id="step-${i + 1}">
   <div><img src="img/step-${i + 1}.png" alt="3D view of step ${i + 1}: ${s.title}" loading="lazy">
