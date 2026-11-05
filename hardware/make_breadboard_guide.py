@@ -338,7 +338,7 @@ def build_steps():
                 W_('pink', esp(str(G('PIN_LDR'))), hl(L2, 'd', sb, 'where sensor and resistor meet'))],
          test='In the night settings, watch <b>sensor now</b> next to "Dark below". It goes up with a torch on the sensor and down when you cover it with a finger.',
          fix=[('Always about 0', f'The sensor leg isn\'t in row {L1} or the orange wire isn\'t on the + rail.'),
-              ('Always about 4095', 'The 10 kΩ resistor isn\'t reaching the − rail.')])
+              ('Always about 4000 or more, even in a dim room', f'The ESP32 is seeing the full 3.3 V. Either the 10 kΩ resistor is missing or isn\'t reaching the − rail (one leg in the same row as the sensor\'s second leg, row {L2}; the other in the − rail by the blue line), or the pink wire is in the sensor\'s first row ({L1}, the 3.3 V side) instead of row {L2}.')])
 
     if one:
         step(id='ds3231', title='Clock module (DS3231): test it later', time='0 min', mods=[], parts=[], wires=[],
