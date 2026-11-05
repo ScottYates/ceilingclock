@@ -298,7 +298,7 @@ def build_steps():
          intro='For testing, use two small 4-legged push buttons; the 16 mm panel buttons go in later. Each one sits <b>across the gap</b> in the middle of the breadboard. Wire to <b>diagonally opposite legs</b>: that way it works whichever way round the button sits.'
                + X('', ' On the lower board the rows beside the ESP32 are taken, so the buttons go at the two ends.', ' They go in the free rows to the right of the ESP32.'),
          parts=[('button', bA[0], 'A', bA[1]), ('button', bB[0], 'B', bB[1])], wires=bw,
-         test='On the clock\'s page, press button <b>B</b>: the <b>Front display</b> button on the page flips between on and off. Hold B for 3 seconds: <b>Projector</b> flips. (Button A snoozes an alarm; you\'ll try it later.)',
+         test='On the clock\'s page, press button <b>B</b>: the <b>Front display</b> button on the page flips between on and off. Now press B and keep holding it: 3 seconds after you pressed, <b>Projector</b> flips on the page (the page can take another second to show it). Let go after it flips; letting go sooner counts as a short press. (Button A snoozes an alarm; you\'ll try it later.)',
          fix=[('Nothing happens', f'Check the wires go to diagonally opposite legs ({legs}) and that the button straddles the gap.'),
               ('It acts as if always pressed', 'The button is turned so both wires land on legs that are always connected. Turn it 90°.')])
 
