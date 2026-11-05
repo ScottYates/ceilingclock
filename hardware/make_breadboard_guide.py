@@ -36,10 +36,11 @@ BX0 = 300                                # x of row 1
 ROWS = 30
 PLUG_ROW0 = 5                            # breadboard row of the ESP32's first pin (plug layout)
 
-def cols(y_a, y_f):
-    d = {c: y_a + i * P for i, c in enumerate('abcde')}
-    d.update({c: y_f + i * P for i, c in enumerate('fghij')})
+def cols(y_a, y_f, p=P):
+    d = {c: y_a + i * p for i, c in enumerate('abcde')}
+    d.update({c: y_f + i * p for i, c in enumerate('fghij')})
     return d
+ONE_P, ONE_X0 = 10, 255                  # one full-size board: 60 rows at a smaller pitch
 
 LAYOUTS = {
   'beside': dict(
@@ -52,21 +53,35 @@ LAYOUTS = {
               'L': dict(label='lower board', y0=285, y1=530, cols=cols(334, 424), rails={'b+': 502, 'b-': 516},
                         gap=401, rowy=495, dead=(298, 312))},
       esp=(BX0 + (PLUG_ROW0 - 1) * P - 16, 226, BX0 + (PLUG_ROW0 + 20) * P + 16, 346), epitch=P),
+  'one': dict(
+      boards={'': dict(label='', y0=236, y1=436, cols=cols(280, 350, ONE_P), rails={'t+': 250, 't-': 262, 'b+': 408, 'b-': 420},
+                       gap=327, rowy=272.5, dead=None)},
+      esp=(ONE_X0 + (PLUG_ROW0 - 1) * ONE_P - 14, 268, ONE_X0 + (PLUG_ROW0 + 20) * ONE_P + 14, 392), epitch=ONE_P,
+      P=ONE_P, X0=ONE_X0, ROWS=60, W=1100, rdx=100),
 }
 LAY = 'beside'                           # the layout being built or drawn
 MIRROR = dict(zip('abcdefghij', 'jihgfedcba'))   # design letter -> letter printed on a real breadboard
 def LY(): return LAYOUTS[LAY]
-def X(beside, plug): return plug if LAY == 'plug' else beside
+def X(beside, plug, one=None):
+    if LAY == 'one': return plug if one is None else one
+    return plug if LAY == 'plug' else beside
+def pp(): return LY().get('P', P)
+def bx(): return LY().get('X0', BX0)
+def nr(): return LY().get('ROWS', ROWS)
+def ww(): return LY().get('W', W)
+ONBOARD = ('plug', 'one')                # layouts where the ESP32 is plugged into the breadboard
 def RAILY(k):
     for b in LY()['boards'].values():
         if k in b['rails']: return b['rails'][k]
-def rx(r): return BX0 + (r - 1) * P
+def rx(r): return bx() + (r - 1) * pp()
 def board(b=None): return LY()['boards'][b or ('L' if LAY == 'plug' else '')]
 def hole(r, c, b=None): return (rx(r), board(b)['cols'][c])
 def rail(k, r): return (rx(r), RAILY(k))
 def epin(name, which=None):
     """Where the pin itself is drawn."""
     hdr, i = esp_pin(name, which)
+    if LAY == 'one':
+        return hole(PLUG_ROW0 + i, 'i') if hdr == 'J1' else hole(PLUG_ROW0 + i, 'a')
     if LAY == 'plug':
         return hole(PLUG_ROW0 + i, 'a', 'L') if hdr == 'J1' else hole(PLUG_ROW0 + i, 'j', 'U')
     EX0, EY0, EX1, EY1 = LY()['esp']
@@ -81,6 +96,10 @@ def E(pt, d, txt, end): return dict(pt=pt, dir=d, txt=txt, end=end)
 def pn(name): return f'pin {name}'
 def esp(name, which=None, note=''):
     hdr, i = esp_pin(name, which)
+    if LAY == 'one':
+        assert hdr == 'J1', f'{name}: no free hole beside the {hdr} pins on one breadboard'
+        r = PLUG_ROW0 + i
+        return E(hole(r, 'j'), 'auto', f'hole {MIRROR["j"]}{r} (beside ESP32 {pn(name)}{note})', 'male')
     if LAY == 'plug':
         r = PLUG_ROW0 + i
         b, c = ('L', 'b') if hdr == 'J1' else ('U', 'i')
@@ -102,8 +121,12 @@ MODS = {
   'mosfet': (800, 345, 980, 455, 'left', ['TRIG', 'GND', 'VIN+', 'VIN−', 'OUT+', 'OUT−'], '#2a6f9e', 'MOSFET module', ''),
   'led':    (840, 490, 980, 570, 'left', ['LED +', 'LED −'], '#d39a00', '3 W LED star', 'on metal'),
 }
+def mod_box(mod):
+    x0, y0, x1, y1, side, *rest = MODS[mod]
+    dx = LY().get('rdx', 0) if side == 'left' else 0      # modules on the right move with a wider picture
+    return (x0 + dx, y0, x1 + dx, y1, side, *rest)
 def mpin_xy(mod, label):
-    x0, y0, x1, y1, side, pins, *_ = MODS[mod]
+    x0, y0, x1, y1, side, pins, *_ = mod_box(mod)
     y = y0 + 34 + pins.index(label) * 13
     return ((x1 + 2, y), (1, 0)) if side == 'right' else ((x0 - 2, y), (-1, 0))
 def md(mod, label, txt, end='female'):
@@ -141,6 +164,8 @@ def bez(p, q):
     m = [(a[i] + 3 * c1[i] + 3 * c2[i] + b[i]) / 8 for i in (0, 1)]   # midpoint, for the number badge
     return path, m
 
+PRE = {'plug': 'p:', 'one': 'o:', 'beside': ''}     # checkbox / highlight id prefix per layout
+SID = {'plug': 'p-', 'one': 'o-', 'beside': 's-'}   # section id prefix
 COL = {'3v3': '#f39c12', 'gnd': '#222222', '5v': '#d32f2f', 'yellow': '#e6b800', 'green': '#2e9e44', 'blue': '#2c6fd6',
        'purple': '#8e44ad', 'white': '#9aa0a6', 'brown': '#8d5a2b', 'cyan': '#14a3b8', 'pink': '#e05297', 'grey': '#6b7280'}
 COLNAME = {'3v3': 'orange', 'gnd': 'black', '5v': 'red', 'yellow': 'yellow', 'green': 'green', 'blue': 'blue', 'purple': 'purple',
@@ -165,7 +190,7 @@ def build_steps():
     def step(**k):
         k['need'] = k['need'] + jumper_need(k['wires'])
         S.append(k)
-    plug = LAY == 'plug'
+    plug, one = LAY == 'plug', LAY == 'one'
     A, B_ = str(G('PIN_BTN_A')), str(G('PIN_BTN_B'))
     sb = 'U' if plug else None                     # board for the light sensor
 
@@ -181,7 +206,23 @@ def build_steps():
               ('Nothing in the serial monitor', 'Use the port marked USB, not UART, at 115200 baud. Some USB-C cables only carry power: try another.'),
               ('No CeilingClock-Setup network', 'Press the RST button on the ESP32 and wait 20 seconds.')])
 
-    if plug:
+    if one:
+        step(id='power', title='ESP32 onto the breadboard, and power rails', time='10 min', mods=[], parts=[],
+             need=['1 full-size breadboard (830 holes, 60+ rows)'],
+             intro='The ESP32 plugs into the left end of the breadboard. It covers most of the holes beside its pins, so each pin on one side keeps a single free hole in column a, and the pins on the other side get none. Every part after this goes in the free rows to the right of it.',
+             todo=['Unplug the USB cable.',
+                   'The pictures show the board turned so row 1 is on the left, with column j at the top. If yours stands upright with row 1 at the top, column a is on the left.',
+                   f'Turn the ESP32 so its antenna points toward row 1. Its row of pins starting with <b>3V3</b> goes into column <b>b</b>; the row starting with <b>GND, TX, RX</b> goes into column <b>j</b>. The first pins go in row <b>{PLUG_ROW0}</b>, so the last ones are in row {PLUG_ROW0 + 21}. Press down evenly on both rows of pins, not on the metal can.',
+                   f'Each wire to an ESP32 pin goes into <b>column a</b> in the same row as that pin: the only hole beside it that the ESP32 doesn\'t cover.'],
+             wires=[W_('3v3', esp('3V3'), rl('t+', 2)),
+                    W_('gnd', esp('G', 'J1'), rl('b-', 22)),
+                    W_('gnd', E((rx(60), RAILY('t-')), (1, -0.3), 'top − rail, right end', 'male'),
+                              E((rx(60), RAILY('b-')), (1, 0.3), 'bottom − rail, right end', 'male'))],
+             test='Plug the USB cable back in: the clock starts as before. With a multimeter, the top + and − rails read about 3.3 V.',
+             fix=[('The ESP32 doesn\'t start on the breadboard', 'A pin may be folded under the board. Lift it out gently, straighten the pin and press it in again.'),
+                  ('The ESP32 goes dark when you add the wires', f'The orange wire is in a ground row or rail. It must start in a{PLUG_ROW0} (the row of the first pin, 3V3) and end in the top + rail.')],
+             warn=f'Leave hole a{PLUG_ROW0 + J1.index("5V")} (the row of the ESP32\'s <b>5V</b> pin) empty.')
+    elif plug:
         step(id='power', title='ESP32 onto the breadboards, and power rails', time='10 min', mods=[], parts=[],
              need=['2 full-size breadboards (830 holes)'],
              intro='The ESP32 is too wide for one breadboard: on one board its pins would cover every free hole. Two boards side by side give each row of pins its own board, with free holes beside every pin. Then three short wires set up the rails: the top rails become 3.3 V and ground, the bottom rails ground for the 5 V supply.',
@@ -208,7 +249,14 @@ def build_steps():
              test='Nothing to see yet. If you have a multimeter, the top + and − rails should read about 3.3 V with the USB cable plugged in.',
              fix=[('The ESP32 goes dark or resets when you plug in the wire', 'The 3V3 wire is in the − rail or touching G. Unplug USB and check: orange to +, black to −.')])
 
-    if plug:
+    if one:
+        bA, bB = (33, None), (38, None)
+        bw = [W_('green', esp(A), hl(33, 'a', note='button A, top-left leg')),
+              W_('gnd', hl(35, 'j', note='button A, bottom-right leg'), rl('b-', 35)),
+              W_('blue', esp(B_), hl(38, 'a', note='button B, top-left leg')),
+              W_('gnd', hl(40, 'j', note='button B, bottom-right leg'), rl('b-', 40))]
+        legs = f'{MIRROR["a"]}33 and {MIRROR["j"]}35, {MIRROR["a"]}38 and {MIRROR["j"]}40'
+    elif plug:
         bA, bB = (1, 'L'), (28, 'L')
         bw = [W_('green', esp(A), hl(1, 'a', 'L', 'button A, top-left leg')),
               W_('gnd', hl(3, 'j', 'L', 'button A, bottom-right leg'), rl('b-', 3)),
@@ -225,7 +273,7 @@ def build_steps():
     step(id='buttons', title='Buttons', time='10 min', mods=[],
          need=['2 small 6 × 6 mm push buttons (from your tactile switch kit)'],
          intro='For testing, use two small 4-legged push buttons; the 16 mm panel buttons go in later. Each one sits <b>across the gap</b> in the middle of the breadboard. Wire to <b>diagonally opposite legs</b>: that way it works whichever way round the button sits.'
-               + X('', ' On the lower board the rows beside the ESP32 are taken, so the buttons go at the two ends.'),
+               + X('', ' On the lower board the rows beside the ESP32 are taken, so the buttons go at the two ends.', ' They go in the free rows to the right of the ESP32.'),
          parts=[('button', bA[0], 'A', bA[1]), ('button', bB[0], 'B', bB[1])], wires=bw,
          test='On the clock\'s page, press button <b>B</b>: the <b>Front display</b> button on the page flips between on and off. Hold B for 3 seconds: <b>Projector</b> flips. (Button A snoozes an alarm; you\'ll try it later.)',
          fix=[('Nothing happens', f'Check the wires go to diagonally opposite legs ({legs}) and that the button straddles the gap.'),
@@ -257,18 +305,27 @@ def build_steps():
          fix=[('Blank or solid black', 'Adjust <b>LCD contrast</b> on the settings page. Check RST and CE.'),
               ('No backlight', 'On some boards BL lights when connected to + instead of −. Move that one wire to the top + rail.')])
 
+    L1, L2 = (43, 46) if one else (13, 16)
     step(id='ldr', title='Light sensor', time='5 min', mods=[],
          need=['GL5528 light sensor', '10 kΩ resistor (brown-black-orange)'],
          intro='A light-dependent resistor and a fixed 10 kΩ resistor make a divider: the voltage between them rises as the room gets brighter. Neither part has a polarity.'
-               + X('', ' They go on the upper board, next to the 3.3 V rail.'),
-         parts=[('ldr', 13, 16, sb), ('res_rail', 16, 't-', '10 kΩ', sb)],
-         wires=[W_('3v3', rl('t+', 13), hl(13, 'a', sb, 'one leg of the sensor')),
-                W_('pink', esp(str(G('PIN_LDR'))), hl(16, 'd', sb, 'where sensor and resistor meet'))],
+               + X('', ' They go on the upper board, next to the 3.3 V rail.', ''),
+         parts=[('ldr', L1, L2, sb), ('res_rail', L2, 't-', '10 kΩ', sb)],
+         wires=[W_('3v3', rl('t+', L1), hl(L1, 'a', sb, 'one leg of the sensor')),
+                W_('pink', esp(str(G('PIN_LDR'))), hl(L2, 'd', sb, 'where sensor and resistor meet'))],
          test='In the night settings, watch <b>sensor now</b> next to "Dark below". It goes up with a torch on the sensor and down when you cover it with a finger.',
-         fix=[('Always about 0', 'The sensor leg isn\'t in row 13 or the orange wire isn\'t on the + rail.'),
+         fix=[('Always about 0', f'The sensor leg isn\'t in row {L1} or the orange wire isn\'t on the + rail.'),
               ('Always about 4095', 'The 10 kΩ resistor isn\'t reaching the − rail.')])
 
-    step(id='ds3231', title='Clock module (DS3231)', time='5 min', mods=['ds3231'], parts=[],
+    if one:
+        step(id='ds3231', title='Clock module (DS3231): test it later', time='0 min', mods=[], parts=[], wires=[],
+             need=['Nothing for now'],
+             intro='The clock module connects to ESP32 pins 1 and 2. On one breadboard those pins are in column j, and the ESP32 covers every hole beside them, so there is nowhere to plug its wires. Skip this step: the clock runs fine without the module, setting its time from the internet, and the page shows <b>no RTC</b>.',
+             todo=['Test the module when the electronics move to the perfboard (<a href="assembly.html#step-4">assembly step 4</a>), or switch to the two-breadboard layout at the top of this page.'],
+             test='Nothing to test yet. The clock\'s page says <b>no RTC</b>, which is expected.',
+             fix=[('I want to test it now', 'Use the <b>Plugged in across two breadboards</b> layout at the top of the page: there, pins 1 and 2 have free holes.')])
+    else:
+      step(id='ds3231', title='Clock module (DS3231)', time='5 min', mods=['ds3231'], parts=[],
          need=['DS3231 module (with its coin cell)'],
          intro='The battery-backed clock that keeps time when Wi-Fi or power drops. '
                + X('Its two data pins are on the <b>other</b> side of the ESP32 (pins 1 and 2), so route those wires round the end of the board.',
@@ -303,7 +360,10 @@ def build_steps():
          fix=[('Silent', 'Is the 5 V adapter plugged in? Check BCLK, LRC and DIN aren\'t swapped. Leave GAIN and SD unconnected.'),
               ('Crackles', 'Push the capacitor\'s legs fully into the rails (long leg to +).')])
 
-    if plug:
+    if one:
+        rr, rw = ('res', 49, 53, 'h', '330 Ω', None), [W_('green', esp(str(G('PIN_RING'))), hl(49, 'j', note='one end of the 330 Ω')),
+                                                   W_('green', hl(53, 'j', note='other end of the 330 Ω'), md('ring', 'DI', 'ring DI (data in)'))]
+    elif plug:
         rr, rw = ('res', 15, 19, 'h', '330 Ω', 'L'), [W_('green', esp(str(G('PIN_RING'))), hl(15, 'f', 'L', 'one end of the 330 Ω')),
                                                   W_('green', hl(19, 'f', 'L', 'other end of the 330 Ω'), md('ring', 'DI', 'ring DI (data in)'))]
     else:
@@ -319,8 +379,9 @@ def build_steps():
          fix=[('Nothing lights', 'Make sure the wire goes to DI (in), not DO (out). Check the 5 V adapter is on.'),
               ('Flickers or wrong colours', 'Keep the data wire short. If it persists, a 74AHCT125 level shifter on the data line fixes it.')])
 
-    lr = ('res', 22, 26, 'h', '4.7 Ω 2 W', 'L') if plug else ('res', 26, 30, 'g', '4.7 Ω 2 W', None)
+    lr = ('res', 22, 26, 'h', '4.7 Ω 2 W', 'L') if plug else ('res', 55, 59, 'c', '4.7 Ω 2 W', None) if one else ('res', 26, 30, 'g', '4.7 Ω 2 W', None)
     lb = 'L' if plug else None
+    lc = 'a' if one else 'j'               # design letter of the free hole in the resistor's rows
     step(id='led', title='Projector LED', time='15 min', mods=['mosfet', 'led'],
          need=['MOSFET module', '3 W LED on its star (leads soldered on)', '4.7 Ω 2 W resistor', 'Something metal to sit the LED on'],
          intro='The bright LED that lights the LCD. The MOSFET module switches and dims it for the ESP32. The 4.7 Ω resistor limits the current to about 400 mA, and it gets warm, so keep it off the plastic.',
@@ -329,8 +390,8 @@ def build_steps():
                 W_('gnd', md('mosfet', 'GND', 'module trigger GND'), rl('b-', 26)),
                 W_('5v', md('mosfet', 'VIN+', 'module VIN+', None), rl('b+', 29, '(5 V)'), 'screw terminal–male'),
                 W_('gnd', md('mosfet', 'VIN−', 'module VIN−', None), rl('b-', 25), 'screw terminal–male'),
-                W_('5v', md('mosfet', 'OUT+', 'module OUT+', None), hl(lr[1], 'j', lb, 'one end of the 4.7 Ω'), 'screw terminal–male'),
-                W_('5v', hl(lr[2], 'j', lb, 'other end of the 4.7 Ω'), md('led', 'LED +', 'LED +', None), 'male–soldered lead'),
+                W_('5v', md('mosfet', 'OUT+', 'module OUT+', None), hl(lr[1], lc, lb, 'one end of the 4.7 Ω'), 'screw terminal–male'),
+                W_('5v', hl(lr[2], lc, lb, 'other end of the 4.7 Ω'), md('led', 'LED +', 'LED +', None), 'male–soldered lead'),
                 W_('gnd', md('led', 'LED −', 'LED −', None), md('mosfet', 'OUT−', 'module OUT−', None), 'soldered lead–screw terminal')],
          test='On the clock\'s page, switch the <b>Projector</b> off and on: the LED goes off and on. Change the projector\'s day brightness: it dims.',
          fix=[('LED never lights', 'LED + and − swapped? Check OUT+ goes through the resistor to LED +.'),
@@ -351,30 +412,32 @@ def check_holes(S):
 
 # ---------------------------------------------------------------- drawing one step
 def draw_board(s):
+    P, BX0, ROWS = pp(), bx(), nr()
+    hs = min(4.4, 0.36 * P)
     for bid, B in LY()['boards'].items():
         s.rect(BX0 - 22, B['y0'], (ROWS - 1) * P + 44, B['y1'] - B['y0'], '#f3f1ea', '#cfcabc', 10, 1.2)
         if B['dead']:
             for y in B['dead']:
-                for r in range(1, ROWS + 1): s.rect(rx(r) - 2.2, y - 2.2, 4.4, 4.4, '#cfcabc', rx=0.8)
+                for r in range(1, ROWS + 1): s.rect(rx(r) - hs / 2, y - hs / 2, hs, hs, '#cfcabc', rx=0.8)
         for key, y in B['rails'].items():
             col = '#d33a2c' if key.endswith('+') else '#2b5fd9'
             ly = y - 7 if key.endswith('+') else y + 7
             if key == 't+': ly = y - 7
             s.line(BX0 - 10, ly, rx(ROWS) + 10, ly, col, 1)
             s.text(BX0 - 18, y + 3.5, '+' if key.endswith('+') else '−', 11, col, 'end', 700)
-            for r in range(1, ROWS + 1): s.rect(rx(r) - 2.2, y - 2.2, 4.4, 4.4, '#8a8577', rx=0.8)
+            for r in range(1, ROWS + 1): s.rect(rx(r) - hs / 2, y - hs / 2, hs, hs, '#8a8577', rx=0.8)
         if 't+' in B['rails']: s.text(rx(ROWS) + 14, B['rails']['t+'] + 4, '3.3 V', 10, '#d33a2c', 'start', 700)
         if 'b+' in B['rails']: s.text(rx(ROWS) + 14, B['rails']['b+'] + 4, '5 V', 10, '#d33a2c', 'start', 700)
         for c, y in B['cols'].items():
             s.text(BX0 - 14, y + 3.5, MIRROR[c], 9.5, '#8a8577', 'middle')
-            for r in range(1, ROWS + 1): s.rect(rx(r) - 2.2, y - 2.2, 4.4, 4.4, '#8a8577', rx=0.8)
+            for r in range(1, ROWS + 1): s.rect(rx(r) - hs / 2, y - hs / 2, hs, hs, '#8a8577', rx=0.8)
         s.rect(BX0 - 6, B['gap'], (ROWS - 1) * P + 12, 16, '#e6e2d6', rx=2)
         if B['label']: s.text(rx(15.5), B['gap'] + 11.5, B['label'].upper(), 9.5, '#a29c8b', 'middle', 700, extra='letter-spacing="2"')
-        for r in (1, 5, 10, 15, 20, 25, 30): s.text(rx(r), B['rowy'], r, 8.5, '#8a8577', 'middle')
+        for r in [1] + list(range(5, ROWS + 1, 5)): s.text(rx(r), B['rowy'], r, 8.5 if P > 12 else 7.5, '#8a8577', 'middle')
 
 def draw_esp(s):
     EX0, EY0, EX1, EY1 = LY()['esp']
-    plug = LAY == 'plug'
+    plug = LAY in ONBOARD
     s.rect(EX0, EY0, EX1 - EX0, EY1 - EY0, '#1e2126', '#000', 6, extra='opacity="0.94"' if plug else '')
     s.rect(EX0 + 6, EY0 + 24, 92, EY1 - EY0 - 48, '#c8ccd2', rx=3)
     for i in range(5): s.line(EX0 + 12, EY0 + 32 + i * 12, EX0 + 30, EY0 + 32 + i * 12, '#9aa0a8', 2)
@@ -390,12 +453,12 @@ def draw_esp(s):
             if not plug: y = y - 14 if hdr == 'J1' else y + 14
             s.circle(x, y, 2.6, '#d8ad45')
             ty = (y - 9) if hdr == 'J1' else (y + 13)
-            s.text(x, ty, nm, 7.5, '#ffd27a' if nm == '5V' else '#e7e9ec', 'middle')
+            s.text(x, ty, nm, 7.5 if pp() > 12 else 6, '#ffd27a' if nm == '5V' else '#e7e9ec', 'middle')
 
 def draw_step(S, k):
     s = Svg()
-    s.add(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">')
-    s.rect(0, 0, W, H, '#fbfaf6', rx=0)
+    s.add(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {ww()} {H}" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">')
+    s.rect(0, 0, ww(), H, '#fbfaf6', rx=0)
     mods_now = [m for st in S[:k + 1] for m in st['mods']]
     new_mods = S[k]['mods']
     draw_board(s)
@@ -410,6 +473,7 @@ def draw_step(S, k):
                 r, B = p[1], board(p[3])
                 ye, yf = B['cols']['e'], B['cols']['f']
                 x0, x1 = rx(r) - 4, rx(r + 2) + 4
+                if pp() < 12: x0, x1 = rx(r) - 5, rx(r + 2) + 5
                 p_.rect(x0, ye - 6, x1 - x0, yf - ye + 12, '#30343b', rx=3)
                 p_.circle((x0 + x1) / 2, (ye + yf) / 2, 8, '#111', '#5b6068')
                 for y in (ye, yf):
@@ -446,10 +510,10 @@ def draw_step(S, k):
                 p_.text(cx, cy + (25 if big else 19), p[2], 8.5, '#2140a0', 'middle', 700)
         p_.add('</g>')
     s.o += parts_svg.o
-    if LAY == 'plug': draw_esp(s)          # plugged in: the board sits on top of the breadboards
+    if LAY in ONBOARD: draw_esp(s)         # plugged in: the board sits on top of the breadboards
     # modules present
     for m in mods_now:
-        x0, y0, x1, y1, side, pins, col, title, sub = MODS[m]
+        x0, y0, x1, y1, side, pins, col, title, sub = mod_box(m)
         s.add(f'<g opacity="{"1" if m in new_mods else "0.45"}">')
         s.rect(x0, y0, x1 - x0, y1 - y0, '#fffdf8', col, 8, 2)
         s.rect(x0, y0, x1 - x0, 20, col, rx=8); s.rect(x0, y0 + 12, x1 - x0, 8, col, rx=0)
@@ -477,7 +541,7 @@ def draw_step(S, k):
         s.add('</g>')
     # wires: earlier steps faded, this step bright with number badges
     n = 0
-    pre = 'p:' if LAY == 'plug' else ''
+    pre = PRE[LAY]
     for idx, st in enumerate(S[:k + 1]):
         cur = idx == k
         for w in st['wires']:
@@ -573,11 +637,11 @@ def sections():
     """Both layouts' steps; the page shows one set at a time."""
     global LAY
     out, navs, totals = [], [], {}
-    for lay in ('plug', 'beside'):
+    for lay in ('plug', 'one', 'beside'):
         LAY = lay
         S = build_steps()
         check_holes(S)
-        pre, sid = ('p:', 'p-') if lay == 'plug' else ('', 's-')
+        pre, sid = PRE[lay], SID[lay]
         totals[lay] = sum(len(st['wires']) for st in S)
         navs.append(f'<div class="toc only-{lay}">' + ''.join(f'<a href="#{sid}{st["id"]}"><span>{i + 1}</span>{esc(st["title"])}</a>' for i, st in enumerate(S)) + '</div>')
         for i, st in enumerate(S):
@@ -645,10 +709,10 @@ def page():
 details{{margin:6px 0 8px}}summary{{cursor:pointer;font-weight:700;color:#b5541f}}dl{{margin:8px 0}}dt{{font-weight:700;margin-top:6px}}dd{{margin:2px 0 0 0;color:#444}}
 .wire{{cursor:pointer}}.bbsvg .wire.hl path:last-of-type{{stroke-width:6}}
 .legend{{display:flex;flex-wrap:wrap;gap:14px;margin:8px 0}}.legend span{{display:flex;align-items:center;gap:6px}}.legend i{{width:22px;height:6px;border-radius:3px;display:inline-block}}
-.only-beside,.only-plug{{display:none}}
-body.lay-beside .only-beside,body.lay-plug .only-plug{{display:block}}
-body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug{{display:flex}}
-.layout{{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 8px}}@media(max-width:700px){{.layout{{grid-template-columns:1fr}}}}
+.only-beside,.only-plug,.only-one{{display:none}}
+body.lay-beside .only-beside,body.lay-plug .only-plug,body.lay-one .only-one{{display:block}}
+body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.only-one{{display:flex}}
+.layout{{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:16px 0 8px}}@media(max-width:700px){{.layout{{grid-template-columns:1fr}}}}
 .layout button{{text-align:left;border:2px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--paper);cursor:pointer;font:inherit;color:inherit}}
 .layout button b{{display:block;font-size:1.02rem;margin-bottom:2px}}.layout button small{{color:var(--mut)}}
 .layout button[aria-pressed=true]{{border-color:#e8743b;box-shadow:0 0 0 3px #f6c3a9;background:#fff8f3}}
@@ -667,6 +731,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug{{display:flex}}
 <p>Pick one; the pictures and wire lists below change to match. Your ticks are kept separately for each.</p>
 <div class="layout" role="group" aria-label="Breadboard layout">
 <button type="button" data-lay="plug" aria-pressed="false"><b>Plugged in across two breadboards</b><small>The ESP32 sits on the boards. Most wires are short hops from the hole beside a pin, and nothing dangles. Needs two full-size breadboards.</small></button>
+<button type="button" data-lay="one" aria-pressed="false"><b>Plugged into one breadboard</b><small>The ESP32 plugs into the left end of one full-size board and everything else goes to its right. Each pin on one side has just one free hole, and the clock module (DS3231) can't connect, so you test it later.</small></button>
 <button type="button" data-lay="beside" aria-pressed="false"><b>Beside one breadboard</b><small>The ESP32 stays loose next to the board and every pin is reached with a female jumper. Needs only one breadboard, but more wires and they can pull off.</small></button>
 </div>
 <div class="progress"><div class="bar"><i id="pbar"></i></div><small id="ptext">0 wires connected</small></div>
@@ -676,7 +741,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug{{display:flex}}
 <div class="two">
 <div><h3>How a breadboard works</h3>{svg_basics()}</div>
 <div><h3>Three kinds of jumper wire</h3>{svg_jumpers()}
-<p class="only-plug">With the ESP32 plugged in, a wire to one of its pins goes into a free hole <b>in the same row of five</b> as that pin, so those ends are male. Modules have pins, so their end of a wire is female.</p>
+<p class="only-plug only-one">With the ESP32 plugged in, a wire to one of its pins goes into a free hole <b>in the same row of five</b> as that pin, so those ends are male. Modules have pins, so their end of a wire is female.</p>
 <p class="only-beside">The ESP32 sits <b>next to</b> the breadboard and you connect to its pins with the <b>female</b> end of a jumper. Most modules have pins too, so a female–female jumper goes straight from the ESP32 to the module.</p></div>
 </div>
 <h3>Wire colours used here</h3>
@@ -707,7 +772,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug{{display:flex}}
   try {{ saved = JSON.parse(localStorage.getItem(KEY) || '{{}}'); }} catch (e) {{}}
   const LKEY = 'ceilingclock-breadboard-layout';
   let lay = 'plug';
-  try {{ const v = localStorage.getItem(LKEY); if (v === 'plug' || v === 'beside') lay = v; }} catch (e) {{}}
+  try {{ const v = localStorage.getItem(LKEY); if (v === 'plug' || v === 'one' || v === 'beside') lay = v; }} catch (e) {{}}
   const allBoxes = [...document.querySelectorAll('.wires input')];
   function update() {{
     const boxes = allBoxes.filter(b => b.closest('.only-' + lay));
@@ -724,8 +789,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug{{display:flex}}
   }}
   function setLay(v) {{
     lay = v;
-    document.body.classList.toggle('lay-plug', v === 'plug');
-    document.body.classList.toggle('lay-beside', v === 'beside');
+    ['plug', 'one', 'beside'].forEach(k => document.body.classList.toggle('lay-' + k, v === k));
     document.querySelectorAll('.layout button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lay === v)));
     try {{ localStorage.setItem(LKEY, v); }} catch (e) {{}}
     update();
