@@ -440,14 +440,23 @@ def draw_esp(s):
     EX0, EY0, EX1, EY1 = LY()['esp']
     plug = LAY in ONBOARD
     s.rect(EX0, EY0, EX1 - EX0, EY1 - EY0, '#1e2126', '#000', 6, extra='opacity="0.94"' if plug else '')
-    s.rect(EX0 + 6, EY0 + 24, 92, EY1 - EY0 - 48, '#c8ccd2', rx=3)
+    L, h = EX1 - EX0, EY1 - EY0
+    sw = 0.3 * L                                           # the metal can over the ESP32-S3 module
+    s.rect(EX0 + 6, EY0 + 24, sw, h - 48, '#c8ccd2', rx=3)
     for i in range(5): s.line(EX0 + 12, EY0 + 32 + i * 12, EX0 + 30, EY0 + 32 + i * 12, '#9aa0a8', 2)
-    s.text(EX0 + 52, EY0 + 60, 'ESP32-S3', 10, '#5b6068', 'middle', 700)
+    s.text(EX0 + 6 + sw / 2, EY0 + h / 2 + 4, 'ESP32-S3', 10 if L > 300 else 8.5, '#5b6068', 'middle', 700)
+    # RST and BOOT push buttons, just past the can on the GND/TX/RX side (as on the board)
+    by = EY0 + 0.36 * h
+    for fx, lab in ((0.42, 'RST'), (0.51, 'BOOT')):
+        bxc = EX0 + fx * L
+        s.rect(bxc - 7, by - 6, 14, 12, '#d9dde2', '#8a9099', 1.5, 1)
+        s.circle(bxc, by, 3.6, '#2b2f36')
+        s.text(bxc, by + 17, lab, 7.5 if L > 300 else 6.5, '#ffffff', 'middle', 700)
     s.rect(EX1 - 2, EY0 + 28, 16, 20, '#9aa0a8', rx=2); s.rect(EX1 - 2, EY0 + 68, 16, 20, '#9aa0a8', rx=2)
     halo = 'stroke="#fbfaf6" stroke-width="3" paint-order="stroke"' if plug else ''
     s.text(EX1 + 18, EY0 + 42, 'UART', 8.5, '#6b7280', extra=halo)
     s.text(EX1 + 18, EY0 + 82, 'USB → computer', 8.5, '#2b5fd9', 'start', 700, extra=halo)
-    s.text((EX0 + EX1) / 2 + 40, (EY0 + EY1) / 2 + 4, 'DevKitC-1', 11, '#cfd3da', 'middle', 700)
+    s.text(EX0 + 0.76 * L, EY0 + h / 2 + 4, 'DevKitC-1', 11 if L > 300 else 9, '#cfd3da', 'middle', 700)
     for hdr, lst in (('J1', J1), ('J3', J3)):
         for i, nm in enumerate(lst):
             x, y = epin(nm, hdr)
