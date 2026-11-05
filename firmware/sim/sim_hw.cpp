@@ -176,7 +176,8 @@ void GFXcanvas1::drawChar(char c) {
 // ---------------------------------------------------------------- LittleFS on a folder
 static std::string fsRoot() { const char* e = getenv("SIM_FS_DIR"); return e ? e : "sim_fs"; }
 std::string fs::FS::real(const char* path) { return fsRoot() + (path[0] == '/' ? "" : "/") + path; }
-bool fs::FS::begin(bool) { ::mkdir(fsRoot().c_str(), 0755); return true; }
+// Like the real one, mounting fails unless the label matches the partition in partitions.csv.
+bool fs::FS::begin(bool, const char*, uint8_t, const char* label) { if (std::string(label) != "littlefs") return false; ::mkdir(fsRoot().c_str(), 0755); return true; }
 File fs::FS::open(const char* path, const char* mode) { return File(real(path), mode); }
 bool fs::FS::exists(const char* path) { struct stat st; return ::stat(real(path).c_str(), &st) == 0; }
 bool fs::FS::remove(const char* path) { return ::remove(real(path).c_str()) == 0; }
@@ -232,7 +233,7 @@ bool isDir(const std::string& p) {
 }
 }
 std::string fs::FS::real(const char* path) { return path; }
-bool fs::FS::begin(bool) { return true; }
+bool fs::FS::begin(bool, const char*, uint8_t, const char* label) { return std::string(label) == "littlefs"; }
 File fs::FS::open(const char* path, const char* mode) { return File(path, mode); }
 bool fs::FS::exists(const char* path) { return memfs::files.count(path) || memfs::isDir(path); }
 bool fs::FS::remove(const char* path) { return memfs::files.erase(path) > 0; }

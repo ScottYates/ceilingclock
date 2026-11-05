@@ -41,7 +41,7 @@ class File : public Stream {
 namespace fs {
 class FS {
  public:
-  bool begin(bool formatOnFail = false);
+  bool begin(bool formatOnFail = false, const char* basePath = "/littlefs", uint8_t maxOpenFiles = 10, const char* partitionLabel = "spiffs");
   File open(const char* path, const char* mode = "r");
   File open(const String& path, const char* mode = "r") { return open(path.c_str(), mode); }
   bool exists(const char* path);

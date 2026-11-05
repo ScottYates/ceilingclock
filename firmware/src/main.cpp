@@ -788,7 +788,8 @@ void setup() {
   front.setBrightness(2, true);
   front.clear();
 
-  if (!LittleFS.begin(true)) Serial.println("LittleFS mount failed");
+  // The partition is labelled "littlefs" in partitions.csv; LittleFS.begin() looks for "spiffs" unless told.
+  if (!LittleFS.begin(true, "/littlefs", 10, "littlefs")) Serial.println("LittleFS mount failed");
   loadConfig();
   ensureDefaultSound();
 
