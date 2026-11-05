@@ -207,11 +207,34 @@ def power_debug():
       ('No meter?', 'Skip ahead to the buttons and the front display: if they work, the rails are fine.'),
     ]
 
+BANDS = {'10 kΩ': 'bands brown-black-orange, or brown-black-black-red on 5-band resistors; the BOJACK bag says 10KΩ',
+         '330 Ω': 'bands orange-orange-brown, or orange-orange-black-black',
+         '4.7 Ω 2 W': 'the big one; bands yellow-violet-gold, or yellow-violet-black-silver'}
+def place_lines(parts):
+    """One plain instruction per part on the breadboard, with this layout's hole names."""
+    out = []
+    def where(b): return f' ({board(b)["label"]})' if LAY == 'plug' and board(b)['label'] else ''
+    for p in parts:
+        if p[0] == 'button':
+            out.append(f'<b>Push button {p[2]}</b> across the gap in the middle: two legs in row {p[1]}, two in row {p[1] + 2}, one each side of the gap{where(p[3])}.')
+        elif p[0] == 'ldr':
+            c = MIRROR['c']
+            out.append(f'<b>Light sensor</b> (the round disc with a squiggly line on it): legs in <b>{c}{p[1]}</b> and <b>{c}{p[2]}</b>{where(p[3])}. Either way round.')
+        elif p[0] == 'res_rail':
+            out.append(f'<b>{p[3]} resistor</b> ({BANDS.get(p[3], "")}): one leg in <b>{MIRROR["a"]}{p[1]}</b>, the same row as the sensor\'s second leg; the other leg in the <b>{RAILNAME[p[2]]}</b> (the row by the blue line), about row {p[1] + 1}{where(p[4])}. Either way round.')
+        elif p[0] == 'res':
+            c = MIRROR[p[3]]
+            out.append(f'<b>{p[4]} resistor</b> ({BANDS.get(p[4], "")}): legs in <b>{c}{p[1]}</b> and <b>{c}{p[2]}</b>{where(p[5])}. Either way round.')
+        elif p[0] == 'cap':
+            out.append(f'<b>{p[2]} capacitor</b>: the <b>long leg (+)</b> in the bottom + rail at row {p[1]}, the leg by the <b>stripe (−)</b> in the bottom − rail at row {p[1] + 1}. This one does have a right way round.')
+    return out
+
 def build_steps():
     S = []
     def step(**k):
         k['need'] = k['need'] + jumper_need(k['wires'])
         if k['id'] == 'power': k['debug'] = power_debug()
+        k['place'] = place_lines(k['parts'])
         S.append(k)
     plug, one = LAY == 'plug', LAY == 'one'
     A, B_ = str(G('PIN_BTN_A')), str(G('PIN_BTN_B'))
@@ -330,9 +353,11 @@ def build_steps():
 
     L1, L2 = (45, 48) if one else (13, 16)
     step(id='ldr', title='Light sensor', time='5 min', mods=[],
-         need=['GL5528 light sensor', '10 kΩ resistor (brown-black-orange)'],
-         intro='A light-dependent resistor and a fixed 10 kΩ resistor make a divider: the voltage between them rises as the room gets brighter. Neither part has a polarity.'
+         need=['GL5528 light sensor (round disc)', '10 kΩ resistor (a separate part: striped cylinder)'],
+         intro='This step uses <b>two separate parts</b>: the light sensor <b>and</b> a 10 kΩ resistor. The sensor alone does nothing: the resistor sits under it, between the sensor and ground, and the ESP32 reads the voltage where the two meet. That voltage rises as the room gets brighter. Neither part has a right way round.'
                + X('', ' They go on the upper board, next to the 3.3 V rail.', ''),
+         figure='ldr',
+         warn='<b>Two parts, not one.</b> If you only put the round sensor in, the reading sits near 4095 whatever the light. And check the resistor is <b>10 kΩ</b> (ten thousand ohms), not <b>10 Ω</b>: they come in the same kind of bag, and 10 Ω reads near 0 all the time.',
          parts=[('ldr', L1, L2, sb), ('res_rail', L2, 't-', '10 kΩ', sb)],
          wires=[W_('3v3', rl('t+', L1), hl(L1, 'a', sb, 'one leg of the sensor')),
                 W_('pink', esp(str(G('PIN_LDR'))), hl(L2, 'd', sb, 'where sensor and resistor meet'))],
@@ -521,8 +546,10 @@ def draw_step(S, k):
                 a, b = hole(p[1], 'a', p[4]), rail(p[2], p[1] + 1)
                 p_.line(*a, *b, '#888', 1.6)
                 mx, my = (a[0] + b[0]) / 2, (a[1] + b[1]) / 2
-                p_.rect(mx - 4, my - 9, 8, 18, '#d9c49a', '#9a8455', 2)
-                p_.text(mx + 10, my + 3, p[3], 9, '#6b5a2b', 'start', 700)
+                p_.rect(mx - 5, my - 10, 10, 20, '#7ab3d6', '#46708c', 3, 1.2)
+                for i, bc in enumerate(('#8d5a2b', '#111', '#e67e22')):
+                    p_.rect(mx - 5, my - 6 + i * 4.5, 10, 2.2, bc, rx=0)
+                p_.text(mx + 10, my + 4, f'{p[3]} resistor', 9.5, '#1f4e6e', 'start', 800, extra='stroke="#f3f1ea" stroke-width="3" paint-order="stroke"')
             elif p[0] == 'res':
                 a, b = hole(p[1], p[3], p[5]), hole(p[2], p[3], p[5])
                 p_.line(*a, *b, '#888', 1.6)
@@ -642,6 +669,29 @@ def svg_jumpers():
     s.add('</svg>')
     return '\n'.join(s.o)
 
+def svg_ldr_parts():
+    s = Svg()
+    s.add('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 170" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">')
+    s.rect(0, 0, 640, 170, '#fbfaf6', rx=0)
+    # light sensor
+    s.line(110, 100, 104, 160, '#999', 2); s.line(130, 100, 136, 160, '#999', 2)
+    s.circle(120, 72, 34, '#f4e2c0', '#b98a3a', 2)
+    s.add('<path d="M96,60 h10 v10 h-10 v10 h48 v-10 h-10 v-10 h10" fill="none" stroke="#b03030" stroke-width="3"/>')
+    s.text(120, 22, '1. Light sensor (GL5528)', 13, '#222', 'middle', 800)
+    s.text(185, 66, 'round disc', 11.5, '#333'); s.text(185, 82, 'squiggly line on top', 11.5, '#333'); s.text(185, 98, 'no stripes', 11.5, '#333')
+    s.text(320, 90, '+', 30, '#e8743b', 'middle', 800)
+    # 10 kOhm resistor
+    s.line(370, 82, 410, 82, '#999', 2.5); s.line(560, 82, 610, 82, '#999', 2.5)
+    s.rect(410, 64, 150, 36, '#7ab3d6', '#46708c', 12, 1.5)
+    for x, c in ((428, '#8d5a2b'), (450, '#111'), (472, '#111'), (494, '#d32f2f'), (538, '#8d5a2b')):
+        s.rect(x, 64, 9, 36, c, rx=0)
+    s.text(485, 22, '2. 10 kΩ resistor', 13, '#222', 'middle', 800)
+    s.text(485, 124, 'brown · black · black · red · brown', 11, '#333', 'middle')
+    s.text(485, 140, '(or brown · black · orange on a 4-band one)', 10.5, '#6b7280', 'middle')
+    s.text(485, 158, 'not 10 Ω: that has a gold band in the middle', 10.5, '#b03030', 'middle', 700)
+    s.add('</svg>')
+    return '\n'.join(s.o)
+
 def svg_optics():
     s = Svg()
     s.add('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 330" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">')
@@ -695,7 +745,9 @@ def sections():
   {warn}
   <div class="pic">{draw_step(S, i)}</div>
   {'<p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>' if st['wires'] else ''}
+  {f'<h3>The two parts</h3>{svg_ldr_parts()}' if st.get('figure') == 'ldr' else ''}
   {f'<ol class="todo">{todo}</ol>' if todo else ''}
+  {f'<h3>Place the parts</h3><ol class="place">' + ''.join(f'<li>{t}</li>' for t in st['place']) + '</ol>' if st.get('place') else ''}
   {f'<h3>Connect</h3><ul class="wires">{"".join(wl)}</ul>' if wl else ''}
   <div class="test"><b>✅ Test it:</b> {st['test']}</div>
   {f'<details class="dbg"><summary>Not reading 3.3 V on the rails? Check in this order</summary><ol>' + ''.join(f'<li><b>{a}{"" if a.endswith("?") else "."}</b> {b}</li>' for a, b in st['debug']) + '</ol></details>' if st.get('debug') else ''}
@@ -736,7 +788,7 @@ def page():
 .badge{{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:50%;border:2.5px solid;font-weight:800;font-size:.8rem}}
 .sw{{width:10px;height:22px;border-radius:3px;flex:none}}
 .arr{{color:#e8743b;font-weight:800}}
-.todo li{{margin:4px 0}}
+.todo li{{margin:4px 0}}.place li{{margin:6px 0}}
 .test{{background:#eaf7ec;border:1px solid #bfe5c6;border-radius:10px;padding:10px 12px;margin:10px 0}}
 .warn{{background:#fff3e0;border:1px solid #ffd59a;border-radius:10px;padding:10px 12px;margin:10px 0}}
 .dbg ol{{margin:8px 0;padding-left:22px}}.dbg li{{margin:6px 0}}

@@ -28,7 +28,7 @@
 .badge{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:50%;border:2.5px solid;font-weight:800;font-size:.8rem}
 .sw{width:10px;height:22px;border-radius:3px;flex:none}
 .arr{color:#e8743b;font-weight:800}
-.todo li{margin:4px 0}
+.todo li{margin:4px 0}.place li{margin:6px 0}
 .test{background:#eaf7ec;border:1px solid #bfe5c6;border-radius:10px;padding:10px 12px;margin:10px 0}
 .warn{background:#fff3e0;border:1px solid #ffd59a;border-radius:10px;padding:10px 12px;margin:10px 0}
 .dbg ol{margin:8px 0;padding-left:22px}.dbg li{margin:6px 0}
@@ -1305,7 +1305,9 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <text x="360.0" y="251.0" font-size="7.5" fill="#e7e9ec" text-anchor="middle" font-weight="400" >G</text>
 </svg></div>
   
+  
   <ol class="todo"><li>Plug the USB-C cable into the port marked <b>USB</b> on the ESP32 (the board has two; this one carries the log).</li><li>Flash the firmware from the <a href="firmware.html">Firmware</a> page: the web flasher needs nothing installed.</li><li>Open a serial monitor at <b>115200</b> baud (the web flasher has one, or PlatformIO's monitor).</li><li>On your phone, join the Wi-Fi network <b>CeilingClock-Setup</b> and pick your home network.</li></ol>
+  
   
   <div class="test"><b>✅ Test it:</b> Open <b>http://ceilingclock.local/</b> on your phone or computer. You should see the clock's page with the time and a green <b>synced just now</b>.</div>
   
@@ -2339,7 +2341,9 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   <ol class="todo"><li>Unplug the USB cable.</li><li>Put the two breadboards side by side, both the same way round, so column <b>j</b> of one board sits next to column <b>a</b> of the other, with two rail strips between them. Leave all the rail strips on.</li><li>The pictures show the boards turned a quarter turn so row 1 is on the left. If yours stand upright with row 1 at the top, the left board is the <b>lower board</b> and the right board is the <b>upper board</b>.</li><li>Turn the ESP32 so its antenna points toward row 1. Its row of pins starting with <b>3V3</b> goes into column <b>j</b> of the lower board; the row starting with <b>GND, TX, RX</b> goes into column <b>a</b> of the upper board. The first pins go in row <b>5</b>. It sits over the two middle rail strips, which stay unused. Press down evenly on both rows of pins, not on the metal can.</li><li>If the pins don't quite reach columns j and a on your boards, use i and b instead, or pull one middle rail strip off and push the boards together. What matters is that each pin has free holes beside it on the outside: the free holes in the same row of five as a pin are connected to that pin.</li></ol>
+  
   <h3>Connect</h3><ul class="wires"><li data-w="p:power-1"><label><input type="checkbox" data-k="p:power-1"><span class="badge" style="border-color:#f39c12">1</span><span class="sw" style="background:#f39c12"></span><span class="wt"><b>Orange wire</b> (male–male):<br>hole i5, lower board (the row of ESP32 pin 3V3) <span class="arr">→</span> top + rail</span></label></li><li data-w="p:power-2"><label><input type="checkbox" data-k="p:power-2"><span class="badge" style="border-color:#222222">2</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (male–male):<br>hole b5, upper board (the row of ESP32 pin G) <span class="arr">→</span> top − rail</span></label></li><li data-w="p:power-3"><label><input type="checkbox" data-k="p:power-3"><span class="badge" style="border-color:#222222">3</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (male–male):<br>hole i26, lower board (the row of ESP32 pin G) <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> Plug the USB cable back in: the clock starts as before. With a multimeter, the top + and − rails read about 3.3 V. Before you measure, check the meter's red lead is in the socket marked <b>V</b>, not <b>A</b> or <b>mA</b>, and the dial is on DC volts: on amps the meter shorts the supply and the ESP32 restarts.</div>
   <details class="dbg"><summary>Not reading 3.3 V on the rails? Check in this order</summary><ol><li><b>Set the meter up.</b> <b>Red lead in the V socket, not A or mA</b>: this is the most common mistake, and on amps the meter shorts the supply (the ESP32's light flashes as it restarts). Turn the dial to <b>DC volts</b> (V with a straight line; the 20 V range if it isn't auto-ranging). Black lead in <b>COM</b>. Meter probes are often too thick to reach the metal inside a breadboard hole: push the male end of a spare jumper into the hole and touch the probe to that instead.</li><li><b>Is the ESP32 on?</b> With the USB cable in the port marked <b>USB</b>, the board's small power LED should be lit and the clock's page should open. If not, try another cable and USB port before anything else.</li><li><b>Measure on the ESP32 itself.</b> Red probe on the solder joint of the <b>3V3</b> pin, black on the joint of a <b>G</b> pin. It should read about 3.3 V. If it reads 0 V, the board isn't getting power (cable or port). If it reads well under 3 V, or the board gets warm, unplug at once and look for solder bridging two header pins.</li><li><b>Measure the 3V3 pin's row.</b> Keep black on the G joint and put red in hole i5, lower board. 3.3 V here means the pin is making contact. 0 V means it isn't: press the ESP32 down firmly (the pins should disappear into the holes), and count the rows to check the 3V3 pin is really in the row you think.</li><li><b>Measure the + rail.</b> Keep black on the G joint and put red in the top + rail, near where the orange wire goes in. 0 V here: the orange wire isn't in the rail (check it is in the rail row by the red line, marked +, not the blue − row), or the jumper is broken: swap it for another.</li><li><b>Check the rail runs the whole length.</b> Many full-size breadboards split each rail in the middle; look for a break in the red and blue lines halfway along. Put red in the + rail at the far end. If it reads 0 V there but 3.3 V near the wire, the rail is split: bridge the two halves with a short jumper, on the − rails too.</li><li><b>Measure + rail to − rail.</b> Now red in the top + rail, black in the top − rail. If the earlier checks passed but this reads 0 V, the − rail isn't connected to ground: check the black wire from hole b5, upper board (the ESP32's first GND pin) to the top − rail.</li><li><b>Reads −3.3 V.</b> The probes are swapped. Nothing is wrong.</li><li><b>The ESP32's light flashes when you touch the probes on.</b> Stop: the meter is shorting the supply and the board restarts each time. Usually the dial is on current (A or mA) or the red lead is in the <b>A</b> or <b>mA</b> socket: move it to <b>V</b> and the dial to DC volts. On amps the meter can blow its internal fuse, so check it on a battery afterwards. Otherwise a probe tip is touching two pins at once, or the black probe is touching the RST pin (it sits next to the 3V3 pins): probe the breadboard holes rather than the pins.</li><li><b>No meter?</b> Skip ahead to the buttons and the front display: if they work, the rails are fine.</li></ol></details>
@@ -3399,6 +3403,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
+  
+  <h3>Place the parts</h3><ol class="place"><li><b>Push button A</b> across the gap in the middle: two legs in row 1, two in row 3, one each side of the gap (lower board).</li><li><b>Push button B</b> across the gap in the middle: two legs in row 28, two in row 30, one each side of the gap (lower board).</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="p:buttons-1"><label><input type="checkbox" data-k="p:buttons-1"><span class="badge" style="border-color:#2e9e44">1</span><span class="sw" style="background:#2e9e44"></span><span class="wt"><b>Green wire</b> (male–male):<br>hole i10, lower board (the row of ESP32 pin 6) <span class="arr">→</span> hole j1, lower board (button A, top-left leg)</span></label></li><li data-w="p:buttons-2"><label><input type="checkbox" data-k="p:buttons-2"><span class="badge" style="border-color:#222222">2</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (male–male):<br>hole a3, lower board (button A, bottom-right leg) <span class="arr">→</span> bottom − rail</span></label></li><li data-w="p:buttons-3"><label><input type="checkbox" data-k="p:buttons-3"><span class="badge" style="border-color:#2c6fd6">3</span><span class="sw" style="background:#2c6fd6"></span><span class="wt"><b>Blue wire</b> (male–male):<br>hole i24, lower board (the row of ESP32 pin 14) <span class="arr">→</span> hole j28, lower board (button B, top-left leg)</span></label></li><li data-w="p:buttons-4"><label><input type="checkbox" data-k="p:buttons-4"><span class="badge" style="border-color:#222222">4</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (male–male):<br>hole a30, lower board (button B, bottom-right leg) <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> On the clock's page, press button <b>B</b>: the <b>Front display</b> button on the page flips between on and off. Now press B and keep holding it: 3 seconds after you pressed, <b>Projector</b> flips on the page (the page can take another second to show it). Let go after it flips; letting go sooner counts as a short press. (Button A snoozes an alarm; you'll try it later.)</div>
   
@@ -4477,6 +4483,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
+  
   
   <h3>Connect</h3><ul class="wires"><li data-w="p:tm1637-1"><label><input type="checkbox" data-k="p:tm1637-1"><span class="badge" style="border-color:#e6b800">1</span><span class="sw" style="background:#e6b800"></span><span class="wt"><b>Yellow wire</b> (female–male):<br>hole i8, lower board (the row of ESP32 pin 4) <span class="arr">→</span> display CLK</span></label></li><li data-w="p:tm1637-2"><label><input type="checkbox" data-k="p:tm1637-2"><span class="badge" style="border-color:#9aa0a6">2</span><span class="sw" style="background:#9aa0a6"></span><span class="wt"><b>White wire</b> (female–male):<br>hole i9, lower board (the row of ESP32 pin 5) <span class="arr">→</span> display DIO</span></label></li><li data-w="p:tm1637-3"><label><input type="checkbox" data-k="p:tm1637-3"><span class="badge" style="border-color:#f39c12">3</span><span class="sw" style="background:#f39c12"></span><span class="wt"><b>Orange wire</b> (female–male):<br>display VCC <span class="arr">→</span> top + rail</span></label></li><li data-w="p:tm1637-4"><label><input type="checkbox" data-k="p:tm1637-4"><span class="badge" style="border-color:#222222">4</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>display GND <span class="arr">→</span> top − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> The display shows the time within a second. On the settings page, change the front display's brightness: it follows.</div>
@@ -5609,6 +5617,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
+  
+  
   <h3>Connect</h3><ul class="wires"><li data-w="p:lcd-1"><label><input type="checkbox" data-k="p:lcd-1"><span class="badge" style="border-color:#8d5a2b">1</span><span class="sw" style="background:#8d5a2b"></span><span class="wt"><b>Brown wire</b> (female–male):<br>hole i16, lower board (the row of ESP32 pin 8) <span class="arr">→</span> LCD RST</span></label></li><li data-w="p:lcd-2"><label><input type="checkbox" data-k="p:lcd-2"><span class="badge" style="border-color:#8e44ad">2</span><span class="sw" style="background:#8e44ad"></span><span class="wt"><b>Purple wire</b> (female–male):<br>hole i20, lower board (the row of ESP32 pin 10) <span class="arr">→</span> LCD CE</span></label></li><li data-w="p:lcd-3"><label><input type="checkbox" data-k="p:lcd-3"><span class="badge" style="border-color:#14a3b8">3</span><span class="sw" style="background:#14a3b8"></span><span class="wt"><b>Cyan wire</b> (female–male):<br>hole i19, lower board (the row of ESP32 pin 9) <span class="arr">→</span> LCD DC</span></label></li><li data-w="p:lcd-4"><label><input type="checkbox" data-k="p:lcd-4"><span class="badge" style="border-color:#2e9e44">4</span><span class="sw" style="background:#2e9e44"></span><span class="wt"><b>Green wire</b> (female–male):<br>hole i21, lower board (the row of ESP32 pin 11) <span class="arr">→</span> LCD DIN</span></label></li><li data-w="p:lcd-5"><label><input type="checkbox" data-k="p:lcd-5"><span class="badge" style="border-color:#e6b800">5</span><span class="sw" style="background:#e6b800"></span><span class="wt"><b>Yellow wire</b> (female–male):<br>hole i22, lower board (the row of ESP32 pin 12) <span class="arr">→</span> LCD CLK</span></label></li><li data-w="p:lcd-6"><label><input type="checkbox" data-k="p:lcd-6"><span class="badge" style="border-color:#f39c12">6</span><span class="sw" style="background:#f39c12"></span><span class="wt"><b>Orange wire</b> (female–male):<br>LCD VCC <span class="arr">→</span> top + rail</span></label></li><li data-w="p:lcd-7"><label><input type="checkbox" data-k="p:lcd-7"><span class="badge" style="border-color:#222222">7</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>LCD BL (bench only: lights it) <span class="arr">→</span> top − rail</span></label></li><li data-w="p:lcd-8"><label><input type="checkbox" data-k="p:lcd-8"><span class="badge" style="border-color:#222222">8</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>LCD GND <span class="arr">→</span> top − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> The LCD shows the time, <b>back to front</b>: the clock mirrors it for the projector. Untick <b>Mirror left/right</b> in the projector settings to read it, and tick it again before testing the optics.</div>
   
@@ -5616,9 +5626,9 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </section>
 <section class="bbstep only-plug" id="p-ldr">
   <div class="bbhead"><span class="num">6</span><h2>Light sensor</h2><span class="time">⏱ 5 min</span></div>
-  <p>A light-dependent resistor and a fixed 10 kΩ resistor make a divider: the voltage between them rises as the room gets brighter. Neither part has a polarity. They go on the upper board, next to the 3.3 V rail.</p>
-  <div class="need"><b>You need:</b> <span class="chip">GL5528 light sensor</span><span class="chip">10 kΩ resistor (brown-black-orange)</span><span class="chip">2 jumper wires: 2 male–male</span></div>
-  
+  <p>This step uses <b>two separate parts</b>: the light sensor <b>and</b> a 10 kΩ resistor. The sensor alone does nothing: the resistor sits under it, between the sensor and ground, and the ESP32 reads the voltage where the two meet. That voltage rises as the room gets brighter. Neither part has a right way round. They go on the upper board, next to the 3.3 V rail.</p>
+  <div class="need"><b>You need:</b> <span class="chip">GL5528 light sensor (round disc)</span><span class="chip">10 kΩ resistor (a separate part: striped cylinder)</span><span class="chip">2 jumper wires: 2 male–male</span></div>
+  <div class="warn">⚠️ <b>Two parts, not one.</b> If you only put the round sensor in, the reading sits near 4095 whatever the light. And check the resistor is <b>10 kΩ</b> (ten thousand ohms), not <b>10 Ω</b>: they come in the same kind of bag, and 10 Ω reads near 0 all the time.</div>
   <div class="pic"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 690" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
 <rect x="0.0" y="0.0" width="1000.0" height="690.0" rx="0" fill="#fbfaf6" stroke="none" stroke-width="1" />
 <rect x="278.0" y="36.0" width="479.0" height="246.0" rx="10" fill="#f3f1ea" stroke="#cfcabc" stroke-width="1.2" />
@@ -6542,8 +6552,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M496.5,100 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
 <text x="502.5" y="87.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
 <line x1="525.0" y1="88.0" x2="540.0" y2="66.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
-<rect x="528.5" y="68.0" width="8.0" height="18.0" rx="2" fill="#d9c49a" stroke="#9a8455" stroke-width="1" />
-<text x="542.5" y="80.0" font-size="9" fill="#6b5a2b" text-anchor="start" font-weight="700" >10 kΩ</text>
+<rect x="527.5" y="67.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
+<rect x="527.5" y="71.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="527.5" y="75.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="527.5" y="80.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
+<text x="542.5" y="81.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
 </g>
 <rect x="344.0" y="226.0" width="347.0" height="120.0" rx="6" fill="#1e2126" stroke="#000" stroke-width="1" opacity="0.94"/>
 <rect x="350.0" y="250.0" width="104.1" height="72.0" rx="3" fill="#c8ccd2" stroke="none" stroke-width="1" />
@@ -6721,7 +6734,32 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  <h3>The two parts</h3><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 170" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+<rect x="0.0" y="0.0" width="640.0" height="170.0" rx="0" fill="#fbfaf6" stroke="none" stroke-width="1" />
+<line x1="110.0" y1="100.0" x2="104.0" y2="160.0" stroke="#999" stroke-width="2" stroke-linecap="round" />
+<line x1="130.0" y1="100.0" x2="136.0" y2="160.0" stroke="#999" stroke-width="2" stroke-linecap="round" />
+<circle cx="120.0" cy="72.0" r="34" fill="#f4e2c0" stroke="#b98a3a" stroke-width="2" />
+<path d="M96,60 h10 v10 h-10 v10 h48 v-10 h-10 v-10 h10" fill="none" stroke="#b03030" stroke-width="3"/>
+<text x="120.0" y="22.0" font-size="13" fill="#222" text-anchor="middle" font-weight="800" >1. Light sensor (GL5528)</text>
+<text x="185.0" y="66.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >round disc</text>
+<text x="185.0" y="82.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >squiggly line on top</text>
+<text x="185.0" y="98.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >no stripes</text>
+<text x="320.0" y="90.0" font-size="30" fill="#e8743b" text-anchor="middle" font-weight="800" >+</text>
+<line x1="370.0" y1="82.0" x2="410.0" y2="82.0" stroke="#999" stroke-width="2.5" stroke-linecap="round" />
+<line x1="560.0" y1="82.0" x2="610.0" y2="82.0" stroke="#999" stroke-width="2.5" stroke-linecap="round" />
+<rect x="410.0" y="64.0" width="150.0" height="36.0" rx="12" fill="#7ab3d6" stroke="#46708c" stroke-width="1.5" />
+<rect x="428.0" y="64.0" width="9.0" height="36.0" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="450.0" y="64.0" width="9.0" height="36.0" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="472.0" y="64.0" width="9.0" height="36.0" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="494.0" y="64.0" width="9.0" height="36.0" rx="0" fill="#d32f2f" stroke="none" stroke-width="1" />
+<rect x="538.0" y="64.0" width="9.0" height="36.0" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<text x="485.0" y="22.0" font-size="13" fill="#222" text-anchor="middle" font-weight="800" >2. 10 kΩ resistor</text>
+<text x="485.0" y="124.0" font-size="11" fill="#333" text-anchor="middle" font-weight="400" >brown · black · black · red · brown</text>
+<text x="485.0" y="140.0" font-size="10.5" fill="#6b7280" text-anchor="middle" font-weight="400" >(or brown · black · orange on a 4-band one)</text>
+<text x="485.0" y="158.0" font-size="10.5" fill="#b03030" text-anchor="middle" font-weight="700" >not 10 Ω: that has a gold band in the middle</text>
+</svg>
   
+  <h3>Place the parts</h3><ol class="place"><li><b>Light sensor</b> (the round disc with a squiggly line on it): legs in <b>h13</b> and <b>h16</b> (upper board). Either way round.</li><li><b>10 kΩ resistor</b> (bands brown-black-orange, or brown-black-black-red on 5-band resistors; the BOJACK bag says 10KΩ): one leg in <b>j16</b>, the same row as the sensor's second leg; the other leg in the <b>top − rail</b> (the row by the blue line), about row 17 (upper board). Either way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="p:ldr-1"><label><input type="checkbox" data-k="p:ldr-1"><span class="badge" style="border-color:#f39c12">1</span><span class="sw" style="background:#f39c12"></span><span class="wt"><b>Orange wire</b> (male–male):<br>top + rail <span class="arr">→</span> hole j13, upper board (one leg of the sensor)</span></label></li><li data-w="p:ldr-2"><label><input type="checkbox" data-k="p:ldr-2"><span class="badge" style="border-color:#e05297">2</span><span class="sw" style="background:#e05297"></span><span class="wt"><b>Pink wire</b> (male–male):<br>hole i11, lower board (the row of ESP32 pin 7) <span class="arr">→</span> hole g16, upper board (where sensor and resistor meet)</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> In the night settings, watch <b>sensor now</b> next to "Dark below". It goes up with a torch on the sensor and down when you cover it with a finger.</div>
   
@@ -7655,8 +7693,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M496.5,100 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
 <text x="502.5" y="87.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
 <line x1="525.0" y1="88.0" x2="540.0" y2="66.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
-<rect x="528.5" y="68.0" width="8.0" height="18.0" rx="2" fill="#d9c49a" stroke="#9a8455" stroke-width="1" />
-<text x="542.5" y="80.0" font-size="9" fill="#6b5a2b" text-anchor="start" font-weight="700" >10 kΩ</text>
+<rect x="527.5" y="67.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
+<rect x="527.5" y="71.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="527.5" y="75.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="527.5" y="80.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
+<text x="542.5" y="81.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
 </g>
 <g opacity="1">
 </g>
@@ -7867,6 +7908,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
+  
   
   <h3>Connect</h3><ul class="wires"><li data-w="p:ds3231-1"><label><input type="checkbox" data-k="p:ds3231-1"><span class="badge" style="border-color:#2c6fd6">1</span><span class="sw" style="background:#2c6fd6"></span><span class="wt"><b>Blue wire</b> (female–male):<br>hole b8, upper board (the row of ESP32 pin 1) <span class="arr">→</span> module SDA (marked D on mini boards)</span></label></li><li data-w="p:ds3231-2"><label><input type="checkbox" data-k="p:ds3231-2"><span class="badge" style="border-color:#e6b800">2</span><span class="sw" style="background:#e6b800"></span><span class="wt"><b>Yellow wire</b> (female–male):<br>hole b9, upper board (the row of ESP32 pin 2) <span class="arr">→</span> module SCL (marked C)</span></label></li><li data-w="p:ds3231-3"><label><input type="checkbox" data-k="p:ds3231-3"><span class="badge" style="border-color:#f39c12">3</span><span class="sw" style="background:#f39c12"></span><span class="wt"><b>Orange wire</b> (female–male):<br>module VCC (+) <span class="arr">→</span> top + rail</span></label></li><li data-w="p:ds3231-4"><label><input type="checkbox" data-k="p:ds3231-4"><span class="badge" style="border-color:#222222">4</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>module GND (−) <span class="arr">→</span> top − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> The page shows <b>RTC backup ok</b>. Turn your router's Wi-Fi off and press RST on the ESP32: the time is still right.</div>
@@ -8801,8 +8844,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M496.5,100 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
 <text x="502.5" y="87.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
 <line x1="525.0" y1="88.0" x2="540.0" y2="66.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
-<rect x="528.5" y="68.0" width="8.0" height="18.0" rx="2" fill="#d9c49a" stroke="#9a8455" stroke-width="1" />
-<text x="542.5" y="80.0" font-size="9" fill="#6b5a2b" text-anchor="start" font-weight="700" >10 kΩ</text>
+<rect x="527.5" y="67.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
+<rect x="527.5" y="71.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="527.5" y="75.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="527.5" y="80.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
+<text x="542.5" y="81.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
 </g>
 <g opacity="0.45">
 </g>
@@ -9021,6 +9067,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
+  
   
   <h3>Connect</h3><ul class="wires"><li data-w="p:supply-1"><label><input type="checkbox" data-k="p:supply-1"><span class="badge" style="border-color:#d32f2f">1</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (soldered lead):<br>breakout VBUS <span class="arr">→</span> bottom + rail</span></label></li><li data-w="p:supply-2"><label><input type="checkbox" data-k="p:supply-2"><span class="badge" style="border-color:#222222">2</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (soldered lead):<br>breakout GND <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> Plug the adapter in. Everything carries on as before. With a multimeter, the bottom rails read about 5 V.</div>
@@ -9955,8 +10003,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M496.5,100 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
 <text x="502.5" y="87.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
 <line x1="525.0" y1="88.0" x2="540.0" y2="66.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
-<rect x="528.5" y="68.0" width="8.0" height="18.0" rx="2" fill="#d9c49a" stroke="#9a8455" stroke-width="1" />
-<text x="542.5" y="80.0" font-size="9" fill="#6b5a2b" text-anchor="start" font-weight="700" >10 kΩ</text>
+<rect x="527.5" y="67.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
+<rect x="527.5" y="71.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="527.5" y="75.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="527.5" y="80.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
+<text x="542.5" y="81.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
 </g>
 <g opacity="0.45">
 </g>
@@ -10228,6 +10279,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
+  
+  <h3>Place the parts</h3><ol class="place"><li><b>100 µF capacitor</b>: the <b>long leg (+)</b> in the bottom + rail at row 19, the leg by the <b>stripe (−)</b> in the bottom − rail at row 20. This one does have a right way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="p:amp-1"><label><input type="checkbox" data-k="p:amp-1"><span class="badge" style="border-color:#8e44ad">1</span><span class="sw" style="background:#8e44ad"></span><span class="wt"><b>Purple wire</b> (female–male):<br>hole i12, lower board (the row of ESP32 pin 15) <span class="arr">→</span> amp BCLK</span></label></li><li data-w="p:amp-2"><label><input type="checkbox" data-k="p:amp-2"><span class="badge" style="border-color:#14a3b8">2</span><span class="sw" style="background:#14a3b8"></span><span class="wt"><b>Cyan wire</b> (female–male):<br>hole i13, lower board (the row of ESP32 pin 16) <span class="arr">→</span> amp LRC</span></label></li><li data-w="p:amp-3"><label><input type="checkbox" data-k="p:amp-3"><span class="badge" style="border-color:#9aa0a6">3</span><span class="sw" style="background:#9aa0a6"></span><span class="wt"><b>White wire</b> (female–male):<br>hole i14, lower board (the row of ESP32 pin 17) <span class="arr">→</span> amp DIN</span></label></li><li data-w="p:amp-4"><label><input type="checkbox" data-k="p:amp-4"><span class="badge" style="border-color:#d32f2f">4</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (female–male):<br>amp VIN <span class="arr">→</span> bottom + rail (5 V)</span></label></li><li data-w="p:amp-5"><label><input type="checkbox" data-k="p:amp-5"><span class="badge" style="border-color:#222222">5</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>amp GND <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> Screw the speaker leads into the amp's + and − terminals. Under <b>Sounds</b>, press <b>Play</b> on beep.wav: four beeps. Then give an alarm a radio or podcast URL and press <b>Preview stream</b>.</div>
   
@@ -11161,8 +11214,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M496.5,100 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
 <text x="502.5" y="87.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
 <line x1="525.0" y1="88.0" x2="540.0" y2="66.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
-<rect x="528.5" y="68.0" width="8.0" height="18.0" rx="2" fill="#d9c49a" stroke="#9a8455" stroke-width="1" />
-<text x="542.5" y="80.0" font-size="9" fill="#6b5a2b" text-anchor="start" font-weight="700" >10 kΩ</text>
+<rect x="527.5" y="67.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
+<rect x="527.5" y="71.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="527.5" y="75.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="527.5" y="80.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
+<text x="542.5" y="81.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
 </g>
 <g opacity="0.45">
 </g>
@@ -11472,6 +11528,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
+  
+  <h3>Place the parts</h3><ol class="place"><li><b>330 Ω resistor</b> (bands orange-orange-brown, or orange-orange-black-black): legs in <b>c15</b> and <b>c19</b> (lower board). Either way round.</li><li><b>1000 µF capacitor</b>: the <b>long leg (+)</b> in the bottom + rail at row 23, the leg by the <b>stripe (−)</b> in the bottom − rail at row 24. This one does have a right way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="p:ring-1"><label><input type="checkbox" data-k="p:ring-1"><span class="badge" style="border-color:#2e9e44">1</span><span class="sw" style="background:#2e9e44"></span><span class="wt"><b>Green wire</b> (male–male):<br>hole i15, lower board (the row of ESP32 pin 18) <span class="arr">→</span> hole e15, lower board (one end of the 330 Ω)</span></label></li><li data-w="p:ring-2"><label><input type="checkbox" data-k="p:ring-2"><span class="badge" style="border-color:#2e9e44">2</span><span class="sw" style="background:#2e9e44"></span><span class="wt"><b>Green wire</b> (female–male):<br>hole e19, lower board (other end of the 330 Ω) <span class="arr">→</span> ring DI (data in)</span></label></li><li data-w="p:ring-3"><label><input type="checkbox" data-k="p:ring-3"><span class="badge" style="border-color:#d32f2f">3</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (female–male):<br>ring 5V <span class="arr">→</span> bottom + rail</span></label></li><li data-w="p:ring-4"><label><input type="checkbox" data-k="p:ring-4"><span class="badge" style="border-color:#222222">4</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>ring GND <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> Give an alarm a sunrise time (for example 15 minutes) and press <b>Ring now</b>: the ring glows warm white until you press <b>Dismiss</b> (or hold button A for 2 seconds).</div>
   
@@ -12405,8 +12463,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M496.5,100 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
 <text x="502.5" y="87.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
 <line x1="525.0" y1="88.0" x2="540.0" y2="66.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
-<rect x="528.5" y="68.0" width="8.0" height="18.0" rx="2" fill="#d9c49a" stroke="#9a8455" stroke-width="1" />
-<text x="542.5" y="80.0" font-size="9" fill="#6b5a2b" text-anchor="start" font-weight="700" >10 kΩ</text>
+<rect x="527.5" y="67.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
+<rect x="527.5" y="71.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="527.5" y="75.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="527.5" y="80.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
+<text x="542.5" y="81.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
 </g>
 <g opacity="0.45">
 </g>
@@ -12781,6 +12842,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
+  
+  <h3>Place the parts</h3><ol class="place"><li><b>4.7 Ω 2 W resistor</b> (the big one; bands yellow-violet-gold, or yellow-violet-black-silver): legs in <b>c22</b> and <b>c26</b> (lower board). Either way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="p:led-1"><label><input type="checkbox" data-k="p:led-1"><span class="badge" style="border-color:#6b7280">1</span><span class="sw" style="background:#6b7280"></span><span class="wt"><b>Grey wire</b> (female–male):<br>hole i23, lower board (the row of ESP32 pin 13) <span class="arr">→</span> module TRIG / PWM</span></label></li><li data-w="p:led-2"><label><input type="checkbox" data-k="p:led-2"><span class="badge" style="border-color:#222222">2</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>module trigger GND <span class="arr">→</span> bottom − rail</span></label></li><li data-w="p:led-3"><label><input type="checkbox" data-k="p:led-3"><span class="badge" style="border-color:#d32f2f">3</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (screw terminal–male):<br>module VIN+ <span class="arr">→</span> bottom + rail (5 V)</span></label></li><li data-w="p:led-4"><label><input type="checkbox" data-k="p:led-4"><span class="badge" style="border-color:#222222">4</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (screw terminal–male):<br>module VIN− <span class="arr">→</span> bottom − rail</span></label></li><li data-w="p:led-5"><label><input type="checkbox" data-k="p:led-5"><span class="badge" style="border-color:#d32f2f">5</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (screw terminal–male):<br>module OUT+ <span class="arr">→</span> hole a22, lower board (one end of the 4.7 Ω)</span></label></li><li data-w="p:led-6"><label><input type="checkbox" data-k="p:led-6"><span class="badge" style="border-color:#d32f2f">6</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (male–soldered lead):<br>hole a26, lower board (other end of the 4.7 Ω) <span class="arr">→</span> LED +</span></label></li><li data-w="p:led-7"><label><input type="checkbox" data-k="p:led-7"><span class="badge" style="border-color:#222222">7</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (soldered lead–screw terminal):<br>LED − <span class="arr">→</span> module OUT−</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> On the clock's page, switch the <b>Projector</b> off and on: the LED goes off and on. Change the projector's day brightness: it dims.</div>
   
@@ -13779,7 +13842,9 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <text x="255.0" y="293.0" font-size="6" fill="#e7e9ec" text-anchor="middle" font-weight="400" >G</text>
 </svg></div>
   
+  
   <ol class="todo"><li>Plug the USB-C cable into the port marked <b>USB</b> on the ESP32 (the board has two; this one carries the log).</li><li>Flash the firmware from the <a href="firmware.html">Firmware</a> page: the web flasher needs nothing installed.</li><li>Open a serial monitor at <b>115200</b> baud (the web flasher has one, or PlatformIO's monitor).</li><li>On your phone, join the Wi-Fi network <b>CeilingClock-Setup</b> and pick your home network.</li></ol>
+  
   
   <div class="test"><b>✅ Test it:</b> Open <b>http://ceilingclock.local/</b> on your phone or computer. You should see the clock's page with the time and a green <b>synced just now</b>.</div>
   
@@ -14798,7 +14863,9 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   <ol class="todo"><li>Unplug the USB cable.</li><li>The pictures show the board turned so row 1 is on the left, with column j at the top. If yours stands upright with row 1 at the top, column a is on the left.</li><li>Turn the ESP32 so its antenna points toward row 1 and hangs over the end of the board. Its row of pins starting with <b>3V3</b> goes into column <b>b</b>; the row starting with <b>GND, TX, RX</b> goes into column <b>j</b>. The first pins go in row <b>1</b>, so the last ones are in row 22. Press down evenly on both rows of pins, not on the metal can.</li><li>Each wire to an ESP32 pin goes into <b>column a</b> in the same row as that pin: the only hole beside it that the ESP32 doesn't cover.</li></ol>
+  
   <h3>Connect</h3><ul class="wires"><li data-w="o:power-1"><label><input type="checkbox" data-k="o:power-1"><span class="badge" style="border-color:#f39c12">1</span><span class="sw" style="background:#f39c12"></span><span class="wt"><b>Orange wire</b> (male–male):<br>hole a1 (beside ESP32 pin 3V3) <span class="arr">→</span> top + rail</span></label></li><li data-w="o:power-2"><label><input type="checkbox" data-k="o:power-2"><span class="badge" style="border-color:#222222">2</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (male–male):<br>hole a22 (beside ESP32 pin G) <span class="arr">→</span> bottom − rail</span></label></li><li data-w="o:power-3"><label><input type="checkbox" data-k="o:power-3"><span class="badge" style="border-color:#222222">3</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (male–male):<br>top − rail, right end <span class="arr">→</span> bottom − rail, right end</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> Plug the USB cable back in: the clock starts as before. With a multimeter, the top + and − rails read about 3.3 V. Before you measure, check the meter's red lead is in the socket marked <b>V</b>, not <b>A</b> or <b>mA</b>, and the dial is on DC volts: on amps the meter shorts the supply and the ESP32 restarts.</div>
   <details class="dbg"><summary>Not reading 3.3 V on the rails? Check in this order</summary><ol><li><b>Set the meter up.</b> <b>Red lead in the V socket, not A or mA</b>: this is the most common mistake, and on amps the meter shorts the supply (the ESP32's light flashes as it restarts). Turn the dial to <b>DC volts</b> (V with a straight line; the 20 V range if it isn't auto-ranging). Black lead in <b>COM</b>. Meter probes are often too thick to reach the metal inside a breadboard hole: push the male end of a spare jumper into the hole and touch the probe to that instead.</li><li><b>Is the ESP32 on?</b> With the USB cable in the port marked <b>USB</b>, the board's small power LED should be lit and the clock's page should open. If not, try another cable and USB port before anything else.</li><li><b>Measure on the ESP32 itself.</b> Red probe on the solder joint of the <b>3V3</b> pin, black on the joint of a <b>G</b> pin. It should read about 3.3 V. If it reads 0 V, the board isn't getting power (cable or port). If it reads well under 3 V, or the board gets warm, unplug at once and look for solder bridging two header pins.</li><li><b>Measure the 3V3 pin's row.</b> Keep black on the G joint and put red in hole a1. 3.3 V here means the pin is making contact. 0 V means it isn't: press the ESP32 down firmly (the pins should disappear into the holes), and count the rows to check the 3V3 pin is really in the row you think.</li><li><b>Measure the + rail.</b> Keep black on the G joint and put red in the top + rail, near where the orange wire goes in. 0 V here: the orange wire isn't in the rail (check it is in the rail row by the red line, marked +, not the blue − row), or the jumper is broken: swap it for another.</li><li><b>Check the rail runs the whole length.</b> Many full-size breadboards split each rail in the middle; look for a break in the red and blue lines halfway along. Put red in the + rail at the far end. If it reads 0 V there but 3.3 V near the wire, the rail is split: bridge the two halves with a short jumper, on the − rails too.</li><li><b>Measure + rail to − rail.</b> Now red in the top + rail, black in the top − rail. If the earlier checks passed but this reads 0 V, the − rail isn't connected to ground: check the black wire from hole a22 to the bottom − rail, and the black wire joining the top and bottom − rails at row 60.</li><li><b>Reads −3.3 V.</b> The probes are swapped. Nothing is wrong.</li><li><b>The ESP32's light flashes when you touch the probes on.</b> Stop: the meter is shorting the supply and the board restarts each time. Usually the dial is on current (A or mA) or the red lead is in the <b>A</b> or <b>mA</b> socket: move it to <b>V</b> and the dial to DC volts. On amps the meter can blow its internal fuse, so check it on a battery afterwards. Otherwise a probe tip is touching two pins at once, or the black probe is touching the RST pin (it sits next to the 3V3 pins): probe the breadboard holes rather than the pins.</li><li><b>No meter?</b> Skip ahead to the buttons and the front display: if they work, the rails are fine.</li></ol></details>
@@ -15843,6 +15910,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
+  
+  <h3>Place the parts</h3><ol class="place"><li><b>Push button A</b> across the gap in the middle: two legs in row 33, two in row 35, one each side of the gap.</li><li><b>Push button B</b> across the gap in the middle: two legs in row 39, two in row 41, one each side of the gap.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="o:buttons-1"><label><input type="checkbox" data-k="o:buttons-1"><span class="badge" style="border-color:#2e9e44">1</span><span class="sw" style="background:#2e9e44"></span><span class="wt"><b>Green wire</b> (male–male):<br>hole a6 (beside ESP32 pin 6) <span class="arr">→</span> hole j33 (button A, top-left leg)</span></label></li><li data-w="o:buttons-2"><label><input type="checkbox" data-k="o:buttons-2"><span class="badge" style="border-color:#222222">2</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (male–male):<br>hole a35 (button A, bottom-right leg) <span class="arr">→</span> bottom − rail</span></label></li><li data-w="o:buttons-3"><label><input type="checkbox" data-k="o:buttons-3"><span class="badge" style="border-color:#2c6fd6">3</span><span class="sw" style="background:#2c6fd6"></span><span class="wt"><b>Blue wire</b> (male–male):<br>hole a20 (beside ESP32 pin 14) <span class="arr">→</span> hole j39 (button B, top-left leg)</span></label></li><li data-w="o:buttons-4"><label><input type="checkbox" data-k="o:buttons-4"><span class="badge" style="border-color:#222222">4</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (male–male):<br>hole a41 (button B, bottom-right leg) <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> On the clock's page, press button <b>B</b>: the <b>Front display</b> button on the page flips between on and off. Now press B and keep holding it: 3 seconds after you pressed, <b>Projector</b> flips on the page (the page can take another second to show it). Let go after it flips; letting go sooner counts as a short press. (Button A snoozes an alarm; you'll try it later.)</div>
   
@@ -16906,6 +16975,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
+  
   
   <h3>Connect</h3><ul class="wires"><li data-w="o:tm1637-1"><label><input type="checkbox" data-k="o:tm1637-1"><span class="badge" style="border-color:#e6b800">1</span><span class="sw" style="background:#e6b800"></span><span class="wt"><b>Yellow wire</b> (female–male):<br>hole a4 (beside ESP32 pin 4) <span class="arr">→</span> display CLK</span></label></li><li data-w="o:tm1637-2"><label><input type="checkbox" data-k="o:tm1637-2"><span class="badge" style="border-color:#9aa0a6">2</span><span class="sw" style="background:#9aa0a6"></span><span class="wt"><b>White wire</b> (female–male):<br>hole a5 (beside ESP32 pin 5) <span class="arr">→</span> display DIO</span></label></li><li data-w="o:tm1637-3"><label><input type="checkbox" data-k="o:tm1637-3"><span class="badge" style="border-color:#f39c12">3</span><span class="sw" style="background:#f39c12"></span><span class="wt"><b>Orange wire</b> (female–male):<br>display VCC <span class="arr">→</span> top + rail</span></label></li><li data-w="o:tm1637-4"><label><input type="checkbox" data-k="o:tm1637-4"><span class="badge" style="border-color:#222222">4</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>display GND <span class="arr">→</span> top − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> The display shows the time within a second. On the settings page, change the front display's brightness: it follows.</div>
@@ -18023,6 +18094,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
+  
+  
   <h3>Connect</h3><ul class="wires"><li data-w="o:lcd-1"><label><input type="checkbox" data-k="o:lcd-1"><span class="badge" style="border-color:#8d5a2b">1</span><span class="sw" style="background:#8d5a2b"></span><span class="wt"><b>Brown wire</b> (female–male):<br>hole a12 (beside ESP32 pin 8) <span class="arr">→</span> LCD RST</span></label></li><li data-w="o:lcd-2"><label><input type="checkbox" data-k="o:lcd-2"><span class="badge" style="border-color:#8e44ad">2</span><span class="sw" style="background:#8e44ad"></span><span class="wt"><b>Purple wire</b> (female–male):<br>hole a16 (beside ESP32 pin 10) <span class="arr">→</span> LCD CE</span></label></li><li data-w="o:lcd-3"><label><input type="checkbox" data-k="o:lcd-3"><span class="badge" style="border-color:#14a3b8">3</span><span class="sw" style="background:#14a3b8"></span><span class="wt"><b>Cyan wire</b> (female–male):<br>hole a15 (beside ESP32 pin 9) <span class="arr">→</span> LCD DC</span></label></li><li data-w="o:lcd-4"><label><input type="checkbox" data-k="o:lcd-4"><span class="badge" style="border-color:#2e9e44">4</span><span class="sw" style="background:#2e9e44"></span><span class="wt"><b>Green wire</b> (female–male):<br>hole a17 (beside ESP32 pin 11) <span class="arr">→</span> LCD DIN</span></label></li><li data-w="o:lcd-5"><label><input type="checkbox" data-k="o:lcd-5"><span class="badge" style="border-color:#e6b800">5</span><span class="sw" style="background:#e6b800"></span><span class="wt"><b>Yellow wire</b> (female–male):<br>hole a18 (beside ESP32 pin 12) <span class="arr">→</span> LCD CLK</span></label></li><li data-w="o:lcd-6"><label><input type="checkbox" data-k="o:lcd-6"><span class="badge" style="border-color:#f39c12">6</span><span class="sw" style="background:#f39c12"></span><span class="wt"><b>Orange wire</b> (female–male):<br>LCD VCC <span class="arr">→</span> top + rail</span></label></li><li data-w="o:lcd-7"><label><input type="checkbox" data-k="o:lcd-7"><span class="badge" style="border-color:#222222">7</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>LCD BL (bench only: lights it) <span class="arr">→</span> top − rail</span></label></li><li data-w="o:lcd-8"><label><input type="checkbox" data-k="o:lcd-8"><span class="badge" style="border-color:#222222">8</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>LCD GND <span class="arr">→</span> top − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> The LCD shows the time, <b>back to front</b>: the clock mirrors it for the projector. Untick <b>Mirror left/right</b> in the projector settings to read it, and tick it again before testing the optics.</div>
   
@@ -18030,9 +18103,9 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </section>
 <section class="bbstep only-one" id="o-ldr">
   <div class="bbhead"><span class="num">6</span><h2>Light sensor</h2><span class="time">⏱ 5 min</span></div>
-  <p>A light-dependent resistor and a fixed 10 kΩ resistor make a divider: the voltage between them rises as the room gets brighter. Neither part has a polarity.</p>
-  <div class="need"><b>You need:</b> <span class="chip">GL5528 light sensor</span><span class="chip">10 kΩ resistor (brown-black-orange)</span><span class="chip">2 jumper wires: 2 male–male</span></div>
-  
+  <p>This step uses <b>two separate parts</b>: the light sensor <b>and</b> a 10 kΩ resistor. The sensor alone does nothing: the resistor sits under it, between the sensor and ground, and the ESP32 reads the voltage where the two meet. That voltage rises as the room gets brighter. Neither part has a right way round.</p>
+  <div class="need"><b>You need:</b> <span class="chip">GL5528 light sensor (round disc)</span><span class="chip">10 kΩ resistor (a separate part: striped cylinder)</span><span class="chip">2 jumper wires: 2 male–male</span></div>
+  <div class="warn">⚠️ <b>Two parts, not one.</b> If you only put the round sensor in, the reading sits near 4095 whatever the light. And check the resistor is <b>10 kΩ</b> (ten thousand ohms), not <b>10 Ω</b>: they come in the same kind of bag, and 10 Ω reads near 0 all the time.</div>
   <div class="pic"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 690" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
 <rect x="0.0" y="0.0" width="1100.0" height="690.0" rx="0" fill="#fbfaf6" stroke="none" stroke-width="1" />
 <rect x="233.0" y="236.0" width="634.0" height="200.0" rx="10" fill="#f3f1ea" stroke="#cfcabc" stroke-width="1.2" />
@@ -18941,8 +19014,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M704.0,282 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
 <text x="710.0" y="269.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
 <line x1="725.0" y1="280.0" x2="735.0" y2="262.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
-<rect x="726.0" y="262.0" width="8.0" height="18.0" rx="2" fill="#d9c49a" stroke="#9a8455" stroke-width="1" />
-<text x="740.0" y="274.0" font-size="9" fill="#6b5a2b" text-anchor="start" font-weight="700" >10 kΩ</text>
+<rect x="725.0" y="261.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
+<rect x="725.0" y="265.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="725.0" y="269.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="725.0" y="274.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
+<text x="740.0" y="275.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
 </g>
 <rect x="231.0" y="268.0" width="248.0" height="124.0" rx="6" fill="#1e2126" stroke="#000" stroke-width="1" opacity="0.94"/>
 <rect x="237.0" y="292.0" width="74.4" height="76.0" rx="3" fill="#c8ccd2" stroke="none" stroke-width="1" />
@@ -19120,7 +19196,32 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  <h3>The two parts</h3><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 170" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+<rect x="0.0" y="0.0" width="640.0" height="170.0" rx="0" fill="#fbfaf6" stroke="none" stroke-width="1" />
+<line x1="110.0" y1="100.0" x2="104.0" y2="160.0" stroke="#999" stroke-width="2" stroke-linecap="round" />
+<line x1="130.0" y1="100.0" x2="136.0" y2="160.0" stroke="#999" stroke-width="2" stroke-linecap="round" />
+<circle cx="120.0" cy="72.0" r="34" fill="#f4e2c0" stroke="#b98a3a" stroke-width="2" />
+<path d="M96,60 h10 v10 h-10 v10 h48 v-10 h-10 v-10 h10" fill="none" stroke="#b03030" stroke-width="3"/>
+<text x="120.0" y="22.0" font-size="13" fill="#222" text-anchor="middle" font-weight="800" >1. Light sensor (GL5528)</text>
+<text x="185.0" y="66.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >round disc</text>
+<text x="185.0" y="82.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >squiggly line on top</text>
+<text x="185.0" y="98.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >no stripes</text>
+<text x="320.0" y="90.0" font-size="30" fill="#e8743b" text-anchor="middle" font-weight="800" >+</text>
+<line x1="370.0" y1="82.0" x2="410.0" y2="82.0" stroke="#999" stroke-width="2.5" stroke-linecap="round" />
+<line x1="560.0" y1="82.0" x2="610.0" y2="82.0" stroke="#999" stroke-width="2.5" stroke-linecap="round" />
+<rect x="410.0" y="64.0" width="150.0" height="36.0" rx="12" fill="#7ab3d6" stroke="#46708c" stroke-width="1.5" />
+<rect x="428.0" y="64.0" width="9.0" height="36.0" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="450.0" y="64.0" width="9.0" height="36.0" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="472.0" y="64.0" width="9.0" height="36.0" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="494.0" y="64.0" width="9.0" height="36.0" rx="0" fill="#d32f2f" stroke="none" stroke-width="1" />
+<rect x="538.0" y="64.0" width="9.0" height="36.0" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<text x="485.0" y="22.0" font-size="13" fill="#222" text-anchor="middle" font-weight="800" >2. 10 kΩ resistor</text>
+<text x="485.0" y="124.0" font-size="11" fill="#333" text-anchor="middle" font-weight="400" >brown · black · black · red · brown</text>
+<text x="485.0" y="140.0" font-size="10.5" fill="#6b7280" text-anchor="middle" font-weight="400" >(or brown · black · orange on a 4-band one)</text>
+<text x="485.0" y="158.0" font-size="10.5" fill="#b03030" text-anchor="middle" font-weight="700" >not 10 Ω: that has a gold band in the middle</text>
+</svg>
   
+  <h3>Place the parts</h3><ol class="place"><li><b>Light sensor</b> (the round disc with a squiggly line on it): legs in <b>h45</b> and <b>h48</b>. Either way round.</li><li><b>10 kΩ resistor</b> (bands brown-black-orange, or brown-black-black-red on 5-band resistors; the BOJACK bag says 10KΩ): one leg in <b>j48</b>, the same row as the sensor's second leg; the other leg in the <b>top − rail</b> (the row by the blue line), about row 49. Either way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="o:ldr-1"><label><input type="checkbox" data-k="o:ldr-1"><span class="badge" style="border-color:#f39c12">1</span><span class="sw" style="background:#f39c12"></span><span class="wt"><b>Orange wire</b> (male–male):<br>top + rail <span class="arr">→</span> hole j45 (one leg of the sensor)</span></label></li><li data-w="o:ldr-2"><label><input type="checkbox" data-k="o:ldr-2"><span class="badge" style="border-color:#e05297">2</span><span class="sw" style="background:#e05297"></span><span class="wt"><b>Pink wire</b> (male–male):<br>hole a7 (beside ESP32 pin 7) <span class="arr">→</span> hole g48 (where sensor and resistor meet)</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> In the night settings, watch <b>sensor now</b> next to "Dark below". It goes up with a torch on the sensor and down when you cover it with a finger.</div>
   
@@ -20039,8 +20140,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M704.0,282 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
 <text x="710.0" y="269.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
 <line x1="725.0" y1="280.0" x2="735.0" y2="262.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
-<rect x="726.0" y="262.0" width="8.0" height="18.0" rx="2" fill="#d9c49a" stroke="#9a8455" stroke-width="1" />
-<text x="740.0" y="274.0" font-size="9" fill="#6b5a2b" text-anchor="start" font-weight="700" >10 kΩ</text>
+<rect x="725.0" y="261.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
+<rect x="725.0" y="265.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="725.0" y="269.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="725.0" y="274.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
+<text x="740.0" y="275.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
 </g>
 <g opacity="1">
 </g>
@@ -20210,7 +20314,9 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M315.0,390.0 C485.0,330.5 555.0,250.5 725.0,310.0" fill="none" stroke="#e05297" stroke-width="2.4" stroke-linecap="round" opacity="0.28"/>
 </svg></div>
   
+  
   <ol class="todo"><li>Test the module when the electronics move to the perfboard (<a href="assembly.html#step-4">assembly step 4</a>), or switch to the two-breadboard layout at the top of this page.</li></ol>
+  
   
   <div class="test"><b>✅ Test it:</b> Nothing to test yet. The clock's page says <b>no RTC</b>, which is expected.</div>
   
@@ -21129,8 +21235,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M704.0,282 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
 <text x="710.0" y="269.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
 <line x1="725.0" y1="280.0" x2="735.0" y2="262.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
-<rect x="726.0" y="262.0" width="8.0" height="18.0" rx="2" fill="#d9c49a" stroke="#9a8455" stroke-width="1" />
-<text x="740.0" y="274.0" font-size="9" fill="#6b5a2b" text-anchor="start" font-weight="700" >10 kΩ</text>
+<rect x="725.0" y="261.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
+<rect x="725.0" y="265.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="725.0" y="269.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="725.0" y="274.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
+<text x="740.0" y="275.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
 </g>
 <g opacity="0.45">
 </g>
@@ -21328,6 +21437,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
+  
   
   <h3>Connect</h3><ul class="wires"><li data-w="o:supply-1"><label><input type="checkbox" data-k="o:supply-1"><span class="badge" style="border-color:#d32f2f">1</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (soldered lead):<br>breakout VBUS <span class="arr">→</span> bottom + rail</span></label></li><li data-w="o:supply-2"><label><input type="checkbox" data-k="o:supply-2"><span class="badge" style="border-color:#222222">2</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (soldered lead):<br>breakout GND <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> Plug the adapter in. Everything carries on as before. With a multimeter, the bottom rails read about 5 V.</div>
@@ -22247,8 +22358,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M704.0,282 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
 <text x="710.0" y="269.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
 <line x1="725.0" y1="280.0" x2="735.0" y2="262.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
-<rect x="726.0" y="262.0" width="8.0" height="18.0" rx="2" fill="#d9c49a" stroke="#9a8455" stroke-width="1" />
-<text x="740.0" y="274.0" font-size="9" fill="#6b5a2b" text-anchor="start" font-weight="700" >10 kΩ</text>
+<rect x="725.0" y="261.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
+<rect x="725.0" y="265.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="725.0" y="269.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="725.0" y="274.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
+<text x="740.0" y="275.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
 </g>
 <g opacity="0.45">
 </g>
@@ -22499,6 +22613,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
+  
+  <h3>Place the parts</h3><ol class="place"><li><b>100 µF capacitor</b>: the <b>long leg (+)</b> in the bottom + rail at row 19, the leg by the <b>stripe (−)</b> in the bottom − rail at row 20. This one does have a right way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="o:amp-1"><label><input type="checkbox" data-k="o:amp-1"><span class="badge" style="border-color:#8e44ad">1</span><span class="sw" style="background:#8e44ad"></span><span class="wt"><b>Purple wire</b> (female–male):<br>hole a8 (beside ESP32 pin 15) <span class="arr">→</span> amp BCLK</span></label></li><li data-w="o:amp-2"><label><input type="checkbox" data-k="o:amp-2"><span class="badge" style="border-color:#14a3b8">2</span><span class="sw" style="background:#14a3b8"></span><span class="wt"><b>Cyan wire</b> (female–male):<br>hole a9 (beside ESP32 pin 16) <span class="arr">→</span> amp LRC</span></label></li><li data-w="o:amp-3"><label><input type="checkbox" data-k="o:amp-3"><span class="badge" style="border-color:#9aa0a6">3</span><span class="sw" style="background:#9aa0a6"></span><span class="wt"><b>White wire</b> (female–male):<br>hole a10 (beside ESP32 pin 17) <span class="arr">→</span> amp DIN</span></label></li><li data-w="o:amp-4"><label><input type="checkbox" data-k="o:amp-4"><span class="badge" style="border-color:#d32f2f">4</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (female–male):<br>amp VIN <span class="arr">→</span> bottom + rail (5 V)</span></label></li><li data-w="o:amp-5"><label><input type="checkbox" data-k="o:amp-5"><span class="badge" style="border-color:#222222">5</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>amp GND <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> Screw the speaker leads into the amp's + and − terminals. Under <b>Sounds</b>, press <b>Play</b> on beep.wav: four beeps. Then give an alarm a radio or podcast URL and press <b>Preview stream</b>.</div>
   
@@ -23417,8 +23533,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M704.0,282 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
 <text x="710.0" y="269.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
 <line x1="725.0" y1="280.0" x2="735.0" y2="262.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
-<rect x="726.0" y="262.0" width="8.0" height="18.0" rx="2" fill="#d9c49a" stroke="#9a8455" stroke-width="1" />
-<text x="740.0" y="274.0" font-size="9" fill="#6b5a2b" text-anchor="start" font-weight="700" >10 kΩ</text>
+<rect x="725.0" y="261.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
+<rect x="725.0" y="265.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="725.0" y="269.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="725.0" y="274.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
+<text x="740.0" y="275.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
 </g>
 <g opacity="0.45">
 </g>
@@ -23707,6 +23826,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
+  
+  <h3>Place the parts</h3><ol class="place"><li><b>330 Ω resistor</b> (bands orange-orange-brown, or orange-orange-black-black): legs in <b>c50</b> and <b>c54</b>. Either way round.</li><li><b>1000 µF capacitor</b>: the <b>long leg (+)</b> in the bottom + rail at row 23, the leg by the <b>stripe (−)</b> in the bottom − rail at row 24. This one does have a right way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="o:ring-1"><label><input type="checkbox" data-k="o:ring-1"><span class="badge" style="border-color:#2e9e44">1</span><span class="sw" style="background:#2e9e44"></span><span class="wt"><b>Green wire</b> (male–male):<br>hole a11 (beside ESP32 pin 18) <span class="arr">→</span> hole a50 (one end of the 330 Ω)</span></label></li><li data-w="o:ring-2"><label><input type="checkbox" data-k="o:ring-2"><span class="badge" style="border-color:#2e9e44">2</span><span class="sw" style="background:#2e9e44"></span><span class="wt"><b>Green wire</b> (female–male):<br>hole a54 (other end of the 330 Ω) <span class="arr">→</span> ring DI (data in)</span></label></li><li data-w="o:ring-3"><label><input type="checkbox" data-k="o:ring-3"><span class="badge" style="border-color:#d32f2f">3</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (female–male):<br>ring 5V <span class="arr">→</span> bottom + rail</span></label></li><li data-w="o:ring-4"><label><input type="checkbox" data-k="o:ring-4"><span class="badge" style="border-color:#222222">4</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>ring GND <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> Give an alarm a sunrise time (for example 15 minutes) and press <b>Ring now</b>: the ring glows warm white until you press <b>Dismiss</b> (or hold button A for 2 seconds).</div>
   
@@ -24625,8 +24746,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M704.0,282 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
 <text x="710.0" y="269.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
 <line x1="725.0" y1="280.0" x2="735.0" y2="262.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
-<rect x="726.0" y="262.0" width="8.0" height="18.0" rx="2" fill="#d9c49a" stroke="#9a8455" stroke-width="1" />
-<text x="740.0" y="274.0" font-size="9" fill="#6b5a2b" text-anchor="start" font-weight="700" >10 kΩ</text>
+<rect x="725.0" y="261.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
+<rect x="725.0" y="265.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="725.0" y="269.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="725.0" y="274.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
+<text x="740.0" y="275.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
 </g>
 <g opacity="0.45">
 </g>
@@ -24980,6 +25104,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
+  
+  <h3>Place the parts</h3><ol class="place"><li><b>4.7 Ω 2 W resistor</b> (the big one; bands yellow-violet-gold, or yellow-violet-black-silver): legs in <b>h56</b> and <b>h60</b>. Either way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="o:led-1"><label><input type="checkbox" data-k="o:led-1"><span class="badge" style="border-color:#6b7280">1</span><span class="sw" style="background:#6b7280"></span><span class="wt"><b>Grey wire</b> (female–male):<br>hole a19 (beside ESP32 pin 13) <span class="arr">→</span> module TRIG / PWM</span></label></li><li data-w="o:led-2"><label><input type="checkbox" data-k="o:led-2"><span class="badge" style="border-color:#222222">2</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>module trigger GND <span class="arr">→</span> bottom − rail</span></label></li><li data-w="o:led-3"><label><input type="checkbox" data-k="o:led-3"><span class="badge" style="border-color:#d32f2f">3</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (screw terminal–male):<br>module VIN+ <span class="arr">→</span> bottom + rail (5 V)</span></label></li><li data-w="o:led-4"><label><input type="checkbox" data-k="o:led-4"><span class="badge" style="border-color:#222222">4</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (screw terminal–male):<br>module VIN− <span class="arr">→</span> bottom − rail</span></label></li><li data-w="o:led-5"><label><input type="checkbox" data-k="o:led-5"><span class="badge" style="border-color:#d32f2f">5</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (screw terminal–male):<br>module OUT+ <span class="arr">→</span> hole j56 (one end of the 4.7 Ω)</span></label></li><li data-w="o:led-6"><label><input type="checkbox" data-k="o:led-6"><span class="badge" style="border-color:#d32f2f">6</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (male–soldered lead):<br>hole j60 (other end of the 4.7 Ω) <span class="arr">→</span> LED +</span></label></li><li data-w="o:led-7"><label><input type="checkbox" data-k="o:led-7"><span class="badge" style="border-color:#222222">7</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (soldered lead–screw terminal):<br>LED − <span class="arr">→</span> module OUT−</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> On the clock's page, switch the <b>Projector</b> off and on: the LED goes off and on. Change the projector's day brightness: it dims.</div>
   
@@ -25552,7 +25678,9 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   
+  
   <ol class="todo"><li>Plug the USB-C cable into the port marked <b>USB</b> on the ESP32 (the board has two; this one carries the log).</li><li>Flash the firmware from the <a href="firmware.html">Firmware</a> page: the web flasher needs nothing installed.</li><li>Open a serial monitor at <b>115200</b> baud (the web flasher has one, or PlatformIO's monitor).</li><li>On your phone, join the Wi-Fi network <b>CeilingClock-Setup</b> and pick your home network.</li></ol>
+  
   
   <div class="test"><b>✅ Test it:</b> Open <b>http://ceilingclock.local/</b> on your phone or computer. You should see the clock's page with the time and a green <b>synced just now</b>.</div>
   
@@ -26145,6 +26273,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
+  
   
   <h3>Connect</h3><ul class="wires"><li data-w="power-1"><label><input type="checkbox" data-k="power-1"><span class="badge" style="border-color:#f39c12">1</span><span class="sw" style="background:#f39c12"></span><span class="wt"><b>Orange wire</b> (female–male):<br>ESP32 pin 3V3 (the first pin, by the antenna) <span class="arr">→</span> top + rail</span></label></li><li data-w="power-2"><label><input type="checkbox" data-k="power-2"><span class="badge" style="border-color:#222222">2</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>ESP32 pin G (last pin on the same side, by the USB ports) <span class="arr">→</span> top − rail</span></label></li><li data-w="power-3"><label><input type="checkbox" data-k="power-3"><span class="badge" style="border-color:#222222">3</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (male–male):<br>top − rail, right end <span class="arr">→</span> bottom − rail, right end</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> Nothing to see yet. If you have a multimeter, the top + and − rails should read about 3.3 V with the USB cable plugged in. Before you measure, check the meter's red lead is in the socket marked <b>V</b>, not <b>A</b> or <b>mA</b>, and the dial is on DC volts: on amps the meter shorts the supply and the ESP32 restarts.</div>
@@ -26764,6 +26894,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
+  
+  <h3>Place the parts</h3><ol class="place"><li><b>Push button A</b> across the gap in the middle: two legs in row 3, two in row 5, one each side of the gap.</li><li><b>Push button B</b> across the gap in the middle: two legs in row 8, two in row 10, one each side of the gap.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="buttons-1"><label><input type="checkbox" data-k="buttons-1"><span class="badge" style="border-color:#2e9e44">1</span><span class="sw" style="background:#2e9e44"></span><span class="wt"><b>Green wire</b> (female–male):<br>ESP32 pin 6 <span class="arr">→</span> hole j3 (button A, top-left leg)</span></label></li><li data-w="buttons-2"><label><input type="checkbox" data-k="buttons-2"><span class="badge" style="border-color:#222222">2</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (male–male):<br>hole a5 (button A, bottom-right leg) <span class="arr">→</span> bottom − rail</span></label></li><li data-w="buttons-3"><label><input type="checkbox" data-k="buttons-3"><span class="badge" style="border-color:#2c6fd6">3</span><span class="sw" style="background:#2c6fd6"></span><span class="wt"><b>Blue wire</b> (female–male):<br>ESP32 pin 14 <span class="arr">→</span> hole j8 (button B, top-left leg)</span></label></li><li data-w="buttons-4"><label><input type="checkbox" data-k="buttons-4"><span class="badge" style="border-color:#222222">4</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (male–male):<br>hole a10 (button B, bottom-right leg) <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> On the clock's page, press button <b>B</b>: the <b>Front display</b> button on the page flips between on and off. Now press B and keep holding it: 3 seconds after you pressed, <b>Projector</b> flips on the page (the page can take another second to show it). Let go after it flips; letting go sooner counts as a short press. (Button A snoozes an alarm; you'll try it later.)</div>
   
@@ -27401,6 +27533,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
+  
   
   <h3>Connect</h3><ul class="wires"><li data-w="tm1637-1"><label><input type="checkbox" data-k="tm1637-1"><span class="badge" style="border-color:#e6b800">1</span><span class="sw" style="background:#e6b800"></span><span class="wt"><b>Yellow wire</b> (female–female):<br>ESP32 pin 4 <span class="arr">→</span> display CLK</span></label></li><li data-w="tm1637-2"><label><input type="checkbox" data-k="tm1637-2"><span class="badge" style="border-color:#9aa0a6">2</span><span class="sw" style="background:#9aa0a6"></span><span class="wt"><b>White wire</b> (female–female):<br>ESP32 pin 5 <span class="arr">→</span> display DIO</span></label></li><li data-w="tm1637-3"><label><input type="checkbox" data-k="tm1637-3"><span class="badge" style="border-color:#f39c12">3</span><span class="sw" style="background:#f39c12"></span><span class="wt"><b>Orange wire</b> (female–male):<br>display VCC <span class="arr">→</span> top + rail</span></label></li><li data-w="tm1637-4"><label><input type="checkbox" data-k="tm1637-4"><span class="badge" style="border-color:#222222">4</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>display GND <span class="arr">→</span> top − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> The display shows the time within a second. On the settings page, change the front display's brightness: it follows.</div>
@@ -28092,6 +28226,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
+  
+  
   <h3>Connect</h3><ul class="wires"><li data-w="lcd-1"><label><input type="checkbox" data-k="lcd-1"><span class="badge" style="border-color:#8d5a2b">1</span><span class="sw" style="background:#8d5a2b"></span><span class="wt"><b>Brown wire</b> (female–female):<br>ESP32 pin 8 <span class="arr">→</span> LCD RST</span></label></li><li data-w="lcd-2"><label><input type="checkbox" data-k="lcd-2"><span class="badge" style="border-color:#8e44ad">2</span><span class="sw" style="background:#8e44ad"></span><span class="wt"><b>Purple wire</b> (female–female):<br>ESP32 pin 10 <span class="arr">→</span> LCD CE</span></label></li><li data-w="lcd-3"><label><input type="checkbox" data-k="lcd-3"><span class="badge" style="border-color:#14a3b8">3</span><span class="sw" style="background:#14a3b8"></span><span class="wt"><b>Cyan wire</b> (female–female):<br>ESP32 pin 9 <span class="arr">→</span> LCD DC</span></label></li><li data-w="lcd-4"><label><input type="checkbox" data-k="lcd-4"><span class="badge" style="border-color:#2e9e44">4</span><span class="sw" style="background:#2e9e44"></span><span class="wt"><b>Green wire</b> (female–female):<br>ESP32 pin 11 <span class="arr">→</span> LCD DIN</span></label></li><li data-w="lcd-5"><label><input type="checkbox" data-k="lcd-5"><span class="badge" style="border-color:#e6b800">5</span><span class="sw" style="background:#e6b800"></span><span class="wt"><b>Yellow wire</b> (female–female):<br>ESP32 pin 12 <span class="arr">→</span> LCD CLK</span></label></li><li data-w="lcd-6"><label><input type="checkbox" data-k="lcd-6"><span class="badge" style="border-color:#f39c12">6</span><span class="sw" style="background:#f39c12"></span><span class="wt"><b>Orange wire</b> (female–male):<br>LCD VCC <span class="arr">→</span> top + rail</span></label></li><li data-w="lcd-7"><label><input type="checkbox" data-k="lcd-7"><span class="badge" style="border-color:#222222">7</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>LCD BL (bench only: lights it) <span class="arr">→</span> top − rail</span></label></li><li data-w="lcd-8"><label><input type="checkbox" data-k="lcd-8"><span class="badge" style="border-color:#222222">8</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>LCD GND <span class="arr">→</span> top − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> The LCD shows the time, <b>back to front</b>: the clock mirrors it for the projector. Untick <b>Mirror left/right</b> in the projector settings to read it, and tick it again before testing the optics.</div>
   
@@ -28099,9 +28235,9 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </section>
 <section class="bbstep only-beside" id="s-ldr">
   <div class="bbhead"><span class="num">6</span><h2>Light sensor</h2><span class="time">⏱ 5 min</span></div>
-  <p>A light-dependent resistor and a fixed 10 kΩ resistor make a divider: the voltage between them rises as the room gets brighter. Neither part has a polarity.</p>
-  <div class="need"><b>You need:</b> <span class="chip">GL5528 light sensor</span><span class="chip">10 kΩ resistor (brown-black-orange)</span><span class="chip">2 jumper wires: 1 female–male, 1 male–male</span></div>
-  
+  <p>This step uses <b>two separate parts</b>: the light sensor <b>and</b> a 10 kΩ resistor. The sensor alone does nothing: the resistor sits under it, between the sensor and ground, and the ESP32 reads the voltage where the two meet. That voltage rises as the room gets brighter. Neither part has a right way round.</p>
+  <div class="need"><b>You need:</b> <span class="chip">GL5528 light sensor (round disc)</span><span class="chip">10 kΩ resistor (a separate part: striped cylinder)</span><span class="chip">2 jumper wires: 1 female–male, 1 male–male</span></div>
+  <div class="warn">⚠️ <b>Two parts, not one.</b> If you only put the round sensor in, the reading sits near 4095 whatever the light. And check the resistor is <b>10 kΩ</b> (ten thousand ohms), not <b>10 Ω</b>: they come in the same kind of bag, and 10 Ω reads near 0 all the time.</div>
   <div class="pic"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 690" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
 <rect x="0.0" y="0.0" width="1000.0" height="690.0" rx="0" fill="#fbfaf6" stroke="none" stroke-width="1" />
 <rect x="278.0" y="380.0" width="479.0" height="258.0" rx="10" fill="#f3f1ea" stroke="#cfcabc" stroke-width="1.2" />
@@ -28691,8 +28827,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M496.5,448 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
 <text x="502.5" y="435.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
 <line x1="525.0" y1="436.0" x2="540.0" y2="412.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
-<rect x="528.5" y="415.0" width="8.0" height="18.0" rx="2" fill="#d9c49a" stroke="#9a8455" stroke-width="1" />
-<text x="542.5" y="427.0" font-size="9" fill="#6b5a2b" text-anchor="start" font-weight="700" >10 kΩ</text>
+<rect x="527.5" y="414.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
+<rect x="527.5" y="418.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="527.5" y="422.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="527.5" y="427.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
+<text x="542.5" y="428.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
 </g>
 <g opacity="0.45">
 <rect x="30.0" y="150.0" width="170.0" height="75.0" rx="8" fill="#fffdf8" stroke="#c0392b" stroke-width="2" />
@@ -28763,7 +28902,32 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  <h3>The two parts</h3><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 170" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+<rect x="0.0" y="0.0" width="640.0" height="170.0" rx="0" fill="#fbfaf6" stroke="none" stroke-width="1" />
+<line x1="110.0" y1="100.0" x2="104.0" y2="160.0" stroke="#999" stroke-width="2" stroke-linecap="round" />
+<line x1="130.0" y1="100.0" x2="136.0" y2="160.0" stroke="#999" stroke-width="2" stroke-linecap="round" />
+<circle cx="120.0" cy="72.0" r="34" fill="#f4e2c0" stroke="#b98a3a" stroke-width="2" />
+<path d="M96,60 h10 v10 h-10 v10 h48 v-10 h-10 v-10 h10" fill="none" stroke="#b03030" stroke-width="3"/>
+<text x="120.0" y="22.0" font-size="13" fill="#222" text-anchor="middle" font-weight="800" >1. Light sensor (GL5528)</text>
+<text x="185.0" y="66.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >round disc</text>
+<text x="185.0" y="82.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >squiggly line on top</text>
+<text x="185.0" y="98.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >no stripes</text>
+<text x="320.0" y="90.0" font-size="30" fill="#e8743b" text-anchor="middle" font-weight="800" >+</text>
+<line x1="370.0" y1="82.0" x2="410.0" y2="82.0" stroke="#999" stroke-width="2.5" stroke-linecap="round" />
+<line x1="560.0" y1="82.0" x2="610.0" y2="82.0" stroke="#999" stroke-width="2.5" stroke-linecap="round" />
+<rect x="410.0" y="64.0" width="150.0" height="36.0" rx="12" fill="#7ab3d6" stroke="#46708c" stroke-width="1.5" />
+<rect x="428.0" y="64.0" width="9.0" height="36.0" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="450.0" y="64.0" width="9.0" height="36.0" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="472.0" y="64.0" width="9.0" height="36.0" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="494.0" y="64.0" width="9.0" height="36.0" rx="0" fill="#d32f2f" stroke="none" stroke-width="1" />
+<rect x="538.0" y="64.0" width="9.0" height="36.0" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<text x="485.0" y="22.0" font-size="13" fill="#222" text-anchor="middle" font-weight="800" >2. 10 kΩ resistor</text>
+<text x="485.0" y="124.0" font-size="11" fill="#333" text-anchor="middle" font-weight="400" >brown · black · black · red · brown</text>
+<text x="485.0" y="140.0" font-size="10.5" fill="#6b7280" text-anchor="middle" font-weight="400" >(or brown · black · orange on a 4-band one)</text>
+<text x="485.0" y="158.0" font-size="10.5" fill="#b03030" text-anchor="middle" font-weight="700" >not 10 Ω: that has a gold band in the middle</text>
+</svg>
   
+  <h3>Place the parts</h3><ol class="place"><li><b>Light sensor</b> (the round disc with a squiggly line on it): legs in <b>h13</b> and <b>h16</b>. Either way round.</li><li><b>10 kΩ resistor</b> (bands brown-black-orange, or brown-black-black-red on 5-band resistors; the BOJACK bag says 10KΩ): one leg in <b>j16</b>, the same row as the sensor's second leg; the other leg in the <b>top − rail</b> (the row by the blue line), about row 17. Either way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="ldr-1"><label><input type="checkbox" data-k="ldr-1"><span class="badge" style="border-color:#f39c12">1</span><span class="sw" style="background:#f39c12"></span><span class="wt"><b>Orange wire</b> (male–male):<br>top + rail <span class="arr">→</span> hole j13 (one leg of the sensor)</span></label></li><li data-w="ldr-2"><label><input type="checkbox" data-k="ldr-2"><span class="badge" style="border-color:#e05297">2</span><span class="sw" style="background:#e05297"></span><span class="wt"><b>Pink wire</b> (female–male):<br>ESP32 pin 7 <span class="arr">→</span> hole g16 (where sensor and resistor meet)</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> In the night settings, watch <b>sensor now</b> next to "Dark below". It goes up with a torch on the sensor and down when you cover it with a finger.</div>
   
@@ -29363,8 +29527,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M496.5,448 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
 <text x="502.5" y="435.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
 <line x1="525.0" y1="436.0" x2="540.0" y2="412.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
-<rect x="528.5" y="415.0" width="8.0" height="18.0" rx="2" fill="#d9c49a" stroke="#9a8455" stroke-width="1" />
-<text x="542.5" y="427.0" font-size="9" fill="#6b5a2b" text-anchor="start" font-weight="700" >10 kΩ</text>
+<rect x="527.5" y="414.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
+<rect x="527.5" y="418.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="527.5" y="422.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="527.5" y="427.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
+<text x="542.5" y="428.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
 </g>
 <g opacity="1">
 </g>
@@ -29468,6 +29635,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
+  
   
   <h3>Connect</h3><ul class="wires"><li data-w="ds3231-1"><label><input type="checkbox" data-k="ds3231-1"><span class="badge" style="border-color:#2c6fd6">1</span><span class="sw" style="background:#2c6fd6"></span><span class="wt"><b>Blue wire</b> (female–female):<br>ESP32 pin 1 (far side) <span class="arr">→</span> module SDA (marked D on mini boards)</span></label></li><li data-w="ds3231-2"><label><input type="checkbox" data-k="ds3231-2"><span class="badge" style="border-color:#e6b800">2</span><span class="sw" style="background:#e6b800"></span><span class="wt"><b>Yellow wire</b> (female–female):<br>ESP32 pin 2 (far side) <span class="arr">→</span> module SCL (marked C)</span></label></li><li data-w="ds3231-3"><label><input type="checkbox" data-k="ds3231-3"><span class="badge" style="border-color:#f39c12">3</span><span class="sw" style="background:#f39c12"></span><span class="wt"><b>Orange wire</b> (female–male):<br>module VCC (+) <span class="arr">→</span> top + rail</span></label></li><li data-w="ds3231-4"><label><input type="checkbox" data-k="ds3231-4"><span class="badge" style="border-color:#222222">4</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>module GND (−) <span class="arr">→</span> top − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> The page shows <b>RTC backup ok</b>. Turn your router's Wi-Fi off and press RST on the ESP32: the time is still right.</div>
@@ -30068,8 +30237,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M496.5,448 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
 <text x="502.5" y="435.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
 <line x1="525.0" y1="436.0" x2="540.0" y2="412.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
-<rect x="528.5" y="415.0" width="8.0" height="18.0" rx="2" fill="#d9c49a" stroke="#9a8455" stroke-width="1" />
-<text x="542.5" y="427.0" font-size="9" fill="#6b5a2b" text-anchor="start" font-weight="700" >10 kΩ</text>
+<rect x="527.5" y="414.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
+<rect x="527.5" y="418.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="527.5" y="422.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="527.5" y="427.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
+<text x="542.5" y="428.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
 </g>
 <g opacity="0.45">
 </g>
@@ -30181,6 +30353,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
+  
   
   <h3>Connect</h3><ul class="wires"><li data-w="supply-1"><label><input type="checkbox" data-k="supply-1"><span class="badge" style="border-color:#d32f2f">1</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (soldered lead):<br>breakout VBUS <span class="arr">→</span> bottom + rail</span></label></li><li data-w="supply-2"><label><input type="checkbox" data-k="supply-2"><span class="badge" style="border-color:#222222">2</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (soldered lead):<br>breakout GND <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> Plug the adapter in. Everything carries on as before. With a multimeter, the bottom rails read about 5 V.</div>
@@ -30781,8 +30955,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M496.5,448 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
 <text x="502.5" y="435.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
 <line x1="525.0" y1="436.0" x2="540.0" y2="412.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
-<rect x="528.5" y="415.0" width="8.0" height="18.0" rx="2" fill="#d9c49a" stroke="#9a8455" stroke-width="1" />
-<text x="542.5" y="427.0" font-size="9" fill="#6b5a2b" text-anchor="start" font-weight="700" >10 kΩ</text>
+<rect x="527.5" y="414.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
+<rect x="527.5" y="418.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="527.5" y="422.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="527.5" y="427.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
+<text x="542.5" y="428.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
 </g>
 <g opacity="0.45">
 </g>
@@ -30947,6 +31124,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
+  
+  <h3>Place the parts</h3><ol class="place"><li><b>100 µF capacitor</b>: the <b>long leg (+)</b> in the bottom + rail at row 19, the leg by the <b>stripe (−)</b> in the bottom − rail at row 20. This one does have a right way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="amp-1"><label><input type="checkbox" data-k="amp-1"><span class="badge" style="border-color:#8e44ad">1</span><span class="sw" style="background:#8e44ad"></span><span class="wt"><b>Purple wire</b> (female–female):<br>ESP32 pin 15 <span class="arr">→</span> amp BCLK</span></label></li><li data-w="amp-2"><label><input type="checkbox" data-k="amp-2"><span class="badge" style="border-color:#14a3b8">2</span><span class="sw" style="background:#14a3b8"></span><span class="wt"><b>Cyan wire</b> (female–female):<br>ESP32 pin 16 <span class="arr">→</span> amp LRC</span></label></li><li data-w="amp-3"><label><input type="checkbox" data-k="amp-3"><span class="badge" style="border-color:#9aa0a6">3</span><span class="sw" style="background:#9aa0a6"></span><span class="wt"><b>White wire</b> (female–female):<br>ESP32 pin 17 <span class="arr">→</span> amp DIN</span></label></li><li data-w="amp-4"><label><input type="checkbox" data-k="amp-4"><span class="badge" style="border-color:#d32f2f">4</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (female–male):<br>amp VIN <span class="arr">→</span> bottom + rail (5 V)</span></label></li><li data-w="amp-5"><label><input type="checkbox" data-k="amp-5"><span class="badge" style="border-color:#222222">5</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>amp GND <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> Screw the speaker leads into the amp's + and − terminals. Under <b>Sounds</b>, press <b>Play</b> on beep.wav: four beeps. Then give an alarm a radio or podcast URL and press <b>Preview stream</b>.</div>
   
@@ -31546,8 +31725,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M496.5,448 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
 <text x="502.5" y="435.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
 <line x1="525.0" y1="436.0" x2="540.0" y2="412.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
-<rect x="528.5" y="415.0" width="8.0" height="18.0" rx="2" fill="#d9c49a" stroke="#9a8455" stroke-width="1" />
-<text x="542.5" y="427.0" font-size="9" fill="#6b5a2b" text-anchor="start" font-weight="700" >10 kΩ</text>
+<rect x="527.5" y="414.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
+<rect x="527.5" y="418.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="527.5" y="422.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="527.5" y="427.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
+<text x="542.5" y="428.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
 </g>
 <g opacity="0.45">
 </g>
@@ -31750,6 +31932,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
+  
+  <h3>Place the parts</h3><ol class="place"><li><b>330 Ω resistor</b> (bands orange-orange-brown, or orange-orange-black-black): legs in <b>h21</b> and <b>h25</b>. Either way round.</li><li><b>1000 µF capacitor</b>: the <b>long leg (+)</b> in the bottom + rail at row 23, the leg by the <b>stripe (−)</b> in the bottom − rail at row 24. This one does have a right way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="ring-1"><label><input type="checkbox" data-k="ring-1"><span class="badge" style="border-color:#2e9e44">1</span><span class="sw" style="background:#2e9e44"></span><span class="wt"><b>Green wire</b> (female–male):<br>ESP32 pin 18 <span class="arr">→</span> hole j21 (one end of the 330 Ω)</span></label></li><li data-w="ring-2"><label><input type="checkbox" data-k="ring-2"><span class="badge" style="border-color:#2e9e44">2</span><span class="sw" style="background:#2e9e44"></span><span class="wt"><b>Green wire</b> (female–male):<br>hole j25 (other end of the 330 Ω) <span class="arr">→</span> ring DI (data in)</span></label></li><li data-w="ring-3"><label><input type="checkbox" data-k="ring-3"><span class="badge" style="border-color:#d32f2f">3</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (female–male):<br>ring 5V <span class="arr">→</span> bottom + rail</span></label></li><li data-w="ring-4"><label><input type="checkbox" data-k="ring-4"><span class="badge" style="border-color:#222222">4</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>ring GND <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> Give an alarm a sunrise time (for example 15 minutes) and press <b>Ring now</b>: the ring glows warm white until you press <b>Dismiss</b> (or hold button A for 2 seconds).</div>
   
@@ -32349,8 +32533,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M496.5,448 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
 <text x="502.5" y="435.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
 <line x1="525.0" y1="436.0" x2="540.0" y2="412.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
-<rect x="528.5" y="415.0" width="8.0" height="18.0" rx="2" fill="#d9c49a" stroke="#9a8455" stroke-width="1" />
-<text x="542.5" y="427.0" font-size="9" fill="#6b5a2b" text-anchor="start" font-weight="700" >10 kΩ</text>
+<rect x="527.5" y="414.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
+<rect x="527.5" y="418.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
+<rect x="527.5" y="422.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
+<rect x="527.5" y="427.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
+<text x="542.5" y="428.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
 </g>
 <g opacity="0.45">
 </g>
@@ -32618,6 +32805,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
+  
+  <h3>Place the parts</h3><ol class="place"><li><b>4.7 Ω 2 W resistor</b> (the big one; bands yellow-violet-gold, or yellow-violet-black-silver): legs in <b>d26</b> and <b>d30</b>. Either way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="led-1"><label><input type="checkbox" data-k="led-1"><span class="badge" style="border-color:#6b7280">1</span><span class="sw" style="background:#6b7280"></span><span class="wt"><b>Grey wire</b> (female–female):<br>ESP32 pin 13 <span class="arr">→</span> module TRIG / PWM</span></label></li><li data-w="led-2"><label><input type="checkbox" data-k="led-2"><span class="badge" style="border-color:#222222">2</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>module trigger GND <span class="arr">→</span> bottom − rail</span></label></li><li data-w="led-3"><label><input type="checkbox" data-k="led-3"><span class="badge" style="border-color:#d32f2f">3</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (screw terminal–male):<br>module VIN+ <span class="arr">→</span> bottom + rail (5 V)</span></label></li><li data-w="led-4"><label><input type="checkbox" data-k="led-4"><span class="badge" style="border-color:#222222">4</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (screw terminal–male):<br>module VIN− <span class="arr">→</span> bottom − rail</span></label></li><li data-w="led-5"><label><input type="checkbox" data-k="led-5"><span class="badge" style="border-color:#d32f2f">5</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (screw terminal–male):<br>module OUT+ <span class="arr">→</span> hole a26 (one end of the 4.7 Ω)</span></label></li><li data-w="led-6"><label><input type="checkbox" data-k="led-6"><span class="badge" style="border-color:#d32f2f">6</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (male–soldered lead):<br>hole a30 (other end of the 4.7 Ω) <span class="arr">→</span> LED +</span></label></li><li data-w="led-7"><label><input type="checkbox" data-k="led-7"><span class="badge" style="border-color:#222222">7</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (soldered lead–screw terminal):<br>LED − <span class="arr">→</span> module OUT−</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> On the clock's page, switch the <b>Projector</b> off and on: the LED goes off and on. Change the projector's day brightness: it dims.</div>
   
