@@ -4,9 +4,12 @@
 # so the wires in the pictures go to the right physical pins.
 #
 # Two bench layouts, switched by a button on the page:
-#   plug   - the ESP32 plugged in across two breadboards pushed together (one power-rail strip removed
-#            from the join). Top edge pins (J3) in column i of the upper board, bottom edge pins (J1) in
-#            column b of the lower board, from row 5. Each pin has three free holes beside it.
+#   plug   - the ESP32 plugged in across two full-size breadboards side by side, straddling the two rail
+#            strips at the join (about 1", the DevKitC-1's pin spacing). Top edge pins (J3) in column a of
+#            the upper board, bottom edge pins (J1) in column j of the lower board, from row 5. Each pin
+#            has four free holes beside it.
+# Letters: the code places parts by 'design' letters with a at the top of each board; the pictures and the
+# text print the real letter (MIRROR), because a real breadboard with row 1 on the left has j at the top.
 #   beside - the ESP32 next to a single breadboard, connected with female jumper leads.
 # In both, the top rails are 3V3 + GND and the bottom rails are the external 5 V + GND, with the grounds joined.
 import os, re, html, math
@@ -44,13 +47,14 @@ LAYOUTS = {
                        gap=503, rowy=425, dead=None)},
       esp=(330, 70, 690, 180), epitch=15.5),
   'plug': dict(
-      boards={'U': dict(label='upper board', y0=42, y1=262, cols=cols(98, 188), rails={'t+': 60, 't-': 74},
-                        gap=165, rowy=89, dead=None),
-              'L': dict(label='lower board', y0=265, y1=522, cols=cols(318, 408), rails={'b+': 492, 'b-': 506},
-                        gap=385, rowy=481, dead=(280, 294))},
-      esp=(BX0 + (PLUG_ROW0 - 1) * P - 16, 222, BX0 + (PLUG_ROW0 + 20) * P + 16, 344), epitch=P),
+      boards={'U': dict(label='upper board', y0=36, y1=282, cols=cols(88, 178), rails={'t+': 52, 't-': 66},
+                        gap=155, rowy=80, dead=(256, 270)),
+              'L': dict(label='lower board', y0=285, y1=530, cols=cols(334, 424), rails={'b+': 502, 'b-': 516},
+                        gap=401, rowy=495, dead=(298, 312))},
+      esp=(BX0 + (PLUG_ROW0 - 1) * P - 16, 226, BX0 + (PLUG_ROW0 + 20) * P + 16, 346), epitch=P),
 }
 LAY = 'beside'                           # the layout being built or drawn
+MIRROR = dict(zip('abcdefghij', 'jihgfedcba'))   # design letter -> letter printed on a real breadboard
 def LY(): return LAYOUTS[LAY]
 def X(beside, plug): return plug if LAY == 'plug' else beside
 def RAILY(k):
@@ -64,7 +68,7 @@ def epin(name, which=None):
     """Where the pin itself is drawn."""
     hdr, i = esp_pin(name, which)
     if LAY == 'plug':
-        return hole(PLUG_ROW0 + i, 'b', 'L') if hdr == 'J1' else hole(PLUG_ROW0 + i, 'i', 'U')
+        return hole(PLUG_ROW0 + i, 'a', 'L') if hdr == 'J1' else hole(PLUG_ROW0 + i, 'j', 'U')
     EX0, EY0, EX1, EY1 = LY()['esp']
     x = EX0 + 15 + i * LY()['epitch']
     return (x, EY1 + 8) if hdr == 'J1' else (x, EY0 - 8)
@@ -79,12 +83,12 @@ def esp(name, which=None, note=''):
     hdr, i = esp_pin(name, which)
     if LAY == 'plug':
         r = PLUG_ROW0 + i
-        b, c = ('L', 'c') if hdr == 'J1' else ('U', 'h')
-        return E(hole(r, c, b), 'auto', f'hole {c}{r}, {board(b)["label"]} (the row of ESP32 {pn(name)}{note})', 'male')
+        b, c = ('L', 'b') if hdr == 'J1' else ('U', 'i')
+        return E(hole(r, c, b), 'auto', f'hole {MIRROR[c]}{r}, {board(b)["label"]} (the row of ESP32 {pn(name)}{note})', 'male')
     return E(epin(name, which), (0, 1) if hdr == 'J1' else (0, -1), f'ESP32 {pn(name)}{note}', 'female')
 def hl(r, c, b=None, note=''):
     where = f', {board(b)["label"]}' if LAY == 'plug' else ''
-    return E(hole(r, c, b), 'auto', f'hole {c}{r}{where}' + (f' ({note})' if note else ''), 'male')
+    return E(hole(r, c, b), 'auto', f'hole {MIRROR[c]}{r}{where}' + (f' ({note})' if note else ''), 'male')
 def rl(k, r, note=''): return E(rail(k, r), 'auto', RAILNAME[k] + (f' {note}' if note else ''), 'male')
 
 # modules (off the breadboard): name -> (x0, y0, x1, y1, pin side, [pins], colour, title, subtitle)
@@ -182,9 +186,10 @@ def build_steps():
              need=['2 full-size breadboards (830 holes)'],
              intro='The ESP32 is too wide for one breadboard: on one board its pins would cover every free hole. Two boards side by side give each row of pins its own board, with free holes beside every pin. Then three short wires set up the rails: the top rails become 3.3 V and ground, the bottom rails ground for the 5 V supply.',
              todo=['Unplug the USB cable.',
-                   'Pull the power-rail strip off one long side of one breadboard (it slides or peels off), and push that side against the other board. One rail strip is left between the two boards; the ESP32 will sit over it.',
-                   f'Line the ESP32 up with its antenna on the left. Put the pins along its top edge into column <b>i</b> of the upper board and the pins along its bottom edge into column <b>b</b> of the lower board, with the first pins in row <b>{PLUG_ROW0}</b>. Press down evenly on both rows of pins, not on the metal can.',
-                   'If the pins don\'t line up with columns i and b on your boards, use whichever columns fit. What matters is that each pin has free holes beside it on the outside. The free holes in the same row of five as a pin are connected to that pin.'],
+                   'Put the two breadboards side by side, both the same way round, so column <b>j</b> of one board sits next to column <b>a</b> of the other, with two rail strips between them. Leave all the rail strips on.',
+                   'The pictures show the boards turned a quarter turn so row 1 is on the left. If yours stand upright with row 1 at the top, the left board is the <b>lower board</b> and the right board is the <b>upper board</b>.',
+                   f'Turn the ESP32 so its antenna points toward row 1. Its row of pins starting with <b>3V3</b> goes into column <b>j</b> of the lower board; the row starting with <b>GND, TX, RX</b> goes into column <b>a</b> of the upper board. The first pins go in row <b>{PLUG_ROW0}</b>. It sits over the two middle rail strips, which stay unused. Press down evenly on both rows of pins, not on the metal can.',
+                   'If the pins don\'t quite reach columns j and a on your boards, use i and b instead, or pull one middle rail strip off and push the boards together. What matters is that each pin has free holes beside it on the outside: the free holes in the same row of five as a pin are connected to that pin.'],
              wires=[W_('3v3', esp('3V3'), rl('t+', 1)),
                     W_('gnd', esp('G', 'J3'), rl('t-', 7)),
                     W_('gnd', esp('G', 'J1'), rl('b-', 22))],
@@ -209,14 +214,14 @@ def build_steps():
               W_('gnd', hl(3, 'j', 'L', 'button A, bottom-right leg'), rl('b-', 3)),
               W_('blue', esp(B_), hl(28, 'a', 'L', 'button B, top-left leg')),
               W_('gnd', hl(30, 'j', 'L', 'button B, bottom-right leg'), rl('b-', 30))]
-        legs = 'a1 and j3, a28 and j30'
+        legs = f'{MIRROR["a"]}1 and {MIRROR["j"]}3, {MIRROR["a"]}28 and {MIRROR["j"]}30'
     else:
         bA, bB = (3, None), (8, None)
         bw = [W_('green', esp(A), hl(3, 'a', note='button A, top-left leg')),
               W_('gnd', hl(5, 'j', note='button A, bottom-right leg'), rl('b-', 5)),
               W_('blue', esp(B_), hl(8, 'a', note='button B, top-left leg')),
               W_('gnd', hl(10, 'j', note='button B, bottom-right leg'), rl('b-', 10))]
-        legs = 'a3 and j5, a8 and j10'
+        legs = f'{MIRROR["a"]}3 and {MIRROR["j"]}5, {MIRROR["a"]}8 and {MIRROR["j"]}10'
     step(id='buttons', title='Buttons', time='10 min', mods=[],
          need=['2 small 6 × 6 mm push buttons (from your tactile switch kit)'],
          intro='For testing, use two small 4-legged push buttons; the 16 mm panel buttons go in later. Each one sits <b>across the gap</b> in the middle of the breadboard. Wire to <b>diagonally opposite legs</b>: that way it works whichever way round the button sits.'
@@ -361,7 +366,7 @@ def draw_board(s):
         if 't+' in B['rails']: s.text(rx(ROWS) + 14, B['rails']['t+'] + 4, '3.3 V', 10, '#d33a2c', 'start', 700)
         if 'b+' in B['rails']: s.text(rx(ROWS) + 14, B['rails']['b+'] + 4, '5 V', 10, '#d33a2c', 'start', 700)
         for c, y in B['cols'].items():
-            s.text(BX0 - 14, y + 3.5, c, 9.5, '#8a8577', 'middle')
+            s.text(BX0 - 14, y + 3.5, MIRROR[c], 9.5, '#8a8577', 'middle')
             for r in range(1, ROWS + 1): s.rect(rx(r) - 2.2, y - 2.2, 4.4, 4.4, '#8a8577', rx=0.8)
         s.rect(BX0 - 6, B['gap'], (ROWS - 1) * P + 12, 16, '#e6e2d6', rx=2)
         if B['label']: s.text(rx(15.5), B['gap'] + 11.5, B['label'].upper(), 9.5, '#a29c8b', 'middle', 700, extra='letter-spacing="2"')
@@ -505,16 +510,16 @@ def svg_basics():
     s.rect(x0 + 5 * p - 6, cols['f'] - 6, 12, cols['j'] - cols['f'] + 12, '#cfe0ff', rx=6)
     for y in list(ys.values()) + list(cols.values()):
         for r in range(n): s.rect(x0 + r * p - 2.3, y - 2.3, 4.6, 4.6, '#8a8577', rx=1)
-    for c, y in cols.items(): s.text(x0 - 10, y + 3.5, c, 9.5, '#8a8577', 'end')
+    for c, y in cols.items(): s.text(x0 - 10, y + 3.5, MIRROR[c], 9.5, '#8a8577', 'end')
     s.text(x0 - 10, ys['t+'] + 4, '+', 11, '#d33a2c', 'end', 700); s.text(x0 - 10, ys['t-'] + 4, '−', 11, '#2b5fd9', 'end', 700)
     tx = x0 + n * p + 22
     def note(y, head, body, col):
         s.text(tx, y, head, 12.5, col, 'start', 700)
         for i, ln in enumerate(body): s.text(tx, y + 17 + i * 15, ln, 11.5, '#333')
     note(52, 'Rails (red and blue lines)', ['Each line of holes along the edge is one long', 'connection. Use them for + power and − ground.'], '#c0392b')
-    note(112, 'Columns of five', ['Holes a–e in one column are joined, so', 'anything in the same five is connected.'], '#2e8b3d')
-    note(172, 'The gap in the middle', ['Splits each column: a–e and f–j are separate.', 'Push buttons sit across it.'], '#555')
-    note(232, 'f–j: another group of five', ['Joined to each other, not to a–e.'], '#2b5fd9')
+    note(112, 'Columns of five', ['Holes f–j in one column are joined, so', 'anything in the same five is connected.'], '#2e8b3d')
+    note(172, 'The gap in the middle', ['Splits each column: f–j and a–e are separate.', 'Push buttons sit across it.'], '#555')
+    note(232, 'a–e: another group of five', ['Joined to each other, not to f–j.'], '#2b5fd9')
     s.add('</svg>')
     return '\n'.join(s.o)
 
