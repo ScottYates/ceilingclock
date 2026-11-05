@@ -186,10 +186,31 @@ def jumper_need(wires):
     if not tot: return []
     return [f'{tot} jumper wire{"s" if tot > 1 else ""}: ' + ', '.join(f'{v} {k}' for k, v in n.items() if v)]
 
+def power_debug():
+    """Step-by-step check for 'no 3.3 V on the rails', with this layout's hole names."""
+    one, plug = LAY == 'one', LAY == 'plug'
+    j = MIRROR['j']
+    pin3 = X('the female end on the ESP32\'s 3V3 pin', f'hole {MIRROR["b"]}{PLUG_ROW0}, lower board', f'hole {j}{ONE_ROW0}')
+    gnd = X('the black wire from the ESP32\'s G pin (by the USB ports) to the top − rail, and the black wire joining the two − rails at the right-hand end',
+            f'the black wire from hole {MIRROR["i"]}{PLUG_ROW0}, upper board (the ESP32\'s first GND pin) to the top − rail',
+            f'the black wire from hole {j}{ONE_ROW0 + 21} to the bottom − rail, and the black wire joining the top and bottom − rails at row 60')
+    return [
+      ('Set the meter up', 'Turn it to <b>DC volts</b> (V with a straight line; the 20 V range if it isn\'t auto-ranging). Black lead in <b>COM</b>, red lead in <b>V</b>. Meter probes are often too thick to reach the metal inside a breadboard hole: push the male end of a spare jumper into the hole and touch the probe to that instead.'),
+      ('Is the ESP32 on?', 'With the USB cable in the port marked <b>USB</b>, the board\'s small power LED should be lit and the clock\'s page should open. If not, try another cable and USB port before anything else.'),
+      ('Measure on the ESP32 itself', 'Red probe on the solder joint of the <b>3V3</b> pin, black on the joint of a <b>G</b> pin. It should read about 3.3 V. If it reads 0 V, the board isn\'t getting power (cable or port). If it reads well under 3 V, or the board gets warm, unplug at once and look for solder bridging two header pins.'),
+      ('Measure the 3V3 pin\'s row', f'Keep black on the G joint and put red in {pin3}. 3.3 V here means the pin is making contact. 0 V means it isn\'t: press the ESP32 down firmly (the pins should disappear into the holes), and count the rows to check the 3V3 pin is really in the row you think.' if LAY != 'beside' else f'Keep black on the G joint and touch red to the male end of the orange wire. 0 V means the female end isn\'t gripping the pin: push it fully on, or try another jumper.'),
+      ('Measure the + rail', 'Keep black on the G joint and put red in the top + rail, near where the orange wire goes in. 0 V here: the orange wire isn\'t in the rail (check it is in the rail row by the red line, marked +, not the blue − row), or the jumper is broken: swap it for another.'),
+      ('Check the rail runs the whole length', 'Many full-size breadboards split each rail in the middle; look for a break in the red and blue lines halfway along. Put red in the + rail at the far end. If it reads 0 V there but 3.3 V near the wire, the rail is split: bridge the two halves with a short jumper, on the − rails too.'),
+      ('Measure + rail to − rail', f'Now red in the top + rail, black in the top − rail. If the earlier checks passed but this reads 0 V, the − rail isn\'t connected to ground: check {gnd}.'),
+      ('Reads −3.3 V', 'The probes are swapped. Nothing is wrong.'),
+      ('No meter?', 'Skip ahead to the buttons and the front display: if they work, the rails are fine.'),
+    ]
+
 def build_steps():
     S = []
     def step(**k):
         k['need'] = k['need'] + jumper_need(k['wires'])
+        if k['id'] == 'power': k['debug'] = power_debug()
         S.append(k)
     plug, one = LAY == 'plug', LAY == 'one'
     A, B_ = str(G('PIN_BTN_A')), str(G('PIN_BTN_B'))
@@ -676,6 +697,7 @@ def sections():
   {f'<ol class="todo">{todo}</ol>' if todo else ''}
   {f'<h3>Connect</h3><ul class="wires">{"".join(wl)}</ul>' if wl else ''}
   <div class="test"><b>✅ Test it:</b> {st['test']}</div>
+  {f'<details class="dbg"><summary>Not reading 3.3 V on the rails? Check in this order</summary><ol>' + ''.join(f'<li><b>{a}{"" if a.endswith("?") else "."}</b> {b}</li>' for a, b in st['debug']) + '</ol></details>' if st.get('debug') else ''}
   <details><summary>Not working?</summary><dl>{fixes}</dl></details>
 </section>''')
     LAY = 'beside'
@@ -716,6 +738,7 @@ def page():
 .todo li{{margin:4px 0}}
 .test{{background:#eaf7ec;border:1px solid #bfe5c6;border-radius:10px;padding:10px 12px;margin:10px 0}}
 .warn{{background:#fff3e0;border:1px solid #ffd59a;border-radius:10px;padding:10px 12px;margin:10px 0}}
+.dbg ol{{margin:8px 0;padding-left:22px}}.dbg li{{margin:6px 0}}
 details{{margin:6px 0 8px}}summary{{cursor:pointer;font-weight:700;color:#b5541f}}dl{{margin:8px 0}}dt{{font-weight:700;margin-top:6px}}dd{{margin:2px 0 0 0;color:#444}}
 .wire{{cursor:pointer}}.bbsvg .wire.hl path:last-of-type{{stroke-width:6}}
 .legend{{display:flex;flex-wrap:wrap;gap:14px;margin:8px 0}}.legend span{{display:flex;align-items:center;gap:6px}}.legend i{{width:22px;height:6px;border-radius:3px;display:inline-block}}
