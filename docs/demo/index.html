@@ -148,7 +148,7 @@ async function poll(){try{const s=await(await fetch('/api/state')).json();drawLi
  $('ringbar').style.display=s.ring=='idle'?'none':'block';$('bSnz').style.display=s.ring=='ringing'?'':'none';
  $('ringtxt').textContent=s.ring=='ringing'?(s.ringLabel||'Alarm')+' ringing':'Snoozed until '+fmtT(s.snoozeUntil);
  $('fs').textContent='Storage: '+(s.fsUsed/1048576).toFixed(1)+' of '+(s.fsTotal/1048576).toFixed(1)+' MB used';
- $('sys').textContent='Firmware '+s.fw+' · IP '+s.ip+' · Wi-Fi '+s.rssi+' dBm';
+ $('sys').textContent='Firmware '+s.fw+(s.fwBuild?' (built '+s.fwBuild+')':'')+' · IP '+s.ip+' · Wi-Fi '+s.rssi+' dBm';
 }catch(e){}}
 function soundOpts(sel){return S.map(x=>`<option ${x.path==sel?'selected':''} value="${x.path}">${x.path.replace('/sounds/','')}</option>`).join('')}
 function renderAlarms(){$('alarms').innerHTML=C.alarms.map((a,i)=>`<div class="alarm">

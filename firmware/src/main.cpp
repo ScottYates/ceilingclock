@@ -26,7 +26,10 @@
 #include "feed_scan.h"
 #include "net_fetch.h"
 
-#define FW_VERSION "1.0.0"
+#define FW_VERSION "1.1.0"   // bump on every release
+#ifndef FW_BUILD
+#define FW_BUILD __DATE__ " " __TIME__   // set by build_stamp.py in PlatformIO builds
+#endif
 #define HOSTNAME "ceilingclock"
 
 // What every output is doing right now, reported to the web page's live view.
@@ -605,6 +608,7 @@ void apiState() {
   st["title"] = streamTitle;
   st["note"] = streamNote;
   d["fw"] = FW_VERSION;
+  d["fwBuild"] = FW_BUILD;
   d["fsUsed"] = LittleFS.usedBytes();
   d["fsTotal"] = LittleFS.totalBytes();
   JsonObject lv = d["live"].to<JsonObject>();
