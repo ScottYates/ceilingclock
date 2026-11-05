@@ -195,7 +195,7 @@ def power_debug():
             f'the black wire from hole {MIRROR["i"]}{PLUG_ROW0}, upper board (the ESP32\'s first GND pin) to the top − rail',
             f'the black wire from hole {j}{ONE_ROW0 + 21} to the bottom − rail, and the black wire joining the top and bottom − rails at row 60')
     return [
-      ('Set the meter up', 'Turn it to <b>DC volts</b> (V with a straight line; the 20 V range if it isn\'t auto-ranging). Black lead in <b>COM</b>, red lead in <b>V</b>. Meter probes are often too thick to reach the metal inside a breadboard hole: push the male end of a spare jumper into the hole and touch the probe to that instead.'),
+      ('Set the meter up', '<b>Red lead in the V socket, not A or mA</b>: this is the most common mistake, and on amps the meter shorts the supply (the ESP32\'s light flashes as it restarts). Turn the dial to <b>DC volts</b> (V with a straight line; the 20 V range if it isn\'t auto-ranging). Black lead in <b>COM</b>. Meter probes are often too thick to reach the metal inside a breadboard hole: push the male end of a spare jumper into the hole and touch the probe to that instead.'),
       ('Is the ESP32 on?', 'With the USB cable in the port marked <b>USB</b>, the board\'s small power LED should be lit and the clock\'s page should open. If not, try another cable and USB port before anything else.'),
       ('Measure on the ESP32 itself', 'Red probe on the solder joint of the <b>3V3</b> pin, black on the joint of a <b>G</b> pin. It should read about 3.3 V. If it reads 0 V, the board isn\'t getting power (cable or port). If it reads well under 3 V, or the board gets warm, unplug at once and look for solder bridging two header pins.'),
       ('Measure the 3V3 pin\'s row', f'Keep black on the G joint and put red in {pin3}. 3.3 V here means the pin is making contact. 0 V means it isn\'t: press the ESP32 down firmly (the pins should disappear into the holes), and count the rows to check the 3V3 pin is really in the row you think.' if LAY != 'beside' else f'Keep black on the G joint and touch red to the male end of the orange wire. 0 V means the female end isn\'t gripping the pin: push it fully on, or try another jumper.'),
@@ -241,7 +241,7 @@ def build_steps():
                     W_('gnd', esp('G', 'J1'), rl('b-', 22)),
                     W_('gnd', E((rx(60), RAILY('t-')), (1, -0.3), 'top − rail, right end', 'male'),
                               E((rx(60), RAILY('b-')), (1, 0.3), 'bottom − rail, right end', 'male'))],
-             test='Plug the USB cable back in: the clock starts as before. With a multimeter, the top + and − rails read about 3.3 V.',
+             test='Plug the USB cable back in: the clock starts as before. With a multimeter, the top + and − rails read about 3.3 V. Before you measure, check the meter\'s red lead is in the socket marked <b>V</b>, not <b>A</b> or <b>mA</b>, and the dial is on DC volts: on amps the meter shorts the supply and the ESP32 restarts.',
              fix=[('The ESP32 doesn\'t start on the breadboard', 'A pin may be folded under the board. Lift it out gently, straighten the pin and press it in again.'),
                   ('The ESP32 goes dark when you add the wires', f'The orange wire is in a ground row or rail. It must start in a{ONE_ROW0} (the row of the first pin, 3V3) and end in the top + rail.')],
              warn=f'Leave hole a{ONE_ROW0 + J1.index("5V")} (the row of the ESP32\'s <b>5V</b> pin) empty.')
@@ -257,7 +257,7 @@ def build_steps():
              wires=[W_('3v3', esp('3V3'), rl('t+', 1)),
                     W_('gnd', esp('G', 'J3'), rl('t-', 7)),
                     W_('gnd', esp('G', 'J1'), rl('b-', 22))],
-             test='Plug the USB cable back in: the clock starts as before. With a multimeter, the top + and − rails read about 3.3 V.',
+             test='Plug the USB cable back in: the clock starts as before. With a multimeter, the top + and − rails read about 3.3 V. Before you measure, check the meter\'s red lead is in the socket marked <b>V</b>, not <b>A</b> or <b>mA</b>, and the dial is on DC volts: on amps the meter shorts the supply and the ESP32 restarts.',
              fix=[('The ESP32 doesn\'t start on the breadboard', 'A pin may be folded under the board. Lift it out gently, straighten the pin and press it in again.'),
                   ('The ESP32 goes dark when you add the wires', 'The orange wire is in a ground row or rail. It must start in the row of the first pin (3V3) and end in the top + rail.')],
              warn=f'Leave the row of the ESP32\'s <b>5V</b> pin (row {PLUG_ROW0 + J1.index("5V")}, lower board) empty.')
@@ -269,7 +269,7 @@ def build_steps():
                     W_('gnd', esp('G', 'J1', ' (last pin on the same side, by the USB ports)'), rl('t-', 26)),
                     W_('gnd', E((rx(30), RAILY('t-')), (1, -0.3), 'top − rail, right end', 'male'),
                               E((rx(30), RAILY('b-')), (1, 0.3), 'bottom − rail, right end', 'male'))],
-             test='Nothing to see yet. If you have a multimeter, the top + and − rails should read about 3.3 V with the USB cable plugged in.',
+             test='Nothing to see yet. If you have a multimeter, the top + and − rails should read about 3.3 V with the USB cable plugged in. Before you measure, check the meter\'s red lead is in the socket marked <b>V</b>, not <b>A</b> or <b>mA</b>, and the dial is on DC volts: on amps the meter shorts the supply and the ESP32 restarts.',
              fix=[('The ESP32 goes dark or resets when you plug in the wire', 'The 3V3 wire is in the − rail or touching G. Unplug USB and check: orange to +, black to −.')])
 
     if one:
