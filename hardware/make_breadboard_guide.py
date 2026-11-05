@@ -35,6 +35,7 @@ P = 15                                   # breadboard pitch in the drawing
 BX0 = 300                                # x of row 1
 ROWS = 30
 PLUG_ROW0 = 5                            # breadboard row of the ESP32's first pin (plug layout)
+ONE_ROW0 = 1                             # one board: the ESP32 starts at row 1, its antenna past the end of the board
 
 def cols(y_a, y_f, p=P):
     d = {c: y_a + i * p for i, c in enumerate('abcde')}
@@ -56,7 +57,7 @@ LAYOUTS = {
   'one': dict(
       boards={'': dict(label='', y0=236, y1=436, cols=cols(280, 350, ONE_P), rails={'t+': 250, 't-': 262, 'b+': 408, 'b-': 420},
                        gap=327, rowy=272.5, dead=None)},
-      esp=(ONE_X0 + (PLUG_ROW0 - 1) * ONE_P - 14, 268, ONE_X0 + (PLUG_ROW0 + 20) * ONE_P + 14, 392), epitch=ONE_P,
+      esp=(ONE_X0 + (ONE_ROW0 - 1) * ONE_P - 24, 268, ONE_X0 + (ONE_ROW0 + 20) * ONE_P + 14, 392), epitch=ONE_P,
       P=ONE_P, X0=ONE_X0, ROWS=60, W=1100, rdx=100),
 }
 LAY = 'beside'                           # the layout being built or drawn
@@ -81,7 +82,7 @@ def epin(name, which=None):
     """Where the pin itself is drawn."""
     hdr, i = esp_pin(name, which)
     if LAY == 'one':
-        return hole(PLUG_ROW0 + i, 'i') if hdr == 'J1' else hole(PLUG_ROW0 + i, 'a')
+        return hole(ONE_ROW0 + i, 'i') if hdr == 'J1' else hole(ONE_ROW0 + i, 'a')
     if LAY == 'plug':
         return hole(PLUG_ROW0 + i, 'a', 'L') if hdr == 'J1' else hole(PLUG_ROW0 + i, 'j', 'U')
     EX0, EY0, EX1, EY1 = LY()['esp']
@@ -98,7 +99,7 @@ def esp(name, which=None, note=''):
     hdr, i = esp_pin(name, which)
     if LAY == 'one':
         assert hdr == 'J1', f'{name}: no free hole beside the {hdr} pins on one breadboard'
-        r = PLUG_ROW0 + i
+        r = ONE_ROW0 + i
         return E(hole(r, 'j'), 'auto', f'hole {MIRROR["j"]}{r} (beside ESP32 {pn(name)}{note})', 'male')
     if LAY == 'plug':
         r = PLUG_ROW0 + i
@@ -209,10 +210,10 @@ def build_steps():
     if one:
         step(id='power', title='ESP32 onto the breadboard, and power rails', time='10 min', mods=[], parts=[],
              need=['1 full-size breadboard (830 holes, 60+ rows)'],
-             intro='The ESP32 plugs into the left end of the breadboard. It covers most of the holes beside its pins, so each pin on one side keeps a single free hole in column a, and the pins on the other side get none. Every part after this goes in the free rows to the right of it.',
+             intro='The ESP32 plugs into the left end of the breadboard, with its antenna sticking out past row 1. It covers most of the holes beside its pins, so each pin on one side keeps a single free hole in column a, and the pins on the other side get none. Every part after this goes in the free rows to the right of it.',
              todo=['Unplug the USB cable.',
                    'The pictures show the board turned so row 1 is on the left, with column j at the top. If yours stands upright with row 1 at the top, column a is on the left.',
-                   f'Turn the ESP32 so its antenna points toward row 1. Its row of pins starting with <b>3V3</b> goes into column <b>b</b>; the row starting with <b>GND, TX, RX</b> goes into column <b>j</b>. The first pins go in row <b>{PLUG_ROW0}</b>, so the last ones are in row {PLUG_ROW0 + 21}. Press down evenly on both rows of pins, not on the metal can.',
+                   f'Turn the ESP32 so its antenna points toward row 1 and hangs over the end of the board. Its row of pins starting with <b>3V3</b> goes into column <b>b</b>; the row starting with <b>GND, TX, RX</b> goes into column <b>j</b>. The first pins go in row <b>{ONE_ROW0}</b>, so the last ones are in row {ONE_ROW0 + 21}. Press down evenly on both rows of pins, not on the metal can.',
                    f'Each wire to an ESP32 pin goes into <b>column a</b> in the same row as that pin: the only hole beside it that the ESP32 doesn\'t cover.'],
              wires=[W_('3v3', esp('3V3'), rl('t+', 2)),
                     W_('gnd', esp('G', 'J1'), rl('b-', 22)),
@@ -220,8 +221,8 @@ def build_steps():
                               E((rx(60), RAILY('b-')), (1, 0.3), 'bottom − rail, right end', 'male'))],
              test='Plug the USB cable back in: the clock starts as before. With a multimeter, the top + and − rails read about 3.3 V.',
              fix=[('The ESP32 doesn\'t start on the breadboard', 'A pin may be folded under the board. Lift it out gently, straighten the pin and press it in again.'),
-                  ('The ESP32 goes dark when you add the wires', f'The orange wire is in a ground row or rail. It must start in a{PLUG_ROW0} (the row of the first pin, 3V3) and end in the top + rail.')],
-             warn=f'Leave hole a{PLUG_ROW0 + J1.index("5V")} (the row of the ESP32\'s <b>5V</b> pin) empty.')
+                  ('The ESP32 goes dark when you add the wires', f'The orange wire is in a ground row or rail. It must start in a{ONE_ROW0} (the row of the first pin, 3V3) and end in the top + rail.')],
+             warn=f'Leave hole a{ONE_ROW0 + J1.index("5V")} (the row of the ESP32\'s <b>5V</b> pin) empty.')
     elif plug:
         step(id='power', title='ESP32 onto the breadboards, and power rails', time='10 min', mods=[], parts=[],
              need=['2 full-size breadboards (830 holes)'],
@@ -250,12 +251,12 @@ def build_steps():
              fix=[('The ESP32 goes dark or resets when you plug in the wire', 'The 3V3 wire is in the − rail or touching G. Unplug USB and check: orange to +, black to −.')])
 
     if one:
-        bA, bB = (33, None), (38, None)
+        bA, bB = (33, None), (39, None)
         bw = [W_('green', esp(A), hl(33, 'a', note='button A, top-left leg')),
               W_('gnd', hl(35, 'j', note='button A, bottom-right leg'), rl('b-', 35)),
-              W_('blue', esp(B_), hl(38, 'a', note='button B, top-left leg')),
-              W_('gnd', hl(40, 'j', note='button B, bottom-right leg'), rl('b-', 40))]
-        legs = f'{MIRROR["a"]}33 and {MIRROR["j"]}35, {MIRROR["a"]}38 and {MIRROR["j"]}40'
+              W_('blue', esp(B_), hl(39, 'a', note='button B, top-left leg')),
+              W_('gnd', hl(41, 'j', note='button B, bottom-right leg'), rl('b-', 41))]
+        legs = f'{MIRROR["a"]}33 and {MIRROR["j"]}35, {MIRROR["a"]}39 and {MIRROR["j"]}41'
     elif plug:
         bA, bB = (1, 'L'), (28, 'L')
         bw = [W_('green', esp(A), hl(1, 'a', 'L', 'button A, top-left leg')),
@@ -305,7 +306,7 @@ def build_steps():
          fix=[('Blank or solid black', 'Adjust <b>LCD contrast</b> on the settings page. Check RST and CE.'),
               ('No backlight', 'On some boards BL lights when connected to + instead of −. Move that one wire to the top + rail.')])
 
-    L1, L2 = (43, 46) if one else (13, 16)
+    L1, L2 = (45, 48) if one else (13, 16)
     step(id='ldr', title='Light sensor', time='5 min', mods=[],
          need=['GL5528 light sensor', '10 kΩ resistor (brown-black-orange)'],
          intro='A light-dependent resistor and a fixed 10 kΩ resistor make a divider: the voltage between them rises as the room gets brighter. Neither part has a polarity.'
@@ -361,8 +362,8 @@ def build_steps():
               ('Crackles', 'Push the capacitor\'s legs fully into the rails (long leg to +).')])
 
     if one:
-        rr, rw = ('res', 49, 53, 'h', '330 Ω', None), [W_('green', esp(str(G('PIN_RING'))), hl(49, 'j', note='one end of the 330 Ω')),
-                                                   W_('green', hl(53, 'j', note='other end of the 330 Ω'), md('ring', 'DI', 'ring DI (data in)'))]
+        rr, rw = ('res', 50, 54, 'h', '330 Ω', None), [W_('green', esp(str(G('PIN_RING'))), hl(50, 'j', note='one end of the 330 Ω')),
+                                                   W_('green', hl(54, 'j', note='other end of the 330 Ω'), md('ring', 'DI', 'ring DI (data in)'))]
     elif plug:
         rr, rw = ('res', 15, 19, 'h', '330 Ω', 'L'), [W_('green', esp(str(G('PIN_RING'))), hl(15, 'f', 'L', 'one end of the 330 Ω')),
                                                   W_('green', hl(19, 'f', 'L', 'other end of the 330 Ω'), md('ring', 'DI', 'ring DI (data in)'))]
@@ -379,7 +380,7 @@ def build_steps():
          fix=[('Nothing lights', 'Make sure the wire goes to DI (in), not DO (out). Check the 5 V adapter is on.'),
               ('Flickers or wrong colours', 'Keep the data wire short. If it persists, a 74AHCT125 level shifter on the data line fixes it.')])
 
-    lr = ('res', 22, 26, 'h', '4.7 Ω 2 W', 'L') if plug else ('res', 55, 59, 'c', '4.7 Ω 2 W', None) if one else ('res', 26, 30, 'g', '4.7 Ω 2 W', None)
+    lr = ('res', 22, 26, 'h', '4.7 Ω 2 W', 'L') if plug else ('res', 56, 60, 'c', '4.7 Ω 2 W', None) if one else ('res', 26, 30, 'g', '4.7 Ω 2 W', None)
     lb = 'L' if plug else None
     lc = 'a' if one else 'j'               # design letter of the free hole in the resistor's rows
     step(id='led', title='Projector LED', time='15 min', mods=['mosfet', 'led'],
