@@ -429,10 +429,34 @@ void setProjectorLed(uint8_t pct) {
 }
 
 // ---------------------------------------------------------------- front display
+// A short message on the front display after a button press, so you can tell the press registered
+// (shown even when the display is switched off). Letters: P projector, d front display.
+const uint8_t LET_P = SEG_A | SEG_B | SEG_E | SEG_F | SEG_G, LET_d = SEG_B | SEG_C | SEG_D | SEG_E | SEG_G;
+const uint8_t LET_o = SEG_C | SEG_D | SEG_E | SEG_G, LET_n = SEG_C | SEG_E | SEG_G, LET_F = SEG_A | SEG_E | SEG_F | SEG_G;
+uint8_t frontMsg[4];
+uint32_t frontMsgUntil = 0, frontMsgSeq = 0;
+void flashFront(uint8_t who, bool on) {
+  const uint8_t m[4] = {who, 0, LET_o, on ? LET_n : LET_F};
+  memcpy(frontMsg, m, 4);
+  frontMsgUntil = millis() + 1500;
+  frontMsgSeq++;
+}
+
 void renderFront(const struct tm& lt, bool visible, uint8_t bright) {
   live.frontOn = visible;
   live.frontBright = bright;
   static int lastKey = -2;
+  static uint32_t shownSeq = 0;
+  if (frontMsgUntil && (int32_t)(millis() - frontMsgUntil) < 0) {
+    if (shownSeq != frontMsgSeq) {
+      shownSeq = frontMsgSeq;
+      front.setBrightness(max(bright, (uint8_t)3), true);
+      front.setSegments(frontMsg);
+      lastKey = -2;  // redraw the time when the message ends
+    }
+    return;
+  }
+  frontMsgUntil = 0;
   int key = visible ? (lt.tm_hour * 60 + lt.tm_min) * 8 + bright + (timeValid() ? 0 : 100000) : -1;
   if (key == lastKey) return;
   lastKey = key;
@@ -529,8 +553,8 @@ void handleButtons() {
     dismiss();
   }
   int b = pollButton(btnB, bLevels, 2);
-  if (b == 1) toggleFront();
-  else if (b == 2) toggleProjector();
+  if (b == 1) { toggleFront(); flashFront(LET_d, cfg.front.mode != DM_OFF); }
+  else if (b == 2) { toggleProjector(); flashFront(LET_P, cfg.proj.mode != DM_OFF); }
   else if (b == 3) {
     Serial.println("Wi-Fi reset");
     wm.resetSettings();
