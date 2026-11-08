@@ -396,8 +396,13 @@ def build_steps():
          warn='Never connect this 5 V to the ESP32\'s <b>5V</b> pin while the computer is plugged in: two supplies would fight through the board. In the finished clock the computer stays unplugged.')
 
     step(id='amp', title='Amplifier and speaker', time='10 min', mods=['amp'],
-         need=['MAX98357A amplifier', '40 mm speaker', '100 µF capacitor'],
-         intro='Plays the alarm sounds. The capacitor steadies its supply; the long leg is +, and the stripe marks −.',
+         need=['MAX98357A amplifier with its 7-pin header and blue screw terminal (in its bag)', '40 mm speaker', '100 µF capacitor', 'Soldering iron and solder'],
+         intro='Plays the alarm sounds. The amplifier comes with its pins loose, so solder those first (below). The capacitor steadies its supply; the long leg is +, and the stripe marks −.',
+         figure='amp',
+         todo=['<b>Header first.</b> Push the 7-pin strip into any free spot on the breadboard, long ends down. Lay the amplifier on the short ends, chip side up, and solder all 7. Start with one end pin, check the board sits flat, then the other end, then the rest.',
+               '<b>Then the screw terminal.</b> Lift the board off the breadboard. Sit the blue block on the chip side at the other edge, wire openings facing outward. Turn the board over and solder its two pins from underneath.',
+               '<b>Check every joint</b> with a bright light: shiny cones, and no solder joining two neighbouring pins (look hardest between GAIN and SD).',
+               'Wire it up as below. Leave <b>GAIN</b> and <b>SD</b> unconnected.'],
          parts=[('cap', 19, '100 µF')],
          wires=[W_('purple', esp(str(G('PIN_I2S_BCLK'))), md('amp', 'BCLK', 'amp BCLK')),
                 W_('cyan', esp(str(G('PIN_I2S_LRC'))), md('amp', 'LRC', 'amp LRC')),
@@ -692,6 +697,144 @@ def svg_ldr_parts():
     s.add('</svg>')
     return '\n'.join(s.o)
 
+def svg_amp_solder():
+    """How to solder the MAX98357A breakout: 7-pin header (using the breadboard as a jig) and the 2-pin screw terminal."""
+    s = Svg()
+    Wd, Ht = 960, 640
+    s.add(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {Wd} {Ht}" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">')
+    s.rect(0, 0, Wd, Ht, '#fbfaf6', rx=0)
+    PCB, PCBE, PAD, BLK, PIN = '#6a3fa0', '#4b2a75', '#e3c26a', '#1d1d1d', '#c9ccd1'
+    SOL = '#b9bec6'
+    pins = ['LRC', 'BCLK', 'DIN', 'GAIN', 'SD', 'GND', 'VIN']
+
+    def panel(x, y, w, h, title):
+        s.rect(x, y, w, h, '#fffdf8', '#ddd6c6', 10, 1.2)
+        s.text(x + 14, y + 24, title, 14, '#222', 'start', 800)
+
+    def iron(tx, ty, ang=-35):
+        # soldering iron: tip at (tx, ty), coming in from the upper right
+        a = math.radians(ang)
+        dx, dy = math.cos(a), math.sin(a)
+        x1, y1 = tx + 34 * dx, ty + 34 * dy
+        x2, y2 = tx + 110 * dx, ty + 110 * dy
+        s.line(tx, ty, x1, y1, '#8a8f98', 5)
+        s.line(x1, y1, x2, y2, '#2f6db3', 13)
+        s.text(x2 + 6, y2 + 4, 'iron', 11, '#2f6db3', 'start', 700)
+
+    def cone(x, ybase, up=True, w=7, h=7):
+        d = -1 if up else 1
+        s.add(f'<path d="M{x - w},{ybase} Q{x - 2},{ybase + d * h * 0.5} {x - 1.6},{ybase + d * h} L{x + 1.6},{ybase + d * h} Q{x + 2},{ybase + d * h * 0.5} {x + w},{ybase} Z" fill="{SOL}" stroke="#8e949c" stroke-width="0.8"/>')
+
+    # ------------------------------------------------ 1. header pins (side view)
+    panel(10, 10, 460, 330, '1. Header pins: breadboard holds them straight')
+    by = 250                                   # breadboard top
+    s.rect(26, by, 344, 46, '#f3f1ea', '#cfcabc', 4, 1.2)
+    for i in range(12): s.rect(38 + i * 28, by + 2, 6, 5, '#8a8577', rx=1)
+    s.text(198, by + 32, 'breadboard', 11, '#8a8577', 'middle', 700)
+    py0, py1 = 196, 206                        # amp board, side on
+    xs = [66 + i * 44 for i in range(7)]
+    s.rect(160, py0 - 9, 60, 9, '#3a3a3a', rx=1.5)   # the chip, behind the row of pins
+    s.text(96, py0 - 24, 'chip side up', 10.5, '#4b2a75', 'start', 700)
+    s.rect(46, 216, 308, 12, BLK, rx=2)        # black plastic spacer
+    for i, x in enumerate(xs):
+        s.rect(x - 2, 228, 4, by + 22 - 228, PIN, rx=1)   # long end into the breadboard
+        s.rect(x - 2, py0 - 8, 4, 8 + (216 - py0), PIN, rx=1)  # short end up through the board
+    s.rect(46, py0, 308, py1 - py0, PCB, PCBE, 2, 1)
+    for x in xs: s.rect(x - 7, py0 - 2, 14, 2.5, PAD, rx=1)
+    for x in xs[:4]: cone(x, py0 - 1.5)
+    iron(xs[4] + 2, py0 - 5)
+    s.line(xs[4] - 30, py0 - 46, xs[4] - 5, py0 - 6, '#a0a6ae', 3)   # solder wire fed into the joint
+    s.text(xs[4] - 34, py0 - 46, 'solder', 11, '#6b7280', 'end', 700)
+    # callouts
+    def call(x, y, tx, ty, txt, anchor='start'):
+        s.line(x, y, tx, ty, '#e8743b', 1.3)
+        s.circle(x, y, 2.5, '#e8743b')
+        s.text(tx + (4 if anchor == 'start' else -4), ty + 4, txt, 10.5, '#333', anchor)
+    call(xs[6], py0 - 6, 378, 140, 'short end up')
+    call(xs[6] + 20, 222, 378, 170, 'plastic spacer')
+    call(xs[6], 242, 378, 200, 'long end down')
+    s.text(30, 64, 'Push the 7-pin strip into the breadboard,', 11.5, '#333')
+    s.text(30, 80, 'long ends down. Lay the amp on top, chip up,', 11.5, '#333')
+    s.text(30, 96, 'labels facing you. Solder the 7 short ends.', 11.5, '#333')
+    s.text(30, 118, 'Do one end pin first, check it sits flat,', 11.5, '#6b7280')
+    s.text(30, 134, 'then the other end, then the rest.', 11.5, '#6b7280')
+    s.text(198, 322, 'About 1 second of heat, then feed solder in: 2–3 s per pin.', 11, '#6b7280', 'middle')
+
+    # ------------------------------------------------ 2. top view of the board
+    panel(490, 10, 460, 330, '2. Screw terminal: openings face out')
+    bx0, by0, bx1, by1 = 600, 110, 840, 262
+    s.rect(bx0, by0, bx1 - bx0, by1 - by0, PCB, PCBE, 8, 1.5)
+    s.rect(690, 160, 40, 34, BLK, rx=3)
+    s.text(710, 214, 'MAX98357A', 9.5, '#e9dcf7', 'middle', 700)
+    # header pads along the bottom edge
+    hx = [bx0 + 30 + i * 30 for i in range(7)]
+    for x, nm in zip(hx, pins):
+        s.circle(x, by1 - 18, 6.5, PAD, '#a8862e', 1); s.circle(x, by1 - 18, 2.4, '#3a2a10')
+        s.text(x, by1 - 32, nm, 9, '#ffffff', 'middle', 700)
+    s.text(720, by1 + 20, 'header pins solder here (step 1)', 11, '#6b7280', 'middle')
+    # screw terminal along the top edge
+    s.add('<defs><marker id="amp-ah" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#e8743b"/></marker></defs>')
+    tx0, tx1, ty0, ty1 = 680, 760, by0 - 6, by0 + 34
+    s.rect(tx0, ty0, tx1 - tx0, ty1 - ty0, '#2f7fd1', '#1d5a99', 4, 1.5)
+    for cx, lab in ((700, '+'), (740, '−')):
+        s.circle(cx, ty0 + 20, 11, '#d7dbe0', '#8a9099', 1.2)
+        s.line(cx - 7, ty0 + 20, cx + 7, ty0 + 20, '#555', 2.2)
+        s.text(cx, ty1 + 18, lab, 16, '#ffffff', 'middle', 800)
+        s.add(f'<path d="M{cx},{ty0 - 34} L{cx},{ty0 - 6}" stroke="#e8743b" stroke-width="2.5" marker-end="url(#amp-ah)"/>')
+    s.text(720, ty0 - 40, 'speaker wires go in here, from outside the board', 11, '#333', 'middle', 700)
+    s.text(510, 304, 'Sit the blue block on the chip side, openings facing away', 11.5, '#333')
+    s.text(510, 319, 'from the board, screws on top. Flip the board and solder', 11.5, '#333')
+    s.text(510, 334, 'its 2 pins underneath (a bit of tape holds it).', 11.5, '#333')
+
+    # ------------------------------------------------ 3. joints and terminal side view
+    panel(10, 352, 460, 278, '3. What a good joint looks like')
+    for i, (lab, good, kind) in enumerate((('Good: shiny cone', True, 'cone'), ('Too little', False, 'thin'),
+                                           ('Blob: too much', False, 'blob'), ('Bridge: two pins joined', False, 'bridge'))):
+        x = 70 + i * 108
+        y = 470
+        s.rect(x - 34, y, 68 if kind != 'bridge' else 90, 9, PCB, PCBE, 2, 1)
+        xs2 = [x] if kind != 'bridge' else [x - 12, x + 22]
+        for xx in xs2:
+            s.rect(xx - 2, y - 22, 4, 22, PIN, rx=1)
+            s.rect(xx - 7, y - 2, 14, 2.5, PAD, rx=1)
+        if kind == 'cone': cone(x, y - 1, w=8, h=16)
+        elif kind == 'thin': s.rect(x - 3.5, y - 4, 7, 3, SOL, rx=1)
+        elif kind == 'blob': s.circle(x, y - 10, 11, SOL, '#8e949c', 0.8)
+        else:
+            s.add(f'<path d="M{x - 20},{y - 1} Q{x + 5},{y - 18} {x + 30},{y - 1} Z" fill="{SOL}" stroke="#8e949c" stroke-width="0.8"/>')
+        s.text(x + (11 if kind == 'bridge' else 0), y + 30, lab, 11, '#2e9e44' if good else '#b03030', 'middle', 700)
+        s.text(x + (11 if kind == 'bridge' else 0), y + 46, '✓' if good else '✗', 16, '#2e9e44' if good else '#b03030', 'middle', 800)
+    s.text(30, 395, 'Each joint should wrap the pin and cover its gold ring.', 11.5, '#333')
+    s.text(30, 411, 'GAIN and SD sit close together: look between every pair.', 11.5, '#333')
+    s.text(30, 560, 'Fix a bridge by dragging the clean, tinned iron tip between', 11, '#6b7280')
+    s.text(30, 576, 'the two pins, or with solder wick. Fix a thin joint by adding', 11, '#6b7280')
+    s.text(30, 592, 'a little more solder.', 11, '#6b7280')
+
+    panel(490, 352, 460, 278, '4. Speaker wires and what to leave alone')
+    # terminal side view with a wire going in
+    s.rect(560, 470, 150, 10, PCB, PCBE, 2, 1)
+    s.rect(600, 432, 60, 38, '#2f7fd1', '#1d5a99', 3, 1.2)
+    s.circle(630, 440, 6, '#d7dbe0', '#8a9099')
+    s.line(624, 440, 636, 440, '#555', 2)
+    for xx in (615, 645):
+        s.rect(xx - 2, 480, 4, 10, PIN, rx=1)
+        cone(xx, 480, up=False, w=6, h=8)
+    s.line(660, 456, 760, 456, '#d32f2f', 4)
+    s.line(660, 456, 676, 456, '#c9a227', 4)
+    s.text(770, 452, 'strip 5 mm, twist the', 11, '#333')
+    s.text(770, 468, 'strands, push in, then', 11, '#333')
+    s.text(770, 484, 'tighten the screw', 11, '#333')
+    s.text(560, 508, 'solder underneath', 10.5, '#6b7280')
+    # speaker
+    s.circle(560, 410, 0.1, '#000')
+    s.text(510, 540, 'Speaker red (+) to the terminal marked +, black (−) to −.', 11.5, '#333')
+    s.text(510, 556, 'Tug each wire gently: it should not pull out.', 11.5, '#333')
+    s.text(510, 580, 'Leave GAIN and SD unconnected: the amp then runs', 11.5, '#b03030', 'start', 700)
+    s.text(510, 596, 'at 9 dB gain and stays switched on.', 11.5, '#b03030', 'start', 700)
+    s.text(510, 616, 'Iron about 330 °C (leaded) or 360 °C (lead-free).', 11, '#6b7280')
+    s.add('</svg>')
+    return '\n'.join(s.o)
+
 def svg_optics():
     s = Svg()
     s.add('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 330" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">')
@@ -746,6 +889,7 @@ def sections():
   <div class="pic">{draw_step(S, i)}</div>
   {'<p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>' if st['wires'] else ''}
   {f'<h3>The two parts</h3>{svg_ldr_parts()}' if st.get('figure') == 'ldr' else ''}
+  {f'<h3>Solder the amplifier first</h3>{svg_amp_solder()}' if st.get('figure') == 'amp' else ''}
   {f'<ol class="todo">{todo}</ol>' if todo else ''}
   {f'<h3>Place the parts</h3><ol class="place">' + ''.join(f'<li>{t}</li>' for t in st['place']) + '</ol>' if st.get('place') else ''}
   {f'<h3>Connect</h3><ul class="wires">{"".join(wl)}</ul>' if wl else ''}

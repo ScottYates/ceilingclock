@@ -1306,6 +1306,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   
   
+  
   <ol class="todo"><li>Plug the USB-C cable into the port marked <b>USB</b> on the ESP32 (the board has two; this one carries the log).</li><li>Flash the firmware from the <a href="firmware.html">Firmware</a> page: the web flasher needs nothing installed.</li><li>Open a serial monitor at <b>115200</b> baud (the web flasher has one, or PlatformIO's monitor).</li><li>On your phone, join the Wi-Fi network <b>CeilingClock-Setup</b> and pick your home network.</li></ol>
   
   
@@ -2341,6 +2342,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   
   <ol class="todo"><li>Unplug the USB cable.</li><li>Put the two breadboards side by side, both the same way round, so column <b>j</b> of one board sits next to column <b>a</b> of the other, with two rail strips between them. Leave all the rail strips on.</li><li>The pictures show the boards turned a quarter turn so row 1 is on the left. If yours stand upright with row 1 at the top, the left board is the <b>lower board</b> and the right board is the <b>upper board</b>.</li><li>Turn the ESP32 so its antenna points toward row 1. Its row of pins starting with <b>3V3</b> goes into column <b>j</b> of the lower board; the row starting with <b>GND, TX, RX</b> goes into column <b>a</b> of the upper board. The first pins go in row <b>5</b>. It sits over the two middle rail strips, which stay unused. Press down evenly on both rows of pins, not on the metal can.</li><li>If the pins don't quite reach columns j and a on your boards, use i and b instead, or pull one middle rail strip off and push the boards together. What matters is that each pin has free holes beside it on the outside: the free holes in the same row of five as a pin are connected to that pin.</li></ol>
   
@@ -3402,6 +3404,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   
   
   <h3>Place the parts</h3><ol class="place"><li><b>Push button A</b> across the gap in the middle: two legs in row 1, two in row 3, one each side of the gap (lower board).</li><li><b>Push button B</b> across the gap in the middle: two legs in row 28, two in row 30, one each side of the gap (lower board).</li></ol>
@@ -4483,6 +4486,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   
   
   
@@ -5616,6 +5620,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   
   
   
@@ -6758,6 +6763,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <text x="485.0" y="140.0" font-size="10.5" fill="#6b7280" text-anchor="middle" font-weight="400" >(or brown · black · orange on a 4-band one)</text>
 <text x="485.0" y="158.0" font-size="10.5" fill="#b03030" text-anchor="middle" font-weight="700" >not 10 Ω: that has a gold band in the middle</text>
 </svg>
+  
   
   <h3>Place the parts</h3><ol class="place"><li><b>Light sensor</b> (the round disc with a squiggly line on it): legs in <b>h13</b> and <b>h16</b> (upper board). Either way round.</li><li><b>10 kΩ resistor</b> (bands brown-black-orange, or brown-black-black-red on 5-band resistors; the BOJACK bag says 10KΩ): one leg in <b>j16</b>, the same row as the sensor's second leg; the other leg in the <b>top − rail</b> (the row by the blue line), about row 17 (upper board). Either way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="p:ldr-1"><label><input type="checkbox" data-k="p:ldr-1"><span class="badge" style="border-color:#f39c12">1</span><span class="sw" style="background:#f39c12"></span><span class="wt"><b>Orange wire</b> (male–male):<br>top + rail <span class="arr">→</span> hole j13, upper board (one leg of the sensor)</span></label></li><li data-w="p:ldr-2"><label><input type="checkbox" data-k="p:ldr-2"><span class="badge" style="border-color:#e05297">2</span><span class="sw" style="background:#e05297"></span><span class="wt"><b>Pink wire</b> (male–male):<br>hole i11, lower board (the row of ESP32 pin 7) <span class="arr">→</span> hole g16, upper board (where sensor and resistor meet)</span></label></li></ul>
@@ -7908,6 +7914,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   
   
   
@@ -9070,6 +9077,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
   
   
   
+  
   <h3>Connect</h3><ul class="wires"><li data-w="p:supply-1"><label><input type="checkbox" data-k="p:supply-1"><span class="badge" style="border-color:#d32f2f">1</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (soldered lead):<br>breakout VBUS <span class="arr">→</span> bottom + rail</span></label></li><li data-w="p:supply-2"><label><input type="checkbox" data-k="p:supply-2"><span class="badge" style="border-color:#222222">2</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (soldered lead):<br>breakout GND <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> Plug the adapter in. Everything carries on as before. With a multimeter, the bottom rails read about 5 V.</div>
   
@@ -9077,8 +9085,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </section>
 <section class="bbstep only-plug" id="p-amp">
   <div class="bbhead"><span class="num">9</span><h2>Amplifier and speaker</h2><span class="time">⏱ 10 min</span></div>
-  <p>Plays the alarm sounds. The capacitor steadies its supply; the long leg is +, and the stripe marks −.</p>
-  <div class="need"><b>You need:</b> <span class="chip">MAX98357A amplifier</span><span class="chip">40 mm speaker</span><span class="chip">100 µF capacitor</span><span class="chip">5 jumper wires: 5 female–male</span></div>
+  <p>Plays the alarm sounds. The amplifier comes with its pins loose, so solder those first (below). The capacitor steadies its supply; the long leg is +, and the stripe marks −.</p>
+  <div class="need"><b>You need:</b> <span class="chip">MAX98357A amplifier with its 7-pin header and blue screw terminal (in its bag)</span><span class="chip">40 mm speaker</span><span class="chip">100 µF capacitor</span><span class="chip">Soldering iron and solder</span><span class="chip">5 jumper wires: 5 female–male</span></div>
   
   <div class="pic"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 690" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
 <rect x="0.0" y="0.0" width="1000.0" height="690.0" rx="0" fill="#fbfaf6" stroke="none" stroke-width="1" />
@@ -10279,7 +10287,171 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
-  
+  <h3>Solder the amplifier first</h3><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+<rect x="0.0" y="0.0" width="960.0" height="640.0" rx="0" fill="#fbfaf6" stroke="none" stroke-width="1" />
+<rect x="10.0" y="10.0" width="460.0" height="330.0" rx="10" fill="#fffdf8" stroke="#ddd6c6" stroke-width="1.2" />
+<text x="24.0" y="34.0" font-size="14" fill="#222" text-anchor="start" font-weight="800" >1. Header pins: breadboard holds them straight</text>
+<rect x="26.0" y="250.0" width="344.0" height="46.0" rx="4" fill="#f3f1ea" stroke="#cfcabc" stroke-width="1.2" />
+<rect x="38.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="66.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="94.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="122.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="150.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="178.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="206.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="234.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="262.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="290.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="318.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="346.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<text x="198.0" y="282.0" font-size="11" fill="#8a8577" text-anchor="middle" font-weight="700" >breadboard</text>
+<rect x="160.0" y="187.0" width="60.0" height="9.0" rx="1.5" fill="#3a3a3a" stroke="none" stroke-width="1" />
+<text x="96.0" y="172.0" font-size="10.5" fill="#4b2a75" text-anchor="start" font-weight="700" >chip side up</text>
+<rect x="46.0" y="216.0" width="308.0" height="12.0" rx="2" fill="#1d1d1d" stroke="none" stroke-width="1" />
+<rect x="64.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="64.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="108.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="108.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="152.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="152.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="196.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="196.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="240.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="240.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="284.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="284.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="328.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="328.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="46.0" y="196.0" width="308.0" height="10.0" rx="2" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1" />
+<rect x="59.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="103.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="147.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="191.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="235.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="279.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="323.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<path d="M59,194.5 Q64,191.0 64.4,187.5 L67.6,187.5 Q68,191.0 73,194.5 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<path d="M103,194.5 Q108,191.0 108.4,187.5 L111.6,187.5 Q112,191.0 117,194.5 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<path d="M147,194.5 Q152,191.0 152.4,187.5 L155.6,187.5 Q156,191.0 161,194.5 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<path d="M191,194.5 Q196,191.0 196.4,187.5 L199.6,187.5 Q200,191.0 205,194.5 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<line x1="244.0" y1="191.0" x2="271.9" y2="171.5" stroke="#8a8f98" stroke-width="5" stroke-linecap="round" />
+<line x1="271.9" y1="171.5" x2="334.1" y2="127.9" stroke="#2f6db3" stroke-width="13" stroke-linecap="round" />
+<text x="340.1" y="131.9" font-size="11" fill="#2f6db3" text-anchor="start" font-weight="700" >iron</text>
+<line x1="212.0" y1="150.0" x2="237.0" y2="190.0" stroke="#a0a6ae" stroke-width="3" stroke-linecap="round" />
+<text x="208.0" y="150.0" font-size="11" fill="#6b7280" text-anchor="end" font-weight="700" >solder</text>
+<line x1="330.0" y1="190.0" x2="378.0" y2="140.0" stroke="#e8743b" stroke-width="1.3" stroke-linecap="round" />
+<circle cx="330.0" cy="190.0" r="2.5" fill="#e8743b" stroke="none" stroke-width="1" />
+<text x="382.0" y="144.0" font-size="10.5" fill="#333" text-anchor="start" font-weight="400" >short end up</text>
+<line x1="350.0" y1="222.0" x2="378.0" y2="170.0" stroke="#e8743b" stroke-width="1.3" stroke-linecap="round" />
+<circle cx="350.0" cy="222.0" r="2.5" fill="#e8743b" stroke="none" stroke-width="1" />
+<text x="382.0" y="174.0" font-size="10.5" fill="#333" text-anchor="start" font-weight="400" >plastic spacer</text>
+<line x1="330.0" y1="242.0" x2="378.0" y2="200.0" stroke="#e8743b" stroke-width="1.3" stroke-linecap="round" />
+<circle cx="330.0" cy="242.0" r="2.5" fill="#e8743b" stroke="none" stroke-width="1" />
+<text x="382.0" y="204.0" font-size="10.5" fill="#333" text-anchor="start" font-weight="400" >long end down</text>
+<text x="30.0" y="64.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >Push the 7-pin strip into the breadboard,</text>
+<text x="30.0" y="80.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >long ends down. Lay the amp on top, chip up,</text>
+<text x="30.0" y="96.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >labels facing you. Solder the 7 short ends.</text>
+<text x="30.0" y="118.0" font-size="11.5" fill="#6b7280" text-anchor="start" font-weight="400" >Do one end pin first, check it sits flat,</text>
+<text x="30.0" y="134.0" font-size="11.5" fill="#6b7280" text-anchor="start" font-weight="400" >then the other end, then the rest.</text>
+<text x="198.0" y="322.0" font-size="11" fill="#6b7280" text-anchor="middle" font-weight="400" >About 1 second of heat, then feed solder in: 2–3 s per pin.</text>
+<rect x="490.0" y="10.0" width="460.0" height="330.0" rx="10" fill="#fffdf8" stroke="#ddd6c6" stroke-width="1.2" />
+<text x="504.0" y="34.0" font-size="14" fill="#222" text-anchor="start" font-weight="800" >2. Screw terminal: openings face out</text>
+<rect x="600.0" y="110.0" width="240.0" height="152.0" rx="8" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1.5" />
+<rect x="690.0" y="160.0" width="40.0" height="34.0" rx="3" fill="#1d1d1d" stroke="none" stroke-width="1" />
+<text x="710.0" y="214.0" font-size="9.5" fill="#e9dcf7" text-anchor="middle" font-weight="700" >MAX98357A</text>
+<circle cx="630.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="630.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="630.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >LRC</text>
+<circle cx="660.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="660.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="660.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >BCLK</text>
+<circle cx="690.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="690.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="690.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >DIN</text>
+<circle cx="720.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="720.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="720.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >GAIN</text>
+<circle cx="750.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="750.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="750.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >SD</text>
+<circle cx="780.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="780.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="780.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >GND</text>
+<circle cx="810.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="810.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="810.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >VIN</text>
+<text x="720.0" y="282.0" font-size="11" fill="#6b7280" text-anchor="middle" font-weight="400" >header pins solder here (step 1)</text>
+<defs><marker id="amp-ah" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#e8743b"/></marker></defs>
+<rect x="680.0" y="104.0" width="80.0" height="40.0" rx="4" fill="#2f7fd1" stroke="#1d5a99" stroke-width="1.5" />
+<circle cx="700.0" cy="124.0" r="11" fill="#d7dbe0" stroke="#8a9099" stroke-width="1.2" />
+<line x1="693.0" y1="124.0" x2="707.0" y2="124.0" stroke="#555" stroke-width="2.2" stroke-linecap="round" />
+<text x="700.0" y="162.0" font-size="16" fill="#ffffff" text-anchor="middle" font-weight="800" >+</text>
+<path d="M700,70 L700,98" stroke="#e8743b" stroke-width="2.5" marker-end="url(#amp-ah)"/>
+<circle cx="740.0" cy="124.0" r="11" fill="#d7dbe0" stroke="#8a9099" stroke-width="1.2" />
+<line x1="733.0" y1="124.0" x2="747.0" y2="124.0" stroke="#555" stroke-width="2.2" stroke-linecap="round" />
+<text x="740.0" y="162.0" font-size="16" fill="#ffffff" text-anchor="middle" font-weight="800" >−</text>
+<path d="M740,70 L740,98" stroke="#e8743b" stroke-width="2.5" marker-end="url(#amp-ah)"/>
+<text x="720.0" y="64.0" font-size="11" fill="#333" text-anchor="middle" font-weight="700" >speaker wires go in here, from outside the board</text>
+<text x="510.0" y="304.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >Sit the blue block on the chip side, openings facing away</text>
+<text x="510.0" y="319.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >from the board, screws on top. Flip the board and solder</text>
+<text x="510.0" y="334.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >its 2 pins underneath (a bit of tape holds it).</text>
+<rect x="10.0" y="352.0" width="460.0" height="278.0" rx="10" fill="#fffdf8" stroke="#ddd6c6" stroke-width="1.2" />
+<text x="24.0" y="376.0" font-size="14" fill="#222" text-anchor="start" font-weight="800" >3. What a good joint looks like</text>
+<rect x="36.0" y="470.0" width="68.0" height="9.0" rx="2" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1" />
+<rect x="68.0" y="448.0" width="4.0" height="22.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="63.0" y="468.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<path d="M62,469 Q68,461.0 68.4,453 L71.6,453 Q72,461.0 78,469 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<text x="70.0" y="500.0" font-size="11" fill="#2e9e44" text-anchor="middle" font-weight="700" >Good: shiny cone</text>
+<text x="70.0" y="516.0" font-size="16" fill="#2e9e44" text-anchor="middle" font-weight="800" >✓</text>
+<rect x="144.0" y="470.0" width="68.0" height="9.0" rx="2" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1" />
+<rect x="176.0" y="448.0" width="4.0" height="22.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="171.0" y="468.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="174.5" y="466.0" width="7.0" height="3.0" rx="1" fill="#b9bec6" stroke="none" stroke-width="1" />
+<text x="178.0" y="500.0" font-size="11" fill="#b03030" text-anchor="middle" font-weight="700" >Too little</text>
+<text x="178.0" y="516.0" font-size="16" fill="#b03030" text-anchor="middle" font-weight="800" >✗</text>
+<rect x="252.0" y="470.0" width="68.0" height="9.0" rx="2" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1" />
+<rect x="284.0" y="448.0" width="4.0" height="22.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="279.0" y="468.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<circle cx="286.0" cy="460.0" r="11" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8" />
+<text x="286.0" y="500.0" font-size="11" fill="#b03030" text-anchor="middle" font-weight="700" >Blob: too much</text>
+<text x="286.0" y="516.0" font-size="16" fill="#b03030" text-anchor="middle" font-weight="800" >✗</text>
+<rect x="360.0" y="470.0" width="90.0" height="9.0" rx="2" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1" />
+<rect x="380.0" y="448.0" width="4.0" height="22.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="375.0" y="468.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="414.0" y="448.0" width="4.0" height="22.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="409.0" y="468.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<path d="M374,469 Q399,452 424,469 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<text x="405.0" y="500.0" font-size="11" fill="#b03030" text-anchor="middle" font-weight="700" >Bridge: two pins joined</text>
+<text x="405.0" y="516.0" font-size="16" fill="#b03030" text-anchor="middle" font-weight="800" >✗</text>
+<text x="30.0" y="395.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >Each joint should wrap the pin and cover its gold ring.</text>
+<text x="30.0" y="411.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >GAIN and SD sit close together: look between every pair.</text>
+<text x="30.0" y="560.0" font-size="11" fill="#6b7280" text-anchor="start" font-weight="400" >Fix a bridge by dragging the clean, tinned iron tip between</text>
+<text x="30.0" y="576.0" font-size="11" fill="#6b7280" text-anchor="start" font-weight="400" >the two pins, or with solder wick. Fix a thin joint by adding</text>
+<text x="30.0" y="592.0" font-size="11" fill="#6b7280" text-anchor="start" font-weight="400" >a little more solder.</text>
+<rect x="490.0" y="352.0" width="460.0" height="278.0" rx="10" fill="#fffdf8" stroke="#ddd6c6" stroke-width="1.2" />
+<text x="504.0" y="376.0" font-size="14" fill="#222" text-anchor="start" font-weight="800" >4. Speaker wires and what to leave alone</text>
+<rect x="560.0" y="470.0" width="150.0" height="10.0" rx="2" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1" />
+<rect x="600.0" y="432.0" width="60.0" height="38.0" rx="3" fill="#2f7fd1" stroke="#1d5a99" stroke-width="1.2" />
+<circle cx="630.0" cy="440.0" r="6" fill="#d7dbe0" stroke="#8a9099" stroke-width="1" />
+<line x1="624.0" y1="440.0" x2="636.0" y2="440.0" stroke="#555" stroke-width="2" stroke-linecap="round" />
+<rect x="613.0" y="480.0" width="4.0" height="10.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<path d="M609,480 Q613,484.0 613.4,488 L616.6,488 Q617,484.0 621,480 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<rect x="643.0" y="480.0" width="4.0" height="10.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<path d="M639,480 Q643,484.0 643.4,488 L646.6,488 Q647,484.0 651,480 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<line x1="660.0" y1="456.0" x2="760.0" y2="456.0" stroke="#d32f2f" stroke-width="4" stroke-linecap="round" />
+<line x1="660.0" y1="456.0" x2="676.0" y2="456.0" stroke="#c9a227" stroke-width="4" stroke-linecap="round" />
+<text x="770.0" y="452.0" font-size="11" fill="#333" text-anchor="start" font-weight="400" >strip 5 mm, twist the</text>
+<text x="770.0" y="468.0" font-size="11" fill="#333" text-anchor="start" font-weight="400" >strands, push in, then</text>
+<text x="770.0" y="484.0" font-size="11" fill="#333" text-anchor="start" font-weight="400" >tighten the screw</text>
+<text x="560.0" y="508.0" font-size="10.5" fill="#6b7280" text-anchor="start" font-weight="400" >solder underneath</text>
+<circle cx="560.0" cy="410.0" r="0.1" fill="#000" stroke="none" stroke-width="1" />
+<text x="510.0" y="540.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >Speaker red (+) to the terminal marked +, black (−) to −.</text>
+<text x="510.0" y="556.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >Tug each wire gently: it should not pull out.</text>
+<text x="510.0" y="580.0" font-size="11.5" fill="#b03030" text-anchor="start" font-weight="700" >Leave GAIN and SD unconnected: the amp then runs</text>
+<text x="510.0" y="596.0" font-size="11.5" fill="#b03030" text-anchor="start" font-weight="700" >at 9 dB gain and stays switched on.</text>
+<text x="510.0" y="616.0" font-size="11" fill="#6b7280" text-anchor="start" font-weight="400" >Iron about 330 °C (leaded) or 360 °C (lead-free).</text>
+</svg>
+  <ol class="todo"><li><b>Header first.</b> Push the 7-pin strip into any free spot on the breadboard, long ends down. Lay the amplifier on the short ends, chip side up, and solder all 7. Start with one end pin, check the board sits flat, then the other end, then the rest.</li><li><b>Then the screw terminal.</b> Lift the board off the breadboard. Sit the blue block on the chip side at the other edge, wire openings facing outward. Turn the board over and solder its two pins from underneath.</li><li><b>Check every joint</b> with a bright light: shiny cones, and no solder joining two neighbouring pins (look hardest between GAIN and SD).</li><li>Wire it up as below. Leave <b>GAIN</b> and <b>SD</b> unconnected.</li></ol>
   <h3>Place the parts</h3><ol class="place"><li><b>100 µF capacitor</b>: the <b>long leg (+)</b> in the bottom + rail at row 19, the leg by the <b>stripe (−)</b> in the bottom − rail at row 20. This one does have a right way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="p:amp-1"><label><input type="checkbox" data-k="p:amp-1"><span class="badge" style="border-color:#8e44ad">1</span><span class="sw" style="background:#8e44ad"></span><span class="wt"><b>Purple wire</b> (female–male):<br>hole i12, lower board (the row of ESP32 pin 15) <span class="arr">→</span> amp BCLK</span></label></li><li data-w="p:amp-2"><label><input type="checkbox" data-k="p:amp-2"><span class="badge" style="border-color:#14a3b8">2</span><span class="sw" style="background:#14a3b8"></span><span class="wt"><b>Cyan wire</b> (female–male):<br>hole i13, lower board (the row of ESP32 pin 16) <span class="arr">→</span> amp LRC</span></label></li><li data-w="p:amp-3"><label><input type="checkbox" data-k="p:amp-3"><span class="badge" style="border-color:#9aa0a6">3</span><span class="sw" style="background:#9aa0a6"></span><span class="wt"><b>White wire</b> (female–male):<br>hole i14, lower board (the row of ESP32 pin 17) <span class="arr">→</span> amp DIN</span></label></li><li data-w="p:amp-4"><label><input type="checkbox" data-k="p:amp-4"><span class="badge" style="border-color:#d32f2f">4</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (female–male):<br>amp VIN <span class="arr">→</span> bottom + rail (5 V)</span></label></li><li data-w="p:amp-5"><label><input type="checkbox" data-k="p:amp-5"><span class="badge" style="border-color:#222222">5</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>amp GND <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> Screw the speaker leads into the amp's + and − terminals. Under <b>Sounds</b>, press <b>Play</b> on beep.wav: four beeps. Then give an alarm a radio or podcast URL and press <b>Preview stream</b>.</div>
@@ -11527,6 +11699,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   
   
   <h3>Place the parts</h3><ol class="place"><li><b>330 Ω resistor</b> (bands orange-orange-brown, or orange-orange-black-black): legs in <b>c15</b> and <b>c19</b> (lower board). Either way round.</li><li><b>1000 µF capacitor</b>: the <b>long leg (+)</b> in the bottom + rail at row 23, the leg by the <b>stripe (−)</b> in the bottom − rail at row 24. This one does have a right way round.</li></ol>
@@ -12843,6 +13016,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
   
+  
   <h3>Place the parts</h3><ol class="place"><li><b>4.7 Ω 2 W resistor</b> (the big one; bands yellow-violet-gold, or yellow-violet-black-silver): legs in <b>c22</b> and <b>c26</b> (lower board). Either way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="p:led-1"><label><input type="checkbox" data-k="p:led-1"><span class="badge" style="border-color:#6b7280">1</span><span class="sw" style="background:#6b7280"></span><span class="wt"><b>Grey wire</b> (female–male):<br>hole i23, lower board (the row of ESP32 pin 13) <span class="arr">→</span> module TRIG / PWM</span></label></li><li data-w="p:led-2"><label><input type="checkbox" data-k="p:led-2"><span class="badge" style="border-color:#222222">2</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>module trigger GND <span class="arr">→</span> bottom − rail</span></label></li><li data-w="p:led-3"><label><input type="checkbox" data-k="p:led-3"><span class="badge" style="border-color:#d32f2f">3</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (screw terminal–male):<br>module VIN+ <span class="arr">→</span> bottom + rail (5 V)</span></label></li><li data-w="p:led-4"><label><input type="checkbox" data-k="p:led-4"><span class="badge" style="border-color:#222222">4</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (screw terminal–male):<br>module VIN− <span class="arr">→</span> bottom − rail</span></label></li><li data-w="p:led-5"><label><input type="checkbox" data-k="p:led-5"><span class="badge" style="border-color:#d32f2f">5</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (screw terminal–male):<br>module OUT+ <span class="arr">→</span> hole a22, lower board (one end of the 4.7 Ω)</span></label></li><li data-w="p:led-6"><label><input type="checkbox" data-k="p:led-6"><span class="badge" style="border-color:#d32f2f">6</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (male–soldered lead):<br>hole a26, lower board (other end of the 4.7 Ω) <span class="arr">→</span> LED +</span></label></li><li data-w="p:led-7"><label><input type="checkbox" data-k="p:led-7"><span class="badge" style="border-color:#222222">7</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (soldered lead–screw terminal):<br>LED − <span class="arr">→</span> module OUT−</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> On the clock's page, switch the <b>Projector</b> off and on: the LED goes off and on. Change the projector's day brightness: it dims.</div>
@@ -13841,6 +14015,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <circle cx="255.0" cy="280.0" r="2.6" fill="#d8ad45" stroke="none" stroke-width="1" />
 <text x="255.0" y="293.0" font-size="6" fill="#e7e9ec" text-anchor="middle" font-weight="400" >G</text>
 </svg></div>
+  
   
   
   <ol class="todo"><li>Plug the USB-C cable into the port marked <b>USB</b> on the ESP32 (the board has two; this one carries the log).</li><li>Flash the firmware from the <a href="firmware.html">Firmware</a> page: the web flasher needs nothing installed.</li><li>Open a serial monitor at <b>115200</b> baud (the web flasher has one, or PlatformIO's monitor).</li><li>On your phone, join the Wi-Fi network <b>CeilingClock-Setup</b> and pick your home network.</li></ol>
@@ -14863,6 +15038,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   
   <ol class="todo"><li>Unplug the USB cable.</li><li>The pictures show the board turned so row 1 is on the left, with column j at the top. If yours stands upright with row 1 at the top, column a is on the left.</li><li>Turn the ESP32 so its antenna points toward row 1 and hangs over the end of the board. Its row of pins starting with <b>3V3</b> goes into column <b>b</b>; the row starting with <b>GND, TX, RX</b> goes into column <b>j</b>. The first pins go in row <b>1</b>, so the last ones are in row 22. Press down evenly on both rows of pins, not on the metal can.</li><li>Each wire to an ESP32 pin goes into <b>column a</b> in the same row as that pin: the only hole beside it that the ESP32 doesn't cover.</li></ol>
   
@@ -15909,6 +16085,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   
   
   <h3>Place the parts</h3><ol class="place"><li><b>Push button A</b> across the gap in the middle: two legs in row 33, two in row 35, one each side of the gap.</li><li><b>Push button B</b> across the gap in the middle: two legs in row 39, two in row 41, one each side of the gap.</li></ol>
@@ -16975,6 +17152,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   
   
   
@@ -18093,6 +18271,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   
   
   
@@ -19221,6 +19400,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <text x="485.0" y="158.0" font-size="10.5" fill="#b03030" text-anchor="middle" font-weight="700" >not 10 Ω: that has a gold band in the middle</text>
 </svg>
   
+  
   <h3>Place the parts</h3><ol class="place"><li><b>Light sensor</b> (the round disc with a squiggly line on it): legs in <b>h45</b> and <b>h48</b>. Either way round.</li><li><b>10 kΩ resistor</b> (bands brown-black-orange, or brown-black-black-red on 5-band resistors; the BOJACK bag says 10KΩ): one leg in <b>j48</b>, the same row as the sensor's second leg; the other leg in the <b>top − rail</b> (the row by the blue line), about row 49. Either way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="o:ldr-1"><label><input type="checkbox" data-k="o:ldr-1"><span class="badge" style="border-color:#f39c12">1</span><span class="sw" style="background:#f39c12"></span><span class="wt"><b>Orange wire</b> (male–male):<br>top + rail <span class="arr">→</span> hole j45 (one leg of the sensor)</span></label></li><li data-w="o:ldr-2"><label><input type="checkbox" data-k="o:ldr-2"><span class="badge" style="border-color:#e05297">2</span><span class="sw" style="background:#e05297"></span><span class="wt"><b>Pink wire</b> (male–male):<br>hole a7 (beside ESP32 pin 7) <span class="arr">→</span> hole g48 (where sensor and resistor meet)</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> In the night settings, watch <b>sensor now</b> next to "Dark below". It goes up with a torch on the sensor and down when you cover it with a finger.</div>
@@ -20313,6 +20493,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <path d="M695.0,250.0 C695.0,285.0 695.0,245.0 695.0,280.0" fill="none" stroke="#f39c12" stroke-width="2.4" stroke-linecap="round" opacity="0.28"/>
 <path d="M315.0,390.0 C485.0,330.5 555.0,250.5 725.0,310.0" fill="none" stroke="#e05297" stroke-width="2.4" stroke-linecap="round" opacity="0.28"/>
 </svg></div>
+  
   
   
   <ol class="todo"><li>Test the module when the electronics move to the perfboard (<a href="assembly.html#step-4">assembly step 4</a>), or switch to the two-breadboard layout at the top of this page.</li></ol>
@@ -21440,6 +21621,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
   
   
   
+  
   <h3>Connect</h3><ul class="wires"><li data-w="o:supply-1"><label><input type="checkbox" data-k="o:supply-1"><span class="badge" style="border-color:#d32f2f">1</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (soldered lead):<br>breakout VBUS <span class="arr">→</span> bottom + rail</span></label></li><li data-w="o:supply-2"><label><input type="checkbox" data-k="o:supply-2"><span class="badge" style="border-color:#222222">2</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (soldered lead):<br>breakout GND <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> Plug the adapter in. Everything carries on as before. With a multimeter, the bottom rails read about 5 V.</div>
   
@@ -21447,8 +21629,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </section>
 <section class="bbstep only-one" id="o-amp">
   <div class="bbhead"><span class="num">9</span><h2>Amplifier and speaker</h2><span class="time">⏱ 10 min</span></div>
-  <p>Plays the alarm sounds. The capacitor steadies its supply; the long leg is +, and the stripe marks −.</p>
-  <div class="need"><b>You need:</b> <span class="chip">MAX98357A amplifier</span><span class="chip">40 mm speaker</span><span class="chip">100 µF capacitor</span><span class="chip">5 jumper wires: 5 female–male</span></div>
+  <p>Plays the alarm sounds. The amplifier comes with its pins loose, so solder those first (below). The capacitor steadies its supply; the long leg is +, and the stripe marks −.</p>
+  <div class="need"><b>You need:</b> <span class="chip">MAX98357A amplifier with its 7-pin header and blue screw terminal (in its bag)</span><span class="chip">40 mm speaker</span><span class="chip">100 µF capacitor</span><span class="chip">Soldering iron and solder</span><span class="chip">5 jumper wires: 5 female–male</span></div>
   
   <div class="pic"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 690" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
 <rect x="0.0" y="0.0" width="1100.0" height="690.0" rx="0" fill="#fbfaf6" stroke="none" stroke-width="1" />
@@ -22613,7 +22795,171 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
-  
+  <h3>Solder the amplifier first</h3><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+<rect x="0.0" y="0.0" width="960.0" height="640.0" rx="0" fill="#fbfaf6" stroke="none" stroke-width="1" />
+<rect x="10.0" y="10.0" width="460.0" height="330.0" rx="10" fill="#fffdf8" stroke="#ddd6c6" stroke-width="1.2" />
+<text x="24.0" y="34.0" font-size="14" fill="#222" text-anchor="start" font-weight="800" >1. Header pins: breadboard holds them straight</text>
+<rect x="26.0" y="250.0" width="344.0" height="46.0" rx="4" fill="#f3f1ea" stroke="#cfcabc" stroke-width="1.2" />
+<rect x="38.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="66.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="94.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="122.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="150.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="178.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="206.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="234.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="262.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="290.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="318.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="346.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<text x="198.0" y="282.0" font-size="11" fill="#8a8577" text-anchor="middle" font-weight="700" >breadboard</text>
+<rect x="160.0" y="187.0" width="60.0" height="9.0" rx="1.5" fill="#3a3a3a" stroke="none" stroke-width="1" />
+<text x="96.0" y="172.0" font-size="10.5" fill="#4b2a75" text-anchor="start" font-weight="700" >chip side up</text>
+<rect x="46.0" y="216.0" width="308.0" height="12.0" rx="2" fill="#1d1d1d" stroke="none" stroke-width="1" />
+<rect x="64.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="64.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="108.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="108.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="152.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="152.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="196.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="196.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="240.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="240.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="284.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="284.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="328.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="328.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="46.0" y="196.0" width="308.0" height="10.0" rx="2" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1" />
+<rect x="59.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="103.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="147.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="191.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="235.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="279.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="323.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<path d="M59,194.5 Q64,191.0 64.4,187.5 L67.6,187.5 Q68,191.0 73,194.5 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<path d="M103,194.5 Q108,191.0 108.4,187.5 L111.6,187.5 Q112,191.0 117,194.5 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<path d="M147,194.5 Q152,191.0 152.4,187.5 L155.6,187.5 Q156,191.0 161,194.5 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<path d="M191,194.5 Q196,191.0 196.4,187.5 L199.6,187.5 Q200,191.0 205,194.5 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<line x1="244.0" y1="191.0" x2="271.9" y2="171.5" stroke="#8a8f98" stroke-width="5" stroke-linecap="round" />
+<line x1="271.9" y1="171.5" x2="334.1" y2="127.9" stroke="#2f6db3" stroke-width="13" stroke-linecap="round" />
+<text x="340.1" y="131.9" font-size="11" fill="#2f6db3" text-anchor="start" font-weight="700" >iron</text>
+<line x1="212.0" y1="150.0" x2="237.0" y2="190.0" stroke="#a0a6ae" stroke-width="3" stroke-linecap="round" />
+<text x="208.0" y="150.0" font-size="11" fill="#6b7280" text-anchor="end" font-weight="700" >solder</text>
+<line x1="330.0" y1="190.0" x2="378.0" y2="140.0" stroke="#e8743b" stroke-width="1.3" stroke-linecap="round" />
+<circle cx="330.0" cy="190.0" r="2.5" fill="#e8743b" stroke="none" stroke-width="1" />
+<text x="382.0" y="144.0" font-size="10.5" fill="#333" text-anchor="start" font-weight="400" >short end up</text>
+<line x1="350.0" y1="222.0" x2="378.0" y2="170.0" stroke="#e8743b" stroke-width="1.3" stroke-linecap="round" />
+<circle cx="350.0" cy="222.0" r="2.5" fill="#e8743b" stroke="none" stroke-width="1" />
+<text x="382.0" y="174.0" font-size="10.5" fill="#333" text-anchor="start" font-weight="400" >plastic spacer</text>
+<line x1="330.0" y1="242.0" x2="378.0" y2="200.0" stroke="#e8743b" stroke-width="1.3" stroke-linecap="round" />
+<circle cx="330.0" cy="242.0" r="2.5" fill="#e8743b" stroke="none" stroke-width="1" />
+<text x="382.0" y="204.0" font-size="10.5" fill="#333" text-anchor="start" font-weight="400" >long end down</text>
+<text x="30.0" y="64.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >Push the 7-pin strip into the breadboard,</text>
+<text x="30.0" y="80.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >long ends down. Lay the amp on top, chip up,</text>
+<text x="30.0" y="96.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >labels facing you. Solder the 7 short ends.</text>
+<text x="30.0" y="118.0" font-size="11.5" fill="#6b7280" text-anchor="start" font-weight="400" >Do one end pin first, check it sits flat,</text>
+<text x="30.0" y="134.0" font-size="11.5" fill="#6b7280" text-anchor="start" font-weight="400" >then the other end, then the rest.</text>
+<text x="198.0" y="322.0" font-size="11" fill="#6b7280" text-anchor="middle" font-weight="400" >About 1 second of heat, then feed solder in: 2–3 s per pin.</text>
+<rect x="490.0" y="10.0" width="460.0" height="330.0" rx="10" fill="#fffdf8" stroke="#ddd6c6" stroke-width="1.2" />
+<text x="504.0" y="34.0" font-size="14" fill="#222" text-anchor="start" font-weight="800" >2. Screw terminal: openings face out</text>
+<rect x="600.0" y="110.0" width="240.0" height="152.0" rx="8" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1.5" />
+<rect x="690.0" y="160.0" width="40.0" height="34.0" rx="3" fill="#1d1d1d" stroke="none" stroke-width="1" />
+<text x="710.0" y="214.0" font-size="9.5" fill="#e9dcf7" text-anchor="middle" font-weight="700" >MAX98357A</text>
+<circle cx="630.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="630.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="630.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >LRC</text>
+<circle cx="660.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="660.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="660.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >BCLK</text>
+<circle cx="690.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="690.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="690.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >DIN</text>
+<circle cx="720.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="720.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="720.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >GAIN</text>
+<circle cx="750.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="750.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="750.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >SD</text>
+<circle cx="780.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="780.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="780.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >GND</text>
+<circle cx="810.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="810.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="810.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >VIN</text>
+<text x="720.0" y="282.0" font-size="11" fill="#6b7280" text-anchor="middle" font-weight="400" >header pins solder here (step 1)</text>
+<defs><marker id="amp-ah" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#e8743b"/></marker></defs>
+<rect x="680.0" y="104.0" width="80.0" height="40.0" rx="4" fill="#2f7fd1" stroke="#1d5a99" stroke-width="1.5" />
+<circle cx="700.0" cy="124.0" r="11" fill="#d7dbe0" stroke="#8a9099" stroke-width="1.2" />
+<line x1="693.0" y1="124.0" x2="707.0" y2="124.0" stroke="#555" stroke-width="2.2" stroke-linecap="round" />
+<text x="700.0" y="162.0" font-size="16" fill="#ffffff" text-anchor="middle" font-weight="800" >+</text>
+<path d="M700,70 L700,98" stroke="#e8743b" stroke-width="2.5" marker-end="url(#amp-ah)"/>
+<circle cx="740.0" cy="124.0" r="11" fill="#d7dbe0" stroke="#8a9099" stroke-width="1.2" />
+<line x1="733.0" y1="124.0" x2="747.0" y2="124.0" stroke="#555" stroke-width="2.2" stroke-linecap="round" />
+<text x="740.0" y="162.0" font-size="16" fill="#ffffff" text-anchor="middle" font-weight="800" >−</text>
+<path d="M740,70 L740,98" stroke="#e8743b" stroke-width="2.5" marker-end="url(#amp-ah)"/>
+<text x="720.0" y="64.0" font-size="11" fill="#333" text-anchor="middle" font-weight="700" >speaker wires go in here, from outside the board</text>
+<text x="510.0" y="304.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >Sit the blue block on the chip side, openings facing away</text>
+<text x="510.0" y="319.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >from the board, screws on top. Flip the board and solder</text>
+<text x="510.0" y="334.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >its 2 pins underneath (a bit of tape holds it).</text>
+<rect x="10.0" y="352.0" width="460.0" height="278.0" rx="10" fill="#fffdf8" stroke="#ddd6c6" stroke-width="1.2" />
+<text x="24.0" y="376.0" font-size="14" fill="#222" text-anchor="start" font-weight="800" >3. What a good joint looks like</text>
+<rect x="36.0" y="470.0" width="68.0" height="9.0" rx="2" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1" />
+<rect x="68.0" y="448.0" width="4.0" height="22.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="63.0" y="468.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<path d="M62,469 Q68,461.0 68.4,453 L71.6,453 Q72,461.0 78,469 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<text x="70.0" y="500.0" font-size="11" fill="#2e9e44" text-anchor="middle" font-weight="700" >Good: shiny cone</text>
+<text x="70.0" y="516.0" font-size="16" fill="#2e9e44" text-anchor="middle" font-weight="800" >✓</text>
+<rect x="144.0" y="470.0" width="68.0" height="9.0" rx="2" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1" />
+<rect x="176.0" y="448.0" width="4.0" height="22.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="171.0" y="468.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="174.5" y="466.0" width="7.0" height="3.0" rx="1" fill="#b9bec6" stroke="none" stroke-width="1" />
+<text x="178.0" y="500.0" font-size="11" fill="#b03030" text-anchor="middle" font-weight="700" >Too little</text>
+<text x="178.0" y="516.0" font-size="16" fill="#b03030" text-anchor="middle" font-weight="800" >✗</text>
+<rect x="252.0" y="470.0" width="68.0" height="9.0" rx="2" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1" />
+<rect x="284.0" y="448.0" width="4.0" height="22.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="279.0" y="468.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<circle cx="286.0" cy="460.0" r="11" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8" />
+<text x="286.0" y="500.0" font-size="11" fill="#b03030" text-anchor="middle" font-weight="700" >Blob: too much</text>
+<text x="286.0" y="516.0" font-size="16" fill="#b03030" text-anchor="middle" font-weight="800" >✗</text>
+<rect x="360.0" y="470.0" width="90.0" height="9.0" rx="2" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1" />
+<rect x="380.0" y="448.0" width="4.0" height="22.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="375.0" y="468.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="414.0" y="448.0" width="4.0" height="22.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="409.0" y="468.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<path d="M374,469 Q399,452 424,469 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<text x="405.0" y="500.0" font-size="11" fill="#b03030" text-anchor="middle" font-weight="700" >Bridge: two pins joined</text>
+<text x="405.0" y="516.0" font-size="16" fill="#b03030" text-anchor="middle" font-weight="800" >✗</text>
+<text x="30.0" y="395.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >Each joint should wrap the pin and cover its gold ring.</text>
+<text x="30.0" y="411.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >GAIN and SD sit close together: look between every pair.</text>
+<text x="30.0" y="560.0" font-size="11" fill="#6b7280" text-anchor="start" font-weight="400" >Fix a bridge by dragging the clean, tinned iron tip between</text>
+<text x="30.0" y="576.0" font-size="11" fill="#6b7280" text-anchor="start" font-weight="400" >the two pins, or with solder wick. Fix a thin joint by adding</text>
+<text x="30.0" y="592.0" font-size="11" fill="#6b7280" text-anchor="start" font-weight="400" >a little more solder.</text>
+<rect x="490.0" y="352.0" width="460.0" height="278.0" rx="10" fill="#fffdf8" stroke="#ddd6c6" stroke-width="1.2" />
+<text x="504.0" y="376.0" font-size="14" fill="#222" text-anchor="start" font-weight="800" >4. Speaker wires and what to leave alone</text>
+<rect x="560.0" y="470.0" width="150.0" height="10.0" rx="2" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1" />
+<rect x="600.0" y="432.0" width="60.0" height="38.0" rx="3" fill="#2f7fd1" stroke="#1d5a99" stroke-width="1.2" />
+<circle cx="630.0" cy="440.0" r="6" fill="#d7dbe0" stroke="#8a9099" stroke-width="1" />
+<line x1="624.0" y1="440.0" x2="636.0" y2="440.0" stroke="#555" stroke-width="2" stroke-linecap="round" />
+<rect x="613.0" y="480.0" width="4.0" height="10.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<path d="M609,480 Q613,484.0 613.4,488 L616.6,488 Q617,484.0 621,480 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<rect x="643.0" y="480.0" width="4.0" height="10.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<path d="M639,480 Q643,484.0 643.4,488 L646.6,488 Q647,484.0 651,480 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<line x1="660.0" y1="456.0" x2="760.0" y2="456.0" stroke="#d32f2f" stroke-width="4" stroke-linecap="round" />
+<line x1="660.0" y1="456.0" x2="676.0" y2="456.0" stroke="#c9a227" stroke-width="4" stroke-linecap="round" />
+<text x="770.0" y="452.0" font-size="11" fill="#333" text-anchor="start" font-weight="400" >strip 5 mm, twist the</text>
+<text x="770.0" y="468.0" font-size="11" fill="#333" text-anchor="start" font-weight="400" >strands, push in, then</text>
+<text x="770.0" y="484.0" font-size="11" fill="#333" text-anchor="start" font-weight="400" >tighten the screw</text>
+<text x="560.0" y="508.0" font-size="10.5" fill="#6b7280" text-anchor="start" font-weight="400" >solder underneath</text>
+<circle cx="560.0" cy="410.0" r="0.1" fill="#000" stroke="none" stroke-width="1" />
+<text x="510.0" y="540.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >Speaker red (+) to the terminal marked +, black (−) to −.</text>
+<text x="510.0" y="556.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >Tug each wire gently: it should not pull out.</text>
+<text x="510.0" y="580.0" font-size="11.5" fill="#b03030" text-anchor="start" font-weight="700" >Leave GAIN and SD unconnected: the amp then runs</text>
+<text x="510.0" y="596.0" font-size="11.5" fill="#b03030" text-anchor="start" font-weight="700" >at 9 dB gain and stays switched on.</text>
+<text x="510.0" y="616.0" font-size="11" fill="#6b7280" text-anchor="start" font-weight="400" >Iron about 330 °C (leaded) or 360 °C (lead-free).</text>
+</svg>
+  <ol class="todo"><li><b>Header first.</b> Push the 7-pin strip into any free spot on the breadboard, long ends down. Lay the amplifier on the short ends, chip side up, and solder all 7. Start with one end pin, check the board sits flat, then the other end, then the rest.</li><li><b>Then the screw terminal.</b> Lift the board off the breadboard. Sit the blue block on the chip side at the other edge, wire openings facing outward. Turn the board over and solder its two pins from underneath.</li><li><b>Check every joint</b> with a bright light: shiny cones, and no solder joining two neighbouring pins (look hardest between GAIN and SD).</li><li>Wire it up as below. Leave <b>GAIN</b> and <b>SD</b> unconnected.</li></ol>
   <h3>Place the parts</h3><ol class="place"><li><b>100 µF capacitor</b>: the <b>long leg (+)</b> in the bottom + rail at row 19, the leg by the <b>stripe (−)</b> in the bottom − rail at row 20. This one does have a right way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="o:amp-1"><label><input type="checkbox" data-k="o:amp-1"><span class="badge" style="border-color:#8e44ad">1</span><span class="sw" style="background:#8e44ad"></span><span class="wt"><b>Purple wire</b> (female–male):<br>hole a8 (beside ESP32 pin 15) <span class="arr">→</span> amp BCLK</span></label></li><li data-w="o:amp-2"><label><input type="checkbox" data-k="o:amp-2"><span class="badge" style="border-color:#14a3b8">2</span><span class="sw" style="background:#14a3b8"></span><span class="wt"><b>Cyan wire</b> (female–male):<br>hole a9 (beside ESP32 pin 16) <span class="arr">→</span> amp LRC</span></label></li><li data-w="o:amp-3"><label><input type="checkbox" data-k="o:amp-3"><span class="badge" style="border-color:#9aa0a6">3</span><span class="sw" style="background:#9aa0a6"></span><span class="wt"><b>White wire</b> (female–male):<br>hole a10 (beside ESP32 pin 17) <span class="arr">→</span> amp DIN</span></label></li><li data-w="o:amp-4"><label><input type="checkbox" data-k="o:amp-4"><span class="badge" style="border-color:#d32f2f">4</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (female–male):<br>amp VIN <span class="arr">→</span> bottom + rail (5 V)</span></label></li><li data-w="o:amp-5"><label><input type="checkbox" data-k="o:amp-5"><span class="badge" style="border-color:#222222">5</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>amp GND <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> Screw the speaker leads into the amp's + and − terminals. Under <b>Sounds</b>, press <b>Play</b> on beep.wav: four beeps. Then give an alarm a radio or podcast URL and press <b>Preview stream</b>.</div>
@@ -23825,6 +24171,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   
   
   <h3>Place the parts</h3><ol class="place"><li><b>330 Ω resistor</b> (bands orange-orange-brown, or orange-orange-black-black): legs in <b>c50</b> and <b>c54</b>. Either way round.</li><li><b>1000 µF capacitor</b>: the <b>long leg (+)</b> in the bottom + rail at row 23, the leg by the <b>stripe (−)</b> in the bottom − rail at row 24. This one does have a right way round.</li></ol>
@@ -25105,6 +25452,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
   
+  
   <h3>Place the parts</h3><ol class="place"><li><b>4.7 Ω 2 W resistor</b> (the big one; bands yellow-violet-gold, or yellow-violet-black-silver): legs in <b>h56</b> and <b>h60</b>. Either way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="o:led-1"><label><input type="checkbox" data-k="o:led-1"><span class="badge" style="border-color:#6b7280">1</span><span class="sw" style="background:#6b7280"></span><span class="wt"><b>Grey wire</b> (female–male):<br>hole a19 (beside ESP32 pin 13) <span class="arr">→</span> module TRIG / PWM</span></label></li><li data-w="o:led-2"><label><input type="checkbox" data-k="o:led-2"><span class="badge" style="border-color:#222222">2</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>module trigger GND <span class="arr">→</span> bottom − rail</span></label></li><li data-w="o:led-3"><label><input type="checkbox" data-k="o:led-3"><span class="badge" style="border-color:#d32f2f">3</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (screw terminal–male):<br>module VIN+ <span class="arr">→</span> bottom + rail (5 V)</span></label></li><li data-w="o:led-4"><label><input type="checkbox" data-k="o:led-4"><span class="badge" style="border-color:#222222">4</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (screw terminal–male):<br>module VIN− <span class="arr">→</span> bottom − rail</span></label></li><li data-w="o:led-5"><label><input type="checkbox" data-k="o:led-5"><span class="badge" style="border-color:#d32f2f">5</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (screw terminal–male):<br>module OUT+ <span class="arr">→</span> hole j56 (one end of the 4.7 Ω)</span></label></li><li data-w="o:led-6"><label><input type="checkbox" data-k="o:led-6"><span class="badge" style="border-color:#d32f2f">6</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (male–soldered lead):<br>hole j60 (other end of the 4.7 Ω) <span class="arr">→</span> LED +</span></label></li><li data-w="o:led-7"><label><input type="checkbox" data-k="o:led-7"><span class="badge" style="border-color:#222222">7</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (soldered lead–screw terminal):<br>LED − <span class="arr">→</span> module OUT−</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> On the clock's page, switch the <b>Projector</b> off and on: the LED goes off and on. Change the projector's day brightness: it dims.</div>
@@ -25677,6 +26025,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <g opacity="1">
 </g>
 </svg></div>
+  
   
   
   <ol class="todo"><li>Plug the USB-C cable into the port marked <b>USB</b> on the ESP32 (the board has two; this one carries the log).</li><li>Flash the firmware from the <a href="firmware.html">Firmware</a> page: the web flasher needs nothing installed.</li><li>Open a serial monitor at <b>115200</b> baud (the web flasher has one, or PlatformIO's monitor).</li><li>On your phone, join the Wi-Fi network <b>CeilingClock-Setup</b> and pick your home network.</li></ol>
@@ -26273,6 +26622,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   
   
   
@@ -26893,6 +27243,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   
   
   <h3>Place the parts</h3><ol class="place"><li><b>Push button A</b> across the gap in the middle: two legs in row 3, two in row 5, one each side of the gap.</li><li><b>Push button B</b> across the gap in the middle: two legs in row 8, two in row 10, one each side of the gap.</li></ol>
@@ -27533,6 +27884,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   
   
   
@@ -28225,6 +28577,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   
   
   
@@ -28926,6 +29279,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <text x="485.0" y="140.0" font-size="10.5" fill="#6b7280" text-anchor="middle" font-weight="400" >(or brown · black · orange on a 4-band one)</text>
 <text x="485.0" y="158.0" font-size="10.5" fill="#b03030" text-anchor="middle" font-weight="700" >not 10 Ω: that has a gold band in the middle</text>
 </svg>
+  
   
   <h3>Place the parts</h3><ol class="place"><li><b>Light sensor</b> (the round disc with a squiggly line on it): legs in <b>h13</b> and <b>h16</b>. Either way round.</li><li><b>10 kΩ resistor</b> (bands brown-black-orange, or brown-black-black-red on 5-band resistors; the BOJACK bag says 10KΩ): one leg in <b>j16</b>, the same row as the sensor's second leg; the other leg in the <b>top − rail</b> (the row by the blue line), about row 17. Either way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="ldr-1"><label><input type="checkbox" data-k="ldr-1"><span class="badge" style="border-color:#f39c12">1</span><span class="sw" style="background:#f39c12"></span><span class="wt"><b>Orange wire</b> (male–male):<br>top + rail <span class="arr">→</span> hole j13 (one leg of the sensor)</span></label></li><li data-w="ldr-2"><label><input type="checkbox" data-k="ldr-2"><span class="badge" style="border-color:#e05297">2</span><span class="sw" style="background:#e05297"></span><span class="wt"><b>Pink wire</b> (female–male):<br>ESP32 pin 7 <span class="arr">→</span> hole g16 (where sensor and resistor meet)</span></label></li></ul>
@@ -29635,6 +29989,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   
   
   
@@ -30356,6 +30711,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
   
   
   
+  
   <h3>Connect</h3><ul class="wires"><li data-w="supply-1"><label><input type="checkbox" data-k="supply-1"><span class="badge" style="border-color:#d32f2f">1</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (soldered lead):<br>breakout VBUS <span class="arr">→</span> bottom + rail</span></label></li><li data-w="supply-2"><label><input type="checkbox" data-k="supply-2"><span class="badge" style="border-color:#222222">2</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (soldered lead):<br>breakout GND <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> Plug the adapter in. Everything carries on as before. With a multimeter, the bottom rails read about 5 V.</div>
   
@@ -30363,8 +30719,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </section>
 <section class="bbstep only-beside" id="s-amp">
   <div class="bbhead"><span class="num">9</span><h2>Amplifier and speaker</h2><span class="time">⏱ 10 min</span></div>
-  <p>Plays the alarm sounds. The capacitor steadies its supply; the long leg is +, and the stripe marks −.</p>
-  <div class="need"><b>You need:</b> <span class="chip">MAX98357A amplifier</span><span class="chip">40 mm speaker</span><span class="chip">100 µF capacitor</span><span class="chip">5 jumper wires: 3 female–female, 2 female–male</span></div>
+  <p>Plays the alarm sounds. The amplifier comes with its pins loose, so solder those first (below). The capacitor steadies its supply; the long leg is +, and the stripe marks −.</p>
+  <div class="need"><b>You need:</b> <span class="chip">MAX98357A amplifier with its 7-pin header and blue screw terminal (in its bag)</span><span class="chip">40 mm speaker</span><span class="chip">100 µF capacitor</span><span class="chip">Soldering iron and solder</span><span class="chip">5 jumper wires: 3 female–female, 2 female–male</span></div>
   
   <div class="pic"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 690" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
 <rect x="0.0" y="0.0" width="1000.0" height="690.0" rx="0" fill="#fbfaf6" stroke="none" stroke-width="1" />
@@ -31124,7 +31480,171 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
   
-  
+  <h3>Solder the amplifier first</h3><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 640" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+<rect x="0.0" y="0.0" width="960.0" height="640.0" rx="0" fill="#fbfaf6" stroke="none" stroke-width="1" />
+<rect x="10.0" y="10.0" width="460.0" height="330.0" rx="10" fill="#fffdf8" stroke="#ddd6c6" stroke-width="1.2" />
+<text x="24.0" y="34.0" font-size="14" fill="#222" text-anchor="start" font-weight="800" >1. Header pins: breadboard holds them straight</text>
+<rect x="26.0" y="250.0" width="344.0" height="46.0" rx="4" fill="#f3f1ea" stroke="#cfcabc" stroke-width="1.2" />
+<rect x="38.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="66.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="94.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="122.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="150.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="178.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="206.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="234.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="262.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="290.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="318.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="346.0" y="252.0" width="6.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<text x="198.0" y="282.0" font-size="11" fill="#8a8577" text-anchor="middle" font-weight="700" >breadboard</text>
+<rect x="160.0" y="187.0" width="60.0" height="9.0" rx="1.5" fill="#3a3a3a" stroke="none" stroke-width="1" />
+<text x="96.0" y="172.0" font-size="10.5" fill="#4b2a75" text-anchor="start" font-weight="700" >chip side up</text>
+<rect x="46.0" y="216.0" width="308.0" height="12.0" rx="2" fill="#1d1d1d" stroke="none" stroke-width="1" />
+<rect x="64.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="64.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="108.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="108.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="152.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="152.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="196.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="196.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="240.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="240.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="284.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="284.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="328.0" y="228.0" width="4.0" height="44.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="328.0" y="188.0" width="4.0" height="28.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="46.0" y="196.0" width="308.0" height="10.0" rx="2" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1" />
+<rect x="59.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="103.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="147.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="191.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="235.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="279.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="323.0" y="194.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<path d="M59,194.5 Q64,191.0 64.4,187.5 L67.6,187.5 Q68,191.0 73,194.5 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<path d="M103,194.5 Q108,191.0 108.4,187.5 L111.6,187.5 Q112,191.0 117,194.5 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<path d="M147,194.5 Q152,191.0 152.4,187.5 L155.6,187.5 Q156,191.0 161,194.5 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<path d="M191,194.5 Q196,191.0 196.4,187.5 L199.6,187.5 Q200,191.0 205,194.5 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<line x1="244.0" y1="191.0" x2="271.9" y2="171.5" stroke="#8a8f98" stroke-width="5" stroke-linecap="round" />
+<line x1="271.9" y1="171.5" x2="334.1" y2="127.9" stroke="#2f6db3" stroke-width="13" stroke-linecap="round" />
+<text x="340.1" y="131.9" font-size="11" fill="#2f6db3" text-anchor="start" font-weight="700" >iron</text>
+<line x1="212.0" y1="150.0" x2="237.0" y2="190.0" stroke="#a0a6ae" stroke-width="3" stroke-linecap="round" />
+<text x="208.0" y="150.0" font-size="11" fill="#6b7280" text-anchor="end" font-weight="700" >solder</text>
+<line x1="330.0" y1="190.0" x2="378.0" y2="140.0" stroke="#e8743b" stroke-width="1.3" stroke-linecap="round" />
+<circle cx="330.0" cy="190.0" r="2.5" fill="#e8743b" stroke="none" stroke-width="1" />
+<text x="382.0" y="144.0" font-size="10.5" fill="#333" text-anchor="start" font-weight="400" >short end up</text>
+<line x1="350.0" y1="222.0" x2="378.0" y2="170.0" stroke="#e8743b" stroke-width="1.3" stroke-linecap="round" />
+<circle cx="350.0" cy="222.0" r="2.5" fill="#e8743b" stroke="none" stroke-width="1" />
+<text x="382.0" y="174.0" font-size="10.5" fill="#333" text-anchor="start" font-weight="400" >plastic spacer</text>
+<line x1="330.0" y1="242.0" x2="378.0" y2="200.0" stroke="#e8743b" stroke-width="1.3" stroke-linecap="round" />
+<circle cx="330.0" cy="242.0" r="2.5" fill="#e8743b" stroke="none" stroke-width="1" />
+<text x="382.0" y="204.0" font-size="10.5" fill="#333" text-anchor="start" font-weight="400" >long end down</text>
+<text x="30.0" y="64.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >Push the 7-pin strip into the breadboard,</text>
+<text x="30.0" y="80.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >long ends down. Lay the amp on top, chip up,</text>
+<text x="30.0" y="96.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >labels facing you. Solder the 7 short ends.</text>
+<text x="30.0" y="118.0" font-size="11.5" fill="#6b7280" text-anchor="start" font-weight="400" >Do one end pin first, check it sits flat,</text>
+<text x="30.0" y="134.0" font-size="11.5" fill="#6b7280" text-anchor="start" font-weight="400" >then the other end, then the rest.</text>
+<text x="198.0" y="322.0" font-size="11" fill="#6b7280" text-anchor="middle" font-weight="400" >About 1 second of heat, then feed solder in: 2–3 s per pin.</text>
+<rect x="490.0" y="10.0" width="460.0" height="330.0" rx="10" fill="#fffdf8" stroke="#ddd6c6" stroke-width="1.2" />
+<text x="504.0" y="34.0" font-size="14" fill="#222" text-anchor="start" font-weight="800" >2. Screw terminal: openings face out</text>
+<rect x="600.0" y="110.0" width="240.0" height="152.0" rx="8" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1.5" />
+<rect x="690.0" y="160.0" width="40.0" height="34.0" rx="3" fill="#1d1d1d" stroke="none" stroke-width="1" />
+<text x="710.0" y="214.0" font-size="9.5" fill="#e9dcf7" text-anchor="middle" font-weight="700" >MAX98357A</text>
+<circle cx="630.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="630.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="630.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >LRC</text>
+<circle cx="660.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="660.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="660.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >BCLK</text>
+<circle cx="690.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="690.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="690.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >DIN</text>
+<circle cx="720.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="720.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="720.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >GAIN</text>
+<circle cx="750.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="750.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="750.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >SD</text>
+<circle cx="780.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="780.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="780.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >GND</text>
+<circle cx="810.0" cy="244.0" r="6.5" fill="#e3c26a" stroke="#a8862e" stroke-width="1" />
+<circle cx="810.0" cy="244.0" r="2.4" fill="#3a2a10" stroke="none" stroke-width="1" />
+<text x="810.0" y="230.0" font-size="9" fill="#ffffff" text-anchor="middle" font-weight="700" >VIN</text>
+<text x="720.0" y="282.0" font-size="11" fill="#6b7280" text-anchor="middle" font-weight="400" >header pins solder here (step 1)</text>
+<defs><marker id="amp-ah" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#e8743b"/></marker></defs>
+<rect x="680.0" y="104.0" width="80.0" height="40.0" rx="4" fill="#2f7fd1" stroke="#1d5a99" stroke-width="1.5" />
+<circle cx="700.0" cy="124.0" r="11" fill="#d7dbe0" stroke="#8a9099" stroke-width="1.2" />
+<line x1="693.0" y1="124.0" x2="707.0" y2="124.0" stroke="#555" stroke-width="2.2" stroke-linecap="round" />
+<text x="700.0" y="162.0" font-size="16" fill="#ffffff" text-anchor="middle" font-weight="800" >+</text>
+<path d="M700,70 L700,98" stroke="#e8743b" stroke-width="2.5" marker-end="url(#amp-ah)"/>
+<circle cx="740.0" cy="124.0" r="11" fill="#d7dbe0" stroke="#8a9099" stroke-width="1.2" />
+<line x1="733.0" y1="124.0" x2="747.0" y2="124.0" stroke="#555" stroke-width="2.2" stroke-linecap="round" />
+<text x="740.0" y="162.0" font-size="16" fill="#ffffff" text-anchor="middle" font-weight="800" >−</text>
+<path d="M740,70 L740,98" stroke="#e8743b" stroke-width="2.5" marker-end="url(#amp-ah)"/>
+<text x="720.0" y="64.0" font-size="11" fill="#333" text-anchor="middle" font-weight="700" >speaker wires go in here, from outside the board</text>
+<text x="510.0" y="304.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >Sit the blue block on the chip side, openings facing away</text>
+<text x="510.0" y="319.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >from the board, screws on top. Flip the board and solder</text>
+<text x="510.0" y="334.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >its 2 pins underneath (a bit of tape holds it).</text>
+<rect x="10.0" y="352.0" width="460.0" height="278.0" rx="10" fill="#fffdf8" stroke="#ddd6c6" stroke-width="1.2" />
+<text x="24.0" y="376.0" font-size="14" fill="#222" text-anchor="start" font-weight="800" >3. What a good joint looks like</text>
+<rect x="36.0" y="470.0" width="68.0" height="9.0" rx="2" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1" />
+<rect x="68.0" y="448.0" width="4.0" height="22.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="63.0" y="468.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<path d="M62,469 Q68,461.0 68.4,453 L71.6,453 Q72,461.0 78,469 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<text x="70.0" y="500.0" font-size="11" fill="#2e9e44" text-anchor="middle" font-weight="700" >Good: shiny cone</text>
+<text x="70.0" y="516.0" font-size="16" fill="#2e9e44" text-anchor="middle" font-weight="800" >✓</text>
+<rect x="144.0" y="470.0" width="68.0" height="9.0" rx="2" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1" />
+<rect x="176.0" y="448.0" width="4.0" height="22.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="171.0" y="468.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="174.5" y="466.0" width="7.0" height="3.0" rx="1" fill="#b9bec6" stroke="none" stroke-width="1" />
+<text x="178.0" y="500.0" font-size="11" fill="#b03030" text-anchor="middle" font-weight="700" >Too little</text>
+<text x="178.0" y="516.0" font-size="16" fill="#b03030" text-anchor="middle" font-weight="800" >✗</text>
+<rect x="252.0" y="470.0" width="68.0" height="9.0" rx="2" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1" />
+<rect x="284.0" y="448.0" width="4.0" height="22.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="279.0" y="468.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<circle cx="286.0" cy="460.0" r="11" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8" />
+<text x="286.0" y="500.0" font-size="11" fill="#b03030" text-anchor="middle" font-weight="700" >Blob: too much</text>
+<text x="286.0" y="516.0" font-size="16" fill="#b03030" text-anchor="middle" font-weight="800" >✗</text>
+<rect x="360.0" y="470.0" width="90.0" height="9.0" rx="2" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1" />
+<rect x="380.0" y="448.0" width="4.0" height="22.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="375.0" y="468.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<rect x="414.0" y="448.0" width="4.0" height="22.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<rect x="409.0" y="468.0" width="14.0" height="2.5" rx="1" fill="#e3c26a" stroke="none" stroke-width="1" />
+<path d="M374,469 Q399,452 424,469 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<text x="405.0" y="500.0" font-size="11" fill="#b03030" text-anchor="middle" font-weight="700" >Bridge: two pins joined</text>
+<text x="405.0" y="516.0" font-size="16" fill="#b03030" text-anchor="middle" font-weight="800" >✗</text>
+<text x="30.0" y="395.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >Each joint should wrap the pin and cover its gold ring.</text>
+<text x="30.0" y="411.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >GAIN and SD sit close together: look between every pair.</text>
+<text x="30.0" y="560.0" font-size="11" fill="#6b7280" text-anchor="start" font-weight="400" >Fix a bridge by dragging the clean, tinned iron tip between</text>
+<text x="30.0" y="576.0" font-size="11" fill="#6b7280" text-anchor="start" font-weight="400" >the two pins, or with solder wick. Fix a thin joint by adding</text>
+<text x="30.0" y="592.0" font-size="11" fill="#6b7280" text-anchor="start" font-weight="400" >a little more solder.</text>
+<rect x="490.0" y="352.0" width="460.0" height="278.0" rx="10" fill="#fffdf8" stroke="#ddd6c6" stroke-width="1.2" />
+<text x="504.0" y="376.0" font-size="14" fill="#222" text-anchor="start" font-weight="800" >4. Speaker wires and what to leave alone</text>
+<rect x="560.0" y="470.0" width="150.0" height="10.0" rx="2" fill="#6a3fa0" stroke="#4b2a75" stroke-width="1" />
+<rect x="600.0" y="432.0" width="60.0" height="38.0" rx="3" fill="#2f7fd1" stroke="#1d5a99" stroke-width="1.2" />
+<circle cx="630.0" cy="440.0" r="6" fill="#d7dbe0" stroke="#8a9099" stroke-width="1" />
+<line x1="624.0" y1="440.0" x2="636.0" y2="440.0" stroke="#555" stroke-width="2" stroke-linecap="round" />
+<rect x="613.0" y="480.0" width="4.0" height="10.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<path d="M609,480 Q613,484.0 613.4,488 L616.6,488 Q617,484.0 621,480 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<rect x="643.0" y="480.0" width="4.0" height="10.0" rx="1" fill="#c9ccd1" stroke="none" stroke-width="1" />
+<path d="M639,480 Q643,484.0 643.4,488 L646.6,488 Q647,484.0 651,480 Z" fill="#b9bec6" stroke="#8e949c" stroke-width="0.8"/>
+<line x1="660.0" y1="456.0" x2="760.0" y2="456.0" stroke="#d32f2f" stroke-width="4" stroke-linecap="round" />
+<line x1="660.0" y1="456.0" x2="676.0" y2="456.0" stroke="#c9a227" stroke-width="4" stroke-linecap="round" />
+<text x="770.0" y="452.0" font-size="11" fill="#333" text-anchor="start" font-weight="400" >strip 5 mm, twist the</text>
+<text x="770.0" y="468.0" font-size="11" fill="#333" text-anchor="start" font-weight="400" >strands, push in, then</text>
+<text x="770.0" y="484.0" font-size="11" fill="#333" text-anchor="start" font-weight="400" >tighten the screw</text>
+<text x="560.0" y="508.0" font-size="10.5" fill="#6b7280" text-anchor="start" font-weight="400" >solder underneath</text>
+<circle cx="560.0" cy="410.0" r="0.1" fill="#000" stroke="none" stroke-width="1" />
+<text x="510.0" y="540.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >Speaker red (+) to the terminal marked +, black (−) to −.</text>
+<text x="510.0" y="556.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >Tug each wire gently: it should not pull out.</text>
+<text x="510.0" y="580.0" font-size="11.5" fill="#b03030" text-anchor="start" font-weight="700" >Leave GAIN and SD unconnected: the amp then runs</text>
+<text x="510.0" y="596.0" font-size="11.5" fill="#b03030" text-anchor="start" font-weight="700" >at 9 dB gain and stays switched on.</text>
+<text x="510.0" y="616.0" font-size="11" fill="#6b7280" text-anchor="start" font-weight="400" >Iron about 330 °C (leaded) or 360 °C (lead-free).</text>
+</svg>
+  <ol class="todo"><li><b>Header first.</b> Push the 7-pin strip into any free spot on the breadboard, long ends down. Lay the amplifier on the short ends, chip side up, and solder all 7. Start with one end pin, check the board sits flat, then the other end, then the rest.</li><li><b>Then the screw terminal.</b> Lift the board off the breadboard. Sit the blue block on the chip side at the other edge, wire openings facing outward. Turn the board over and solder its two pins from underneath.</li><li><b>Check every joint</b> with a bright light: shiny cones, and no solder joining two neighbouring pins (look hardest between GAIN and SD).</li><li>Wire it up as below. Leave <b>GAIN</b> and <b>SD</b> unconnected.</li></ol>
   <h3>Place the parts</h3><ol class="place"><li><b>100 µF capacitor</b>: the <b>long leg (+)</b> in the bottom + rail at row 19, the leg by the <b>stripe (−)</b> in the bottom − rail at row 20. This one does have a right way round.</li></ol>
   <h3>Connect</h3><ul class="wires"><li data-w="amp-1"><label><input type="checkbox" data-k="amp-1"><span class="badge" style="border-color:#8e44ad">1</span><span class="sw" style="background:#8e44ad"></span><span class="wt"><b>Purple wire</b> (female–female):<br>ESP32 pin 15 <span class="arr">→</span> amp BCLK</span></label></li><li data-w="amp-2"><label><input type="checkbox" data-k="amp-2"><span class="badge" style="border-color:#14a3b8">2</span><span class="sw" style="background:#14a3b8"></span><span class="wt"><b>Cyan wire</b> (female–female):<br>ESP32 pin 16 <span class="arr">→</span> amp LRC</span></label></li><li data-w="amp-3"><label><input type="checkbox" data-k="amp-3"><span class="badge" style="border-color:#9aa0a6">3</span><span class="sw" style="background:#9aa0a6"></span><span class="wt"><b>White wire</b> (female–female):<br>ESP32 pin 17 <span class="arr">→</span> amp DIN</span></label></li><li data-w="amp-4"><label><input type="checkbox" data-k="amp-4"><span class="badge" style="border-color:#d32f2f">4</span><span class="sw" style="background:#d32f2f"></span><span class="wt"><b>Red wire</b> (female–male):<br>amp VIN <span class="arr">→</span> bottom + rail (5 V)</span></label></li><li data-w="amp-5"><label><input type="checkbox" data-k="amp-5"><span class="badge" style="border-color:#222222">5</span><span class="sw" style="background:#222222"></span><span class="wt"><b>Black wire</b> (female–male):<br>amp GND <span class="arr">→</span> bottom − rail</span></label></li></ul>
   <div class="test"><b>✅ Test it:</b> Screw the speaker leads into the amp's + and − terminals. Under <b>Sounds</b>, press <b>Play</b> on beep.wav: four beeps. Then give an alarm a radio or podcast URL and press <b>Preview stream</b>.</div>
@@ -31931,6 +32451,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   
   
   <h3>Place the parts</h3><ol class="place"><li><b>330 Ω resistor</b> (bands orange-orange-brown, or orange-orange-black-black): legs in <b>h21</b> and <b>h25</b>. Either way round.</li><li><b>1000 µF capacitor</b>: the <b>long leg (+)</b> in the bottom + rail at row 23, the leg by the <b>stripe (−)</b> in the bottom − rail at row 24. This one does have a right way round.</li></ol>
@@ -32804,6 +33325,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </g>
 </svg></div>
   <p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>
+  
   
   
   <h3>Place the parts</h3><ol class="place"><li><b>4.7 Ω 2 W resistor</b> (the big one; bands yellow-violet-gold, or yellow-violet-black-silver): legs in <b>d26</b> and <b>d30</b>. Either way round.</li></ol>
