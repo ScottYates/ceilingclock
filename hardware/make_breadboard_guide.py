@@ -397,7 +397,7 @@ def build_steps():
 
     step(id='amp', title='Amplifier and speaker', time='10 min', mods=['amp'],
          need=['MAX98357A amplifier with its 7-pin header and blue screw terminal (in its bag)', '40 mm speaker', '100 µF capacitor', 'Soldering iron and solder'],
-         intro='Plays the alarm sounds. The amplifier comes with its pins loose, so solder those first (below). The capacitor steadies its supply; the long leg is +, and the stripe marks −.',
+         intro='Plays the alarm sounds. The amplifier comes with its pins loose: if you haven\'t soldered them yet, open <b>Solder the amplifier first</b> below. The capacitor steadies its supply; the long leg is +, and the stripe marks −.',
          figure='amp',
          todo=['<b>Header first.</b> Push the 7-pin strip into any free spot on the breadboard, long ends down. Lay the amplifier on the short ends, chip side up, and solder all 7. Start with one end pin, check the board sits flat, then the other end, then the rest.',
                '<b>Then the screw terminal.</b> Lift the board off the breadboard. Sit the blue block on the chip side at the other edge, wire openings facing outward. Turn the board over and solder its two pins from underneath.',
@@ -889,8 +889,8 @@ def sections():
   <div class="pic">{draw_step(S, i)}</div>
   {'<p class="mut" style="margin:4px 0 10px">New wires are bright and numbered; earlier ones are faded. Hover a wire in the list to find it in the picture.</p>' if st['wires'] else ''}
   {f'<h3>The two parts</h3>{svg_ldr_parts()}' if st.get('figure') == 'ldr' else ''}
-  {f'<h3>Solder the amplifier first</h3>{svg_amp_solder()}' if st.get('figure') == 'amp' else ''}
-  {f'<ol class="todo">{todo}</ol>' if todo else ''}
+  {f'<details class="solder"><summary>Solder the amplifier first: header pins and screw terminal (tap to show)</summary>{svg_amp_solder()}<ol class="todo">{todo}</ol></details>' if st.get('figure') == 'amp' else ''}
+  {f'<ol class="todo">{todo}</ol>' if todo and st.get('figure') != 'amp' else ''}
   {f'<h3>Place the parts</h3><ol class="place">' + ''.join(f'<li>{t}</li>' for t in st['place']) + '</ol>' if st.get('place') else ''}
   {f'<h3>Connect</h3><ul class="wires">{"".join(wl)}</ul>' if wl else ''}
   <div class="test"><b>✅ Test it:</b> {st['test']}</div>
@@ -935,6 +935,7 @@ def page():
 .todo li{{margin:4px 0}}.place li{{margin:6px 0}}
 .test{{background:#eaf7ec;border:1px solid #bfe5c6;border-radius:10px;padding:10px 12px;margin:10px 0}}
 .warn{{background:#fff3e0;border:1px solid #ffd59a;border-radius:10px;padding:10px 12px;margin:10px 0}}
+.solder{{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:10px 0;background:#fffdf8}}.solder summary{{font-weight:700;cursor:pointer}}.solder[open] summary{{margin-bottom:8px}}
 .dbg ol{{margin:8px 0;padding-left:22px}}.dbg li{{margin:6px 0}}
 details{{margin:6px 0 8px}}summary{{cursor:pointer;font-weight:700;color:#b5541f}}dl{{margin:8px 0}}dt{{font-weight:700;margin-top:6px}}dd{{margin:2px 0 0 0;color:#444}}
 .wire{{cursor:pointer}}.bbsvg .wire.hl path:last-of-type{{stroke-width:6}}
