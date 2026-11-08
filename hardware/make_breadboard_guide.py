@@ -77,7 +77,13 @@ def RAILY(k):
 def rx(r): return bx() + (r - 1) * pp()
 def board(b=None): return LY()['boards'][b or ('L' if LAY == 'plug' else '')]
 def hole(r, c, b=None): return (rx(r), board(b)['cols'][c])
-def rail(k, r): return (rx(r), RAILY(k))
+# Power rails on real breadboards have holes in groups of five with a one-hole gap: rows 3-7, 9-13, 15-19, ...
+# (no hole at rows 1, 2, 8, 14, 20, ...). A rail connection asked for in a gap moves to the next hole.
+def rail_ok(r): return 3 <= r <= 61 and (r - 3) % 6 != 5
+def rrow(r):
+    r = max(3, min(61, r))
+    return r if rail_ok(r) else r + 1
+def rail(k, r): return (rx(rrow(r)), RAILY(k))
 def epin(name, which=None):
     """Where the pin itself is drawn."""
     hdr, i = esp_pin(name, which)
@@ -221,12 +227,12 @@ def place_lines(parts):
             c = MIRROR['c']
             out.append(f'<b>Light sensor</b> (the round disc with a squiggly line on it): legs in <b>{c}{p[1]}</b> and <b>{c}{p[2]}</b>{where(p[3])}. Either way round.')
         elif p[0] == 'res_rail':
-            out.append(f'<b>{p[3]} resistor</b> ({BANDS.get(p[3], "")}): one leg in <b>{MIRROR["a"]}{p[1]}</b>, the same row as the sensor\'s second leg; the other leg in the <b>{RAILNAME[p[2]]}</b> (the row by the blue line), about row {p[1] + 1}{where(p[4])}. Either way round.')
+            out.append(f'<b>{p[3]} resistor</b> ({BANDS.get(p[3], "")}): one leg in <b>{MIRROR["a"]}{p[1]}</b>, the same row as the sensor\'s second leg; the other leg in the <b>{RAILNAME[p[2]]}</b> (the row by the blue line), at row {rrow(p[1] + 1)}{where(p[4])}. Either way round.')
         elif p[0] == 'res':
             c = MIRROR[p[3]]
             out.append(f'<b>{p[4]} resistor</b> ({BANDS.get(p[4], "")}): legs in <b>{c}{p[1]}</b> and <b>{c}{p[2]}</b>{where(p[5])}. Either way round.')
         elif p[0] == 'cap':
-            out.append(f'<b>{p[2]} capacitor</b>: the <b>long leg (+)</b> in the bottom + rail at row {p[1]}, the leg by the <b>stripe (−)</b> in the bottom − rail at row {p[1] + 1}. This one does have a right way round.')
+            out.append(f'<b>{p[2]} capacitor</b>: the <b>long leg (+)</b> in the bottom + rail at row {rrow(p[1])}, the leg by the <b>stripe (−)</b> in the bottom − rail at row {rrow(p[1] + 1)}. This one does have a right way round.')
     return out
 
 def build_steps():
@@ -289,7 +295,7 @@ def build_steps():
              need=['Breadboard'],
              intro='The two rails along the top of the breadboard become 3.3 V (from the ESP32) and ground. Every small module will plug into them. A wire over the right-hand end joins the top ground rail to the bottom one.',
              wires=[W_('3v3', esp('3V3', note=' (the first pin, by the antenna)'), rl('t+', 1)),
-                    W_('gnd', esp('G', 'J1', ' (last pin on the same side, by the USB ports)'), rl('t-', 26)),
+                    W_('gnd', esp('G', 'J1', ' (last pin on the same side, by the USB ports)'), rl('t-', 25)),
                     W_('gnd', E((rx(30), RAILY('t-')), (1, -0.3), 'top − rail, right end', 'male'),
                               E((rx(30), RAILY('b-')), (1, 0.3), 'bottom − rail, right end', 'male'))],
              test='Nothing to see yet. If you have a multimeter, the top + and − rails should read about 3.3 V with the USB cable plugged in. Before you measure, check the meter\'s red lead is in the socket marked <b>V</b>, not <b>A</b> or <b>mA</b>, and the dial is on DC volts: on amps the meter shorts the supply and the ESP32 restarts.',
@@ -380,7 +386,7 @@ def build_steps():
                    'Its two data pins are on the ESP32\'s top edge (pins 1 and 2), so these two wires start on the upper board.'),
          wires=[W_('blue', esp(str(G('PIN_SDA')), 'J3', X(' (far side)', '')), md('ds3231', 'SDA (D)', 'module SDA (marked D on mini boards)')),
                 W_('yellow', esp(str(G('PIN_SCL')), 'J3', X(' (far side)', '')), md('ds3231', 'SCL (C)', 'module SCL (marked C)')),
-                W_('3v3', md('ds3231', 'VCC (+)', 'module VCC (+)'), rl('t+', 2)),
+                W_('3v3', md('ds3231', 'VCC (+)', 'module VCC (+)'), rl('t+', 5)),
                 W_('gnd', md('ds3231', 'GND (−)', 'module GND (−)'), rl('t-', 3))],
          test='The page shows <b>RTC backup ok</b>. Turn your router\'s Wi-Fi off and press RST on the ESP32: the time is still right.',
          fix=[('Still says "no RTC"', 'SDA and SCL swapped, or VCC on 5 V instead of 3.3 V.'),
@@ -389,8 +395,8 @@ def build_steps():
     step(id='supply', title='5 V supply', time='10 min', mods=['usbc'], parts=[],
          need=['USB-C breakout + 5 V 3 A adapter', '2 wires soldered to VBUS and GND (or header pins)'],
          intro='From here on, parts need more current than the ESP32 can give. The 5 V supply feeds the <b>bottom</b> rails only. The ESP32 stays on your computer\'s USB, and the grounds are already joined.',
-         wires=[W_('5v', md('usbc', 'VBUS', 'breakout VBUS', None), rl('b+', 1), 'soldered lead'),
-                W_('gnd', md('usbc', 'GND', 'breakout GND', None), rl('b-', 2), 'soldered lead')],
+         wires=[W_('5v', md('usbc', 'VBUS', 'breakout VBUS', None), rl('b+', 3), 'soldered lead'),
+                W_('gnd', md('usbc', 'GND', 'breakout GND', None), rl('b-', 4), 'soldered lead')],
          test='Plug the adapter in. Everything carries on as before. With a multimeter, the bottom rails read about 5 V.',
          fix=[('Reads 0 V', 'Some breakouts only switch on with a USB-C to USB-C charger and 5.1 kΩ CC resistors (yours has them). Try another cable.')],
          warn='Never connect this 5 V to the ESP32\'s <b>5V</b> pin while the computer is plugged in: two supplies would fight through the board. In the finished clock the computer stays unplugged.')
@@ -471,14 +477,16 @@ def draw_board(s):
         s.rect(BX0 - 22, B['y0'], (ROWS - 1) * P + 44, B['y1'] - B['y0'], '#f3f1ea', '#cfcabc', 10, 1.2)
         if B['dead']:
             for y in B['dead']:
-                for r in range(1, ROWS + 1): s.rect(rx(r) - hs / 2, y - hs / 2, hs, hs, '#cfcabc', rx=0.8)
+                for r in range(1, ROWS + 1):
+                    if rail_ok(r): s.rect(rx(r) - hs / 2, y - hs / 2, hs, hs, '#cfcabc', rx=0.8)
         for key, y in B['rails'].items():
             col = '#d33a2c' if key.endswith('+') else '#2b5fd9'
             ly = y - 7 if key.endswith('+') else y + 7
             if key == 't+': ly = y - 7
             s.line(BX0 - 10, ly, rx(ROWS) + 10, ly, col, 1)
             s.text(BX0 - 18, y + 3.5, '+' if key.endswith('+') else '−', 11, col, 'end', 700)
-            for r in range(1, ROWS + 1): s.rect(rx(r) - hs / 2, y - hs / 2, hs, hs, '#8a8577', rx=0.8)
+            for r in range(1, ROWS + 1):
+                if rail_ok(r): s.rect(rx(r) - hs / 2, y - hs / 2, hs, hs, '#8a8577', rx=0.8)
         if 't+' in B['rails']: s.text(rx(ROWS) + 14, B['rails']['t+'] + 4, '3.3 V', 10, '#d33a2c', 'start', 700)
         if 'b+' in B['rails']: s.text(rx(ROWS) + 14, B['rails']['b+'] + 4, '5 V', 10, '#d33a2c', 'start', 700)
         for c, y in B['cols'].items():
@@ -637,14 +645,16 @@ def svg_basics():
     s.rect(x0 + 5 * p - 6, cols['a'] - 6, 12, cols['e'] - cols['a'] + 12, '#c9f0cf', rx=6)
     s.rect(x0 + 5 * p - 6, cols['f'] - 6, 12, cols['j'] - cols['f'] + 12, '#cfe0ff', rx=6)
     for y in list(ys.values()) + list(cols.values()):
-        for r in range(n): s.rect(x0 + r * p - 2.3, y - 2.3, 4.6, 4.6, '#8a8577', rx=1)
+        for r in range(n):
+            if y in ys.values() and r % 6 == 5: continue      # rails: groups of five with a gap
+            s.rect(x0 + r * p - 2.3, y - 2.3, 4.6, 4.6, '#8a8577', rx=1)
     for c, y in cols.items(): s.text(x0 - 10, y + 3.5, MIRROR[c], 9.5, '#8a8577', 'end')
     s.text(x0 - 10, ys['t+'] + 4, '+', 11, '#d33a2c', 'end', 700); s.text(x0 - 10, ys['t-'] + 4, '−', 11, '#2b5fd9', 'end', 700)
     tx = x0 + n * p + 22
     def note(y, head, body, col):
         s.text(tx, y, head, 12.5, col, 'start', 700)
         for i, ln in enumerate(body): s.text(tx, y + 17 + i * 15, ln, 11.5, '#333')
-    note(52, 'Rails (red and blue lines)', ['Each line of holes along the edge is one long', 'connection. Use them for + power and − ground.'], '#c0392b')
+    note(52, 'Rails (red and blue lines)', ['Each line of holes along the edge is one long', 'connection. Use them for + power and − ground.', 'Holes come in fives with a gap: any hole will do.'], '#c0392b')
     note(112, 'Columns of five', ['Holes f–j in one column are joined, so', 'anything in the same five is connected.'], '#2e8b3d')
     note(172, 'The gap in the middle', ['Splits each column: f–j and a–e are separate.', 'Push buttons sit across it.'], '#555')
     note(232, 'a–e: another group of five', ['Joined to each other, not to f–j.'], '#2b5fd9')
