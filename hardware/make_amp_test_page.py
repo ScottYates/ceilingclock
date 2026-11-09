@@ -157,7 +157,7 @@ def fig_pieces():
     callout(s, 456, y + 70, 490, y + 66, ['ground clip', 'always on GND'])
     # meter leads
     y2 = 300
-    for i, (col, plug, lab) in enumerate(((RED, 'for volts (V/Ω)', 'red lead'), ('#222', 'COM', 'black lead'))):
+    for i, (col, plug, lab) in enumerate(((RED, 'VΩ', 'red lead'), ('#222', 'COM', 'black lead'))):
         yy = y2 + i * 46
         s.rect(30, yy - 7, 30, 14, col, rx=3); s.line(60, yy, 230, yy, col, 4)
         s.rect(230, yy - 7, 80, 14, col, rx=6); s.line(310, yy, 336, yy, '#9aa0a6', 3)
@@ -231,6 +231,68 @@ def fig_output():
     s.text(510, 342, 'either screw shorts that output and can damage the amp.', 11.5, '#333')
     return s.done()
 
+
+def fig_scope_panel():
+    """The FNIRSI 2C53T's front, drawn from a photo: buttons, the four banana sockets, and the three BNCs on top."""
+    s = Svg(960, 660)
+    s.text(20, 30, 'Your 2C53T: where each lead goes and which buttons you use', 16, '#222', 'start', 800)
+    X0, Y0, BW, BH = 330, 150, 300, 480
+    # three BNC sockets on the top edge
+    for i, x in enumerate((X0 + 70, X0 + 150, X0 + 230)):
+        s.rect(x - 16, Y0 - 34, 32, 36, '#b9bec6', '#7d838c', 4, 1.2)
+        s.rect(x - 10, Y0 - 46, 20, 14, '#d9dde2', '#7d838c', 3, 1)
+        s.circle(x, Y0 - 39, 3, '#555')
+    s.rect(X0, Y0, BW, BH, '#1c1f24', '#3a9ad9', 28, 4)
+    s.rect(X0 + 22, Y0 + 20, BW - 44, 170, '#2a2e33', '#111', 6, 1.5)
+    s.text(X0 + BW - 30, Y0 + 40, '2C53T', 12, '#e6e6e6', 'end', 800)
+    def btn(x, y, w, label, hi=None, col='#2b2f35', tc='#f2f2f2', fs=10.5):
+        s.rect(x, y, w, 26, col, ORANGE if hi else '#444', 7, 3 if hi else 1)
+        s.text(x + w / 2, y + 17, label, fs, tc, 'middle', 800)
+    row = Y0 + 206
+    for i, lab in enumerate(('MOVE', 'SELECT', 'TRIGGER', 'PRM')):
+        btn(X0 + 18 + i * 68, row, 58, lab, fs=9.5)
+    btn(X0 + 18, row + 40, 54, 'CH1')
+    btn(X0 + BW - 72, row + 40, 54, 'CH2')
+    btn(X0 + 18, row + 80, 54, 'AUTO', hi=True)
+    btn(X0 + BW - 72, row + 80, 54, 'SAVE')
+    s.circle(X0 + 45, row + 133, 14, '#2b2f35', '#e0573a', 2); s.text(X0 + 45, row + 138, '⏻', 13, '#e0573a', 'middle')
+    s.rect(X0 + BW - 74, row + 120, 58, 26, '#2b2f35', ORANGE, 13, 3); s.text(X0 + BW - 45, row + 137, 'MENU', 10.5, '#f0a35a', 'middle', 800)
+    # navigation pad
+    cx, cy = X0 + BW / 2, row + 93
+    s.rect(cx - 52, cy - 52, 104, 104, '#22262b', '#3a9ad9', 18, 3)
+    s.rect(cx - 16, cy - 13, 32, 26, '#3a9ad9', rx=6); s.text(cx, cy + 5, '▶', 12, '#fff', 'middle')
+    for dx, dy, ch in ((0, -36, '▲'), (0, 40, '▼'), (-36, 4, '◀'), (36, 4, '▶')):
+        s.text(cx + dx, cy + dy, ch, 13, '#eee', 'middle')
+    # banana sockets along the bottom
+    jy = Y0 + BH - 52
+    jacks = [('10A', X0 + 48), ('mA', X0 + 116), ('COM', X0 + 184), ('VΩ', X0 + 252)]
+    pos = {}
+    for lab, x in jacks:
+        ring = '#3a9ad9' if lab != 'COM' else '#555'
+        s.circle(x, jy, 20, '#111', '#333', 2); s.circle(x, jy, 11, ring); s.circle(x, jy, 5, '#000')
+        s.text(x, jy + 38, lab, 13, '#eee', 'middle', 800)
+        pos[lab] = (x, jy)
+    s.add(f'<line x1="{X0 + 30}" y1="{jy + 46}" x2="{X0 + 140}" y2="{jy + 46}" stroke="{RED}" stroke-width="3"/>')
+    # leads
+    for lab, col, txt, ex in (('VΩ', RED, 'red lead → VΩ', 790), ('COM', '#111', 'black lead → COM', 760)):
+        x, y = pos[lab]
+        s.circle(x, y, 7, col)
+        s.path(f'M{x},{y} C{x + 40},{y + 70} {ex - 80},{y + 60} {ex},{y - 10}', col, 5)
+        s.text(ex + 8, y - 6 if lab == 'VΩ' else y + 14, txt, 13, col, 'start', 800)
+    s.text(X0 + 84, jy + 64, 'never 10A or mA here', 11.5, RED, 'middle', 800)
+    # probe into a top BNC
+    bx = X0 + 70
+    s.path(f'M{bx},{Y0 - 46} C{bx - 20},{Y0 - 80} {bx - 120},{Y0 - 60} {bx - 190},{Y0 - 40}', '#444', 4)
+    s.rect(bx - 8, Y0 - 60, 16, 16, '#c9ccd1', '#8a9099', 3, 1)
+    s.text(bx - 196, Y0 - 50, 'scope probe → the top socket', 13, '#222', 'end', 800)
+    s.text(bx - 196, Y0 - 34, 'labelled CH1 (push, twist to lock)', 12, '#555', 'end')
+    s.text(X0 + 260, Y0 - 100, 'three BNC sockets on top: CH1, CH2 and the generator output', 11.5, '#555', 'middle')
+    # callouts for the buttons
+    callout(s, X0 + 18, row + 93, 40, 400, ['AUTO', 'press once to find', 'and show the signal'], 'start')
+    callout(s, X0 + BW - 16, row + 133, 700, 380, ['MENU', 'switch between oscilloscope', 'and multimeter'], 'start')
+    callout(s, X0 + 45, row + 40 + 13, 40, 300, ['CH1', 'channel 1 settings, including', 'the probe ×1/×10 setting'], 'start')
+    return s.done()
+
 def page():
     style = open(os.path.join(HERE, '..', 'docs', 'breadboard.html')).read()
     ver = style[style.index('style.css?v='):].split('"')[0]
@@ -264,7 +326,8 @@ ol li{{margin:5px 0}}
 <li><b>Multimeter test leads</b>, red and black. You need both.</li>
 <li><b>BNC-to-crocodile-clip cable</b>: that one is for the signal generator output. Leave it in the case.</li>
 </ul>
-<p>The scope inputs are marked <b>CH1</b> and <b>CH2</b>, and the signal generator output sits beside them; use CH1. The multimeter has its own banana sockets: <b>COM</b>, <b>10A</b>, <b>mA</b> and the volts/ohms socket. To change mode, <b>hold the home key</b> to get the function selection page, then pick Oscilloscope or Multimeter.</p>
+<p>The three BNC sockets on top are the scope's <b>CH1</b> and <b>CH2</b> and the signal generator output; the probe goes in the one labelled <b>CH1</b>. The four banana sockets along the bottom are for the multimeter: <b>10A</b>, <b>mA</b>, <b>COM</b> and <b>VΩ</b>. Use <b>MENU</b> to switch between the oscilloscope and the multimeter.</p>
+{fig_scope_panel()}
 </div>
 
 <div class="card">
@@ -280,7 +343,7 @@ ol li{{margin:5px 0}}
 <div class="card">
 <h2>Check 1: power</h2>
 <ol>
-<li>Plug the <b>black</b> lead into <b>COM</b> and the <b>red</b> lead into the <b>volts/ohms</b> socket (not 10A or mA). Switch the 2C53T to its multimeter.</li>
+<li>Plug the <b>black</b> lead into <b>COM</b> and the <b>red</b> lead into <b>VΩ</b>, the right-hand socket (not 10A or mA). Switch the 2C53T to its multimeter.</li>
 <li>The meter picks AC or DC volts by itself, but its automatic mode doesn't work below about 0.7 V, and SD sits right around there. If SD reads blank or 0, step the meter to <b>DC volts</b> by hand: short presses of the function key cycle through AC/DC, diode/continuity and so on.</li>
 <li>Black tip on the <b>GND</b> joint. Red tip on <b>VIN</b>, then on <b>SD</b>.</li>
 </ol>
