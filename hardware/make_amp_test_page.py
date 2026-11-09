@@ -70,7 +70,7 @@ def meter_probe(s, tip, colour, label, ang=-60, length=150):
     s.line(x2, y2, x3, y3, colour, 4)
     s.text(x3 + 6 * (1 if dx >= 0 else -1), y3 + 4, label, 12, colour, 'start' if dx >= 0 else 'end', 800)
 
-def scope_probe(s, tip, ang=-55, length=170, label='scope probe (CH1)'):
+def scope_probe(s, tip, ang=-55, length=170, label='scope probe (CH1)', anchor='start'):
     a = math.radians(ang)
     dx, dy = math.cos(a), math.sin(a)
     p = lambda d: (tip[0] + d * dx, tip[1] + d * dy)
@@ -79,15 +79,16 @@ def scope_probe(s, tip, ang=-55, length=170, label='scope probe (CH1)'):
     s.line(*p(30), *p(105), '#2d2f33', 13)                # body
     s.line(*p(105), *p(length), '#444', 4)                # cable
     x, y = p(length)
-    s.text(x + 6, y + 4, label, 12, '#2d2f33', 'start', 800)
+    s.text(x + (6 if anchor == 'start' else -6), y + 4, label, 12, '#2d2f33', anchor, 800)
     return p(70)                                          # where the ground lead leaves the body
 
-def ground_clip(s, frm, to, label='ground clip'):
-    mx, my = (frm[0] + to[0]) / 2, max(frm[1], to[1]) + 50
-    s.path(f'M{frm[0]:.1f},{frm[1]:.1f} Q{mx:.1f},{my:.1f} {to[0]:.1f},{to[1] - 14:.1f}', '#111', 2.5)
+def ground_clip(s, frm, to, c1, c2, label='ground clip'):
+    """Ground lead from the probe body to a crocodile clip at `to`, routed through control points c1, c2
+    (chosen per figure so the lead never crosses any text)."""
+    s.path(f'M{frm[0]:.1f},{frm[1]:.1f} C{c1[0]:.1f},{c1[1]:.1f} {c2[0]:.1f},{c2[1]:.1f} {to[0]:.1f},{to[1] - 22:.1f}', '#111', 2.5)
     s.rect(to[0] - 6, to[1] - 22, 12, 18, '#111', rx=3)                       # crocodile clip
     s.path(f'M{to[0] - 6},{to[1] - 4} l3,6 l3,-6 l3,6 l3,-6', '#9aa0a6', 1.5)
-    s.text(to[0] + 12, to[1] - 10, label, 11.5, '#111', 'start', 800)
+    s.text(to[0] + 14, to[1] - 8, label, 11.5, '#111', 'start', 800)
 
 def callout(s, x, y, tx, ty, lines, anchor='start', colour='#333'):
     s.line(x, y, tx, ty, ORANGE, 1.4)
@@ -191,14 +192,14 @@ def fig_scope():
     s.text(20, 52, 'Ground clip on a GND point and left there. Touch the sharp probe tip to one joint at a time, then press Auto.', 12, '#555')
     pts = amp_board(s, 110, 120, 1.0, hilite=('LRC', 'BCLK', 'DIN'))
     # ground point: a spare jumper pushed into the bottom − rail
-    s.rect(40, 360, 330, 40, '#f3f1ea', '#cfcabc', 4, 1)
-    s.line(48, 380, 362, 380, BLUE, 1)
-    for i in range(18): s.rect(52 + i * 17, 376, 5, 5, '#8a8577', rx=1)
-    s.text(48, 414, 'bottom − rail (GND)', 11, BLUE, 'start', 700)
-    s.rect(78, 344, 7, 30, '#222', rx=1.5); s.line(81, 344, 81, 334, '#9aa0a6', 2)   # spare jumper standing up
-    s.text(48, 432, 'the clip grips a spare jumper pushed into the − rail', 11, '#333')
-    body = scope_probe(s, pts['DIN'], ang=-58, length=165)
-    ground_clip(s, body, (81, 334))
+    s.rect(20, 430, 190, 34, '#f3f1ea', '#cfcabc', 4, 1)
+    s.line(28, 447, 202, 447, BLUE, 1)
+    for i in range(10): s.rect(32 + i * 17, 444, 5, 5, '#8a8577', rx=1)
+    s.rect(57, 414, 7, 30, '#222', rx=1.5); s.line(60, 414, 60, 404, '#9aa0a6', 2)   # spare jumper standing up
+    s.text(20, 480, 'bottom − rail (GND): the clip grips a', 11, BLUE, 'start', 700)
+    s.text(20, 495, 'spare jumper pushed into the − rail', 11, BLUE, 'start', 700)
+    body = scope_probe(s, pts['DIN'], ang=55, length=160)
+    ground_clip(s, body, (60, 404), (180, 390), (62, 330))
     # what to expect
     sx = 430
     screen(s, sx, 90, 150, 90, 'LRC', 'square', note='0–3.3 V square, ≈44 kHz')
@@ -215,12 +216,13 @@ def fig_output():
     s.text(20, 30, "Check 3: the amp's output (sound playing)", 16, '#222', 'start', 800)
     s.text(20, 52, 'Ground clip stays on GND. Touch only the probe tip to the + speaker screw.', 12, '#555')
     pts = amp_board(s, 190, 150, 1.0, hilite=('+',))
-    body = scope_probe(s, pts['+'], ang=-40, length=160)
-    s.rect(40, 330, 330, 40, '#f3f1ea', '#cfcabc', 4, 1)
-    s.line(48, 350, 362, 350, BLUE, 1)
-    for i in range(18): s.rect(52 + i * 17, 346, 5, 5, '#8a8577', rx=1)
-    s.rect(60, 314, 7, 30, '#222', rx=1.5); s.line(63, 314, 63, 304, '#9aa0a6', 2)
-    ground_clip(s, body, (63, 304))
+    body = scope_probe(s, pts['+'], ang=-128, length=120, anchor='end')
+    s.rect(20, 330, 150, 34, '#f3f1ea', '#cfcabc', 4, 1)
+    s.line(28, 347, 162, 347, BLUE, 1)
+    for i in range(8): s.rect(32 + i * 17, 344, 5, 5, '#8a8577', rx=1)
+    s.rect(57, 314, 7, 30, '#222', rx=1.5); s.line(60, 314, 60, 304, '#9aa0a6', 2)
+    s.text(20, 380, 'bottom − rail (GND)', 11, BLUE, 'start', 700)
+    ground_clip(s, body, (60, 304), (150, 118), (58, 150))
     screen(s, 490, 100, 180, 100, 'Working: fast 5 V pulses', 'pwm', note='their width follows the sound')
     screen(s, 720, 100, 180, 100, 'Flat line', 'flat', colour=RED, note='the amp is not running')
     # do-not panel
