@@ -157,12 +157,12 @@ def fig_pieces():
     callout(s, 456, y + 70, 490, y + 66, ['ground clip', 'always on GND'])
     # meter leads
     y2 = 300
-    for i, (col, plug, lab) in enumerate(((RED, 'V', 'red lead'), ('#222', 'COM', 'black lead'))):
+    for i, (col, plug, lab) in enumerate(((RED, 'for volts (V/Ω)', 'red lead'), ('#222', 'COM', 'black lead'))):
         yy = y2 + i * 46
         s.rect(30, yy - 7, 30, 14, col, rx=3); s.line(60, yy, 230, yy, col, 4)
         s.rect(230, yy - 7, 80, 14, col, rx=6); s.line(310, yy, 336, yy, '#9aa0a6', 3)
-        s.text(30, yy - 13, f'{lab}: banana plug into the socket marked {plug}', 11.5, col, 'start', 800)
-    s.text(30, y2 + 82, 'Never the A or mA socket for any of these checks.', 11.5, RED, 'start', 800)
+        s.text(30, yy - 13, f'{lab}: banana plug into the multimeter socket {plug}', 11.5, col, 'start', 800)
+    s.text(30, y2 + 82, 'Never the 10A or mA socket for any of these checks.', 11.5, RED, 'start', 800)
     # amp board
     pts = amp_board(s, 640, 150, 1.0)
     s.text(765, 120, 'speaker terminal', 11.5, '#333', 'middle', 700)
@@ -258,6 +258,16 @@ ol li{{margin:5px 0}}
 <p class="lead">No sound from the speaker? Three checks, in order, find where it stops: power to the amp, the three signals from the ESP32, and the amp's output. Written for the FNIRSI 2C53T, which is a multimeter and an oscilloscope in one, but any meter and scope work the same way.</p>
 
 <div class="card">
+<h2>What's in the 2C53T box, and what you need here</h2>
+<ul>
+<li><b>Oscilloscope probes</b> (P6100, ×1/×10): one or two, depending on the bundle. Each has a BNC plug, a ×1/×10 switch on the handle, a hook tip and a ground clip. You need one.</li>
+<li><b>Multimeter test leads</b>, red and black. You need both.</li>
+<li><b>BNC-to-crocodile-clip cable</b>: that one is for the signal generator output. Leave it in the case.</li>
+</ul>
+<p>The scope inputs are marked <b>CH1</b> and <b>CH2</b>, and the signal generator output sits beside them; use CH1. The multimeter has its own banana sockets: <b>COM</b>, <b>10A</b>, <b>mA</b> and the volts/ohms socket. To change mode, <b>hold the home key</b> to get the function selection page, then pick Oscilloscope or Multimeter.</p>
+</div>
+
+<div class="card">
 <h2>Before you start</h2>
 <ol>
 <li>Wire the amp as in the <a href="breadboard.html#o-amp">amplifier step</a>, speaker connected, 5 V adapter and USB plugged in.</li>
@@ -270,7 +280,8 @@ ol li{{margin:5px 0}}
 <div class="card">
 <h2>Check 1: power</h2>
 <ol>
-<li>Plug the <b>black</b> lead into <b>COM</b> and the <b>red</b> lead into <b>V</b>. Switch the 2C53T to its multimeter and choose <b>DC volts</b>.</li>
+<li>Plug the <b>black</b> lead into <b>COM</b> and the <b>red</b> lead into the <b>volts/ohms</b> socket (not 10A or mA). Switch the 2C53T to its multimeter.</li>
+<li>The meter picks AC or DC volts by itself, but its automatic mode doesn't work below about 0.7 V, and SD sits right around there. If SD reads blank or 0, step the meter to <b>DC volts</b> by hand: short presses of the function key cycle through AC/DC, diode/continuity and so on.</li>
 <li>Black tip on the <b>GND</b> joint. Red tip on <b>VIN</b>, then on <b>SD</b>.</li>
 </ol>
 {fig_meter()}
@@ -282,9 +293,10 @@ ol li{{margin:5px 0}}
 <div class="card">
 <h2>Check 2: the signals from the ESP32</h2>
 <ol>
-<li>Push the probe's BNC plug into <b>CH1</b> and twist it to lock. Set the probe's switch to <b>×10</b>, and the channel's probe setting in the scope menu to <b>×10</b> too.</li>
+<li>Push the probe's BNC plug into <b>CH1</b> and twist it to lock. Set the switch on the probe's handle to <b>×10</b>, and set CH1's probe setting on the scope to <b>×10</b> too: the manual says both must be on the same setting, or the voltages read 10 times wrong.</li>
 <li>Push a spare jumper into the <b>bottom − rail</b> and fix the <b>ground clip</b> on its metal end. Leave it there.</li>
-<li>Switch the 2C53T to the oscilloscope. Pull the hook sleeve back and touch the <b>sharp tip</b> to the <b>LRC</b> joint, then press <b>Auto</b>. Repeat for <b>BCLK</b> and <b>DIN</b>.</li>
+<li>Switch the 2C53T to the oscilloscope. Pull the hook sleeve back and touch the <b>sharp tip</b> to the <b>LRC</b> joint, then press <b>AUTO</b> once. Repeat for <b>BCLK</b> and <b>DIN</b>.</li>
+<li>Using both channels? Put both probes' ground clips on the same GND point. The manual forbids connecting the two ground clips to different points.</li>
 </ol>
 {fig_scope()}
 <table><tr><th>Pin</th><th>Healthy, with sound playing</th><th>If it's flat</th></tr>
