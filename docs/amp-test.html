@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Testing the amplifier · Ceiling Clock</title>
+<link rel="stylesheet" href="style.css?v=20261030w">
+<style>
+.fig{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px;margin:10px 0 6px}
+.card{border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin:20px 0;background:var(--paper)}
+.warn{background:#fff3e0;border:1px solid #ffd59a;border-radius:10px;padding:10px 12px;margin:10px 0}
+.test{background:#eaf7ec;border:1px solid #bfe5c6;border-radius:10px;padding:10px 12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:#f3f1ea}
+ol li{margin:5px 0}
+</style>
+</head><body>
+<header class="site"><div class="in">
+<a class="brand" href="index.html"><span class="dot"></span>Ceiling Clock</a>
+<nav><a href="index.html">3D model</a><a href="assembly.html">Assembly</a><a href="wiring.html">Wiring</a><a href="breadboard.html" class="on">Breadboard test</a><a href="parts.html">Parts</a><a href="demo/">Live demo</a><a href="firmware.html">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
+</div></header>
+<main>
+<p><a href="breadboard.html#o-amp">← back to the breadboard test</a></p>
+<h1>Testing the amplifier</h1>
+<p class="lead">No sound from the speaker? Three checks, in order, find where it stops: power to the amp, the three signals from the ESP32, and the amp's output. Written for the FNIRSI 2C53T, which is a multimeter and an oscilloscope in one, but any meter and scope work the same way.</p>
+
+<div class="card">
+<h2>Before you start</h2>
+<ol>
+<li>Wire the amp as in the <a href="breadboard.html#o-amp">amplifier step</a>, speaker connected, 5 V adapter and USB plugged in.</li>
+<li>On the clock's page, under <b>Sounds</b>, play a sound to have something to measure. A long, steady sound is easiest to read (the built-in beep is mostly silence).</li>
+<li>Every check measures from the amp's <b>GND</b>. The amp's pins are covered by the jumpers underneath, so probe the <b>silver solder joints on top</b> of the board.</li>
+</ol>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" class="fig" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+<rect width="960" height="420" fill="#fbfaf6"/>
+<text x="20.0" y="30.0" font-size="16" fill="#222" text-anchor="start" font-weight="800" >The pieces</text>
+<rect x="30.0" y="94.0" width="34.0" height="32.0" rx="5" fill="#c9ccd1" stroke="#8a9099" stroke-width="1.2" />
+<rect x="64.0" y="101.0" width="18.0" height="18.0" rx="3" fill="#9aa0a6" stroke="none" stroke-width="1" />
+<path d="M82,110 C150,70 190,150 250,110" fill="none" stroke="#444" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="250.0" y="99.0" width="160.0" height="22.0" rx="10" fill="#2d2f33" stroke="none" stroke-width="1" />
+<rect x="300.0" y="95.0" width="26.0" height="8.0" rx="2" fill="#e8e1cf" stroke="none" stroke-width="1" />
+<rect x="410.0" y="104.0" width="34.0" height="12.0" rx="4" fill="#cfd3d8" stroke="none" stroke-width="1" />
+<line x1="444.0" y1="110.0" x2="470.0" y2="110.0" stroke="#9aa0a6" stroke-width="2.5" stroke-linecap="round" />
+<path d="M330,121 C330,170 400,180 430,180" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="430.0" y="171.0" width="26.0" height="18.0" rx="3" fill="#111" stroke="none" stroke-width="1" />
+<line x1="47.0" y1="94.0" x2="40.0" y2="56.0" stroke="#e8743b" stroke-width="1.4" stroke-linecap="round" />
+<circle cx="47.0" cy="94.0" r="3" fill="#e8743b" stroke="none" stroke-width="1"/>
+<text x="45.0" y="60.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="800" >BNC plug</text>
+<text x="45.0" y="75.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >push on, twist to lock,</text>
+<text x="45.0" y="90.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >into the socket marked CH1</text>
+<line x1="313.0" y1="95.0" x2="280.0" y2="56.0" stroke="#e8743b" stroke-width="1.4" stroke-linecap="round" />
+<circle cx="313.0" cy="95.0" r="3" fill="#e8743b" stroke="none" stroke-width="1"/>
+<text x="285.0" y="60.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="800" >×1 / ×10 switch</text>
+<text x="285.0" y="75.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >set ×10, and set the</text>
+<text x="285.0" y="90.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >channel&#x27;s probe to ×10</text>
+<line x1="427.0" y1="104.0" x2="470.0" y2="56.0" stroke="#e8743b" stroke-width="1.4" stroke-linecap="round" />
+<circle cx="427.0" cy="104.0" r="3" fill="#e8743b" stroke="none" stroke-width="1"/>
+<text x="475.0" y="60.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="800" >hook tip</text>
+<text x="475.0" y="75.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >pull the sleeve back for</text>
+<text x="475.0" y="90.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >the sharp point underneath</text>
+<line x1="456.0" y1="180.0" x2="490.0" y2="176.0" stroke="#e8743b" stroke-width="1.4" stroke-linecap="round" />
+<circle cx="456.0" cy="180.0" r="3" fill="#e8743b" stroke="none" stroke-width="1"/>
+<text x="495.0" y="180.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="800" >ground clip</text>
+<text x="495.0" y="195.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >always on GND</text>
+<rect x="30.0" y="293.0" width="30.0" height="14.0" rx="3" fill="#d32f2f" stroke="none" stroke-width="1" />
+<line x1="60.0" y1="300.0" x2="230.0" y2="300.0" stroke="#d32f2f" stroke-width="4" stroke-linecap="round" />
+<rect x="230.0" y="293.0" width="80.0" height="14.0" rx="6" fill="#d32f2f" stroke="none" stroke-width="1" />
+<line x1="310.0" y1="300.0" x2="336.0" y2="300.0" stroke="#9aa0a6" stroke-width="3" stroke-linecap="round" />
+<text x="30.0" y="287.0" font-size="11.5" fill="#d32f2f" text-anchor="start" font-weight="800" >red lead: banana plug into the socket marked V</text>
+<rect x="30.0" y="339.0" width="30.0" height="14.0" rx="3" fill="#222" stroke="none" stroke-width="1" />
+<line x1="60.0" y1="346.0" x2="230.0" y2="346.0" stroke="#222" stroke-width="4" stroke-linecap="round" />
+<rect x="230.0" y="339.0" width="80.0" height="14.0" rx="6" fill="#222" stroke="none" stroke-width="1" />
+<line x1="310.0" y1="346.0" x2="336.0" y2="346.0" stroke="#9aa0a6" stroke-width="3" stroke-linecap="round" />
+<text x="30.0" y="333.0" font-size="11.5" fill="#222" text-anchor="start" font-weight="800" >black lead: banana plug into the socket marked COM</text>
+<text x="30.0" y="382.0" font-size="11.5" fill="#d32f2f" text-anchor="start" font-weight="800" >Never the A or mA socket for any of these checks.</text>
+<rect x="640.0" y="150.0" width="250.0" height="180.0" rx="10.0" fill="#2f5fae" stroke="#1f437d" stroke-width="1.5" />
+<rect x="743.0" y="222.0" width="44.0" height="36.0" rx="3" fill="#1d1d1d" stroke="none" stroke-width="1" />
+<text x="765.0" y="274.0" font-size="10.0" fill="#dce6f7" text-anchor="middle" font-weight="700" >MAX98357A</text>
+<circle cx="668.0" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="668.0" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="668.0" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >LRC</text>
+<circle cx="700.5" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="700.5" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="700.5" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >BCLK</text>
+<circle cx="733.0" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="733.0" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="733.0" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >DIN</text>
+<circle cx="765.5" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="765.5" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="765.5" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >GAIN</text>
+<circle cx="798.0" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="798.0" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="798.0" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >SD</text>
+<circle cx="830.5" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="830.5" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="830.5" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >GND</text>
+<circle cx="863.0" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="863.0" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="863.0" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >VIN</text>
+<rect x="715.0" y="140.0" width="100.0" height="46.0" rx="5" fill="#2f9ad1" stroke="#1d6f99" stroke-width="1.5" />
+<circle cx="740.0" cy="162.0" r="13.0" fill="#d7dbe0" stroke="#8a9099" stroke-width="1.2"/>
+<line x1="732.0" y1="162.0" x2="748.0" y2="162.0" stroke="#555" stroke-width="2.5" stroke-linecap="round" />
+<text x="740.0" y="206.0" font-size="16.0" fill="#ffffff" text-anchor="middle" font-weight="800" >+</text>
+<circle cx="790.0" cy="162.0" r="13.0" fill="#d7dbe0" stroke="#8a9099" stroke-width="1.2"/>
+<line x1="782.0" y1="162.0" x2="798.0" y2="162.0" stroke="#555" stroke-width="2.5" stroke-linecap="round" />
+<text x="790.0" y="206.0" font-size="16.0" fill="#ffffff" text-anchor="middle" font-weight="800" >−</text>
+<text x="765.0" y="120.0" font-size="11.5" fill="#333" text-anchor="middle" font-weight="700" >speaker terminal</text>
+<text x="765.0" y="362.0" font-size="11.5" fill="#333" text-anchor="middle" font-weight="700" >header joints: probe these silver bumps on top</text>
+<text x="765.0" y="378.0" font-size="11" fill="#6b7280" text-anchor="middle" font-weight="400" >(the jumpers stay plugged in underneath)</text>
+</svg>
+</div>
+
+<div class="card">
+<h2>Check 1: power</h2>
+<ol>
+<li>Plug the <b>black</b> lead into <b>COM</b> and the <b>red</b> lead into <b>V</b>. Switch the 2C53T to its multimeter and choose <b>DC volts</b>.</li>
+<li>Black tip on the <b>GND</b> joint. Red tip on <b>VIN</b>, then on <b>SD</b>.</li>
+</ol>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" class="fig" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+<rect width="960" height="470" fill="#fbfaf6"/>
+<text x="20.0" y="30.0" font-size="16" fill="#222" text-anchor="start" font-weight="800" >Check 1: power, with the multimeter</text>
+<text x="20.0" y="52.0" font-size="12" fill="#555" text-anchor="start" font-weight="400" >Multimeter mode, DC volts. Black on GND for every reading; move only the red one.</text>
+<rect x="100.0" y="150.0" width="250.0" height="180.0" rx="10.0" fill="#2f5fae" stroke="#1f437d" stroke-width="1.5" />
+<rect x="203.0" y="222.0" width="44.0" height="36.0" rx="3" fill="#1d1d1d" stroke="none" stroke-width="1" />
+<text x="225.0" y="274.0" font-size="10.0" fill="#dce6f7" text-anchor="middle" font-weight="700" >MAX98357A</text>
+<circle cx="128.0" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="128.0" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="128.0" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >LRC</text>
+<circle cx="160.5" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="160.5" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="160.5" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >BCLK</text>
+<circle cx="193.0" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="193.0" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="193.0" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >DIN</text>
+<circle cx="225.5" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="225.5" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="225.5" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >GAIN</text>
+<circle cx="258.0" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="258.0" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="258.0" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >SD</text>
+<circle cx="290.5" cy="308.0" r="9.0" fill="#e3c26a" stroke="#e8743b" stroke-width="3"/>
+<circle cx="290.5" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="290.5" y="292.0" font-size="10.0" fill="#ffd27a" text-anchor="middle" font-weight="800" >GND</text>
+<circle cx="323.0" cy="308.0" r="9.0" fill="#e3c26a" stroke="#e8743b" stroke-width="3"/>
+<circle cx="323.0" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="323.0" y="292.0" font-size="10.0" fill="#ffd27a" text-anchor="middle" font-weight="800" >VIN</text>
+<rect x="175.0" y="140.0" width="100.0" height="46.0" rx="5" fill="#2f9ad1" stroke="#1d6f99" stroke-width="1.5" />
+<circle cx="200.0" cy="162.0" r="13.0" fill="#d7dbe0" stroke="#8a9099" stroke-width="1.2"/>
+<line x1="192.0" y1="162.0" x2="208.0" y2="162.0" stroke="#555" stroke-width="2.5" stroke-linecap="round" />
+<text x="200.0" y="206.0" font-size="16.0" fill="#ffffff" text-anchor="middle" font-weight="800" >+</text>
+<circle cx="250.0" cy="162.0" r="13.0" fill="#d7dbe0" stroke="#8a9099" stroke-width="1.2"/>
+<line x1="242.0" y1="162.0" x2="258.0" y2="162.0" stroke="#555" stroke-width="2.5" stroke-linecap="round" />
+<text x="250.0" y="206.0" font-size="16.0" fill="#ffffff" text-anchor="middle" font-weight="800" >−</text>
+<line x1="290.5" y1="308.0" x2="282.9" y2="324.3" stroke="#9aa0a6" stroke-width="3" stroke-linecap="round" />
+<line x1="282.9" y1="324.3" x2="252.5" y2="389.6" stroke="#222" stroke-width="11" stroke-linecap="round" />
+<line x1="252.5" y1="389.6" x2="246.1" y2="403.2" stroke="#222" stroke-width="4" stroke-linecap="round" />
+<text x="240.1" y="407.2" font-size="12" fill="#222" text-anchor="end" font-weight="800" >black: GND</text>
+<line x1="323.0" y1="308.0" x2="330.6" y2="324.3" stroke="#9aa0a6" stroke-width="3" stroke-linecap="round" />
+<line x1="330.6" y1="324.3" x2="361.0" y2="389.6" stroke="#d32f2f" stroke-width="11" stroke-linecap="round" />
+<line x1="361.0" y1="389.6" x2="367.4" y2="403.2" stroke="#d32f2f" stroke-width="4" stroke-linecap="round" />
+<text x="373.4" y="407.2" font-size="12" fill="#d32f2f" text-anchor="start" font-weight="800" >red: VIN</text>
+<rect x="290.0" y="76.0" width="120.0" height="52.0" rx="8" fill="#d8e3c8" stroke="#7a8a62" stroke-width="1.5" />
+<text x="350.0" y="112.0" font-size="24" fill="#1f2a14" text-anchor="middle" font-weight="800" font-family="ui-monospace,monospace">5.2 V</text>
+<text x="350.0" y="146.0" font-size="11.5" fill="#2e9e44" text-anchor="middle" font-weight="800" >about 5 V: powered</text>
+<rect x="570.0" y="150.0" width="250.0" height="180.0" rx="10.0" fill="#2f5fae" stroke="#1f437d" stroke-width="1.5" />
+<rect x="673.0" y="222.0" width="44.0" height="36.0" rx="3" fill="#1d1d1d" stroke="none" stroke-width="1" />
+<text x="695.0" y="274.0" font-size="10.0" fill="#dce6f7" text-anchor="middle" font-weight="700" >MAX98357A</text>
+<circle cx="598.0" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="598.0" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="598.0" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >LRC</text>
+<circle cx="630.5" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="630.5" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="630.5" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >BCLK</text>
+<circle cx="663.0" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="663.0" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="663.0" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >DIN</text>
+<circle cx="695.5" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="695.5" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="695.5" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >GAIN</text>
+<circle cx="728.0" cy="308.0" r="9.0" fill="#e3c26a" stroke="#e8743b" stroke-width="3"/>
+<circle cx="728.0" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="728.0" y="292.0" font-size="10.0" fill="#ffd27a" text-anchor="middle" font-weight="800" >SD</text>
+<circle cx="760.5" cy="308.0" r="9.0" fill="#e3c26a" stroke="#e8743b" stroke-width="3"/>
+<circle cx="760.5" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="760.5" y="292.0" font-size="10.0" fill="#ffd27a" text-anchor="middle" font-weight="800" >GND</text>
+<circle cx="793.0" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="793.0" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="793.0" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >VIN</text>
+<rect x="645.0" y="140.0" width="100.0" height="46.0" rx="5" fill="#2f9ad1" stroke="#1d6f99" stroke-width="1.5" />
+<circle cx="670.0" cy="162.0" r="13.0" fill="#d7dbe0" stroke="#8a9099" stroke-width="1.2"/>
+<line x1="662.0" y1="162.0" x2="678.0" y2="162.0" stroke="#555" stroke-width="2.5" stroke-linecap="round" />
+<text x="670.0" y="206.0" font-size="16.0" fill="#ffffff" text-anchor="middle" font-weight="800" >+</text>
+<circle cx="720.0" cy="162.0" r="13.0" fill="#d7dbe0" stroke="#8a9099" stroke-width="1.2"/>
+<line x1="712.0" y1="162.0" x2="728.0" y2="162.0" stroke="#555" stroke-width="2.5" stroke-linecap="round" />
+<text x="720.0" y="206.0" font-size="16.0" fill="#ffffff" text-anchor="middle" font-weight="800" >−</text>
+<line x1="760.5" y1="308.0" x2="752.9" y2="324.3" stroke="#9aa0a6" stroke-width="3" stroke-linecap="round" />
+<line x1="752.9" y1="324.3" x2="722.5" y2="389.6" stroke="#222" stroke-width="11" stroke-linecap="round" />
+<line x1="722.5" y1="389.6" x2="716.1" y2="403.2" stroke="#222" stroke-width="4" stroke-linecap="round" />
+<text x="710.1" y="407.2" font-size="12" fill="#222" text-anchor="end" font-weight="800" >black: GND</text>
+<line x1="728.0" y1="308.0" x2="735.6" y2="324.3" stroke="#9aa0a6" stroke-width="3" stroke-linecap="round" />
+<line x1="735.6" y1="324.3" x2="766.0" y2="389.6" stroke="#d32f2f" stroke-width="11" stroke-linecap="round" />
+<line x1="766.0" y1="389.6" x2="772.4" y2="403.2" stroke="#d32f2f" stroke-width="4" stroke-linecap="round" />
+<text x="778.4" y="407.2" font-size="12" fill="#d32f2f" text-anchor="start" font-weight="800" >red: SD</text>
+<rect x="760.0" y="76.0" width="120.0" height="52.0" rx="8" fill="#d8e3c8" stroke="#7a8a62" stroke-width="1.5" />
+<text x="820.0" y="112.0" font-size="24" fill="#1f2a14" text-anchor="middle" font-weight="800" font-family="ui-monospace,monospace">0.6 V</text>
+<text x="820.0" y="146.0" font-size="11.5" fill="#2e9e44" text-anchor="middle" font-weight="800" >about 0.5–0.8 V: switched on</text>
+<text x="40.0" y="458.0" font-size="11.5" fill="#d32f2f" text-anchor="start" font-weight="700" >VIN reads 0: the amp has no power. SD reads 0: the amp is switched off (look for solder joining SD to GND, they sit side by side).</text>
+</svg>
+<table><tr><th>Red on</th><th>Expect</th><th>If not</th></tr>
+<tr><td>VIN</td><td>about 5 V</td><td>0 V: check the 5 V adapter, the bottom rails and the amp's VIN and GND jumpers.</td></tr>
+<tr><td>SD</td><td>about 0.5–0.8 V</td><td>0 V: the amp is held off. Look for solder joining SD to its neighbour GND.</td></tr></table>
+</div>
+
+<div class="card">
+<h2>Check 2: the signals from the ESP32</h2>
+<ol>
+<li>Push the probe's BNC plug into <b>CH1</b> and twist it to lock. Set the probe's switch to <b>×10</b>, and the channel's probe setting in the scope menu to <b>×10</b> too.</li>
+<li>Push a spare jumper into the <b>bottom − rail</b> and fix the <b>ground clip</b> on its metal end. Leave it there.</li>
+<li>Switch the 2C53T to the oscilloscope. Pull the hook sleeve back and touch the <b>sharp tip</b> to the <b>LRC</b> joint, then press <b>Auto</b>. Repeat for <b>BCLK</b> and <b>DIN</b>.</li>
+</ol>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" class="fig" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+<rect width="960" height="520" fill="#fbfaf6"/>
+<text x="20.0" y="30.0" font-size="16" fill="#222" text-anchor="start" font-weight="800" >Check 2: the signals, with the oscilloscope (sound playing)</text>
+<text x="20.0" y="52.0" font-size="12" fill="#555" text-anchor="start" font-weight="400" >Ground clip on a GND point and left there. Touch the sharp probe tip to one joint at a time, then press Auto.</text>
+<rect x="110.0" y="120.0" width="250.0" height="180.0" rx="10.0" fill="#2f5fae" stroke="#1f437d" stroke-width="1.5" />
+<rect x="213.0" y="192.0" width="44.0" height="36.0" rx="3" fill="#1d1d1d" stroke="none" stroke-width="1" />
+<text x="235.0" y="244.0" font-size="10.0" fill="#dce6f7" text-anchor="middle" font-weight="700" >MAX98357A</text>
+<circle cx="138.0" cy="278.0" r="9.0" fill="#e3c26a" stroke="#e8743b" stroke-width="3"/>
+<circle cx="138.0" cy="278.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="138.0" y="262.0" font-size="10.0" fill="#ffd27a" text-anchor="middle" font-weight="800" >LRC</text>
+<circle cx="170.5" cy="278.0" r="9.0" fill="#e3c26a" stroke="#e8743b" stroke-width="3"/>
+<circle cx="170.5" cy="278.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="170.5" y="262.0" font-size="10.0" fill="#ffd27a" text-anchor="middle" font-weight="800" >BCLK</text>
+<circle cx="203.0" cy="278.0" r="9.0" fill="#e3c26a" stroke="#e8743b" stroke-width="3"/>
+<circle cx="203.0" cy="278.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="203.0" y="262.0" font-size="10.0" fill="#ffd27a" text-anchor="middle" font-weight="800" >DIN</text>
+<circle cx="235.5" cy="278.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="235.5" cy="278.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="235.5" y="262.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >GAIN</text>
+<circle cx="268.0" cy="278.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="268.0" cy="278.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="268.0" y="262.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >SD</text>
+<circle cx="300.5" cy="278.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="300.5" cy="278.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="300.5" y="262.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >GND</text>
+<circle cx="333.0" cy="278.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="333.0" cy="278.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="333.0" y="262.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >VIN</text>
+<rect x="185.0" y="110.0" width="100.0" height="46.0" rx="5" fill="#2f9ad1" stroke="#1d6f99" stroke-width="1.5" />
+<circle cx="210.0" cy="132.0" r="13.0" fill="#d7dbe0" stroke="#8a9099" stroke-width="1.2"/>
+<line x1="202.0" y1="132.0" x2="218.0" y2="132.0" stroke="#555" stroke-width="2.5" stroke-linecap="round" />
+<text x="210.0" y="176.0" font-size="16.0" fill="#ffffff" text-anchor="middle" font-weight="800" >+</text>
+<circle cx="260.0" cy="132.0" r="13.0" fill="#d7dbe0" stroke="#8a9099" stroke-width="1.2"/>
+<line x1="252.0" y1="132.0" x2="268.0" y2="132.0" stroke="#555" stroke-width="2.5" stroke-linecap="round" />
+<text x="260.0" y="176.0" font-size="16.0" fill="#ffffff" text-anchor="middle" font-weight="800" >−</text>
+<rect x="40.0" y="360.0" width="330.0" height="40.0" rx="4" fill="#f3f1ea" stroke="#cfcabc" stroke-width="1" />
+<line x1="48.0" y1="380.0" x2="362.0" y2="380.0" stroke="#2b5fd9" stroke-width="1" stroke-linecap="round" />
+<rect x="52.0" y="376.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="69.0" y="376.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="86.0" y="376.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="103.0" y="376.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="120.0" y="376.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="137.0" y="376.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="154.0" y="376.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="171.0" y="376.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="188.0" y="376.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="205.0" y="376.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="222.0" y="376.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="239.0" y="376.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="256.0" y="376.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="273.0" y="376.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="290.0" y="376.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="307.0" y="376.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="324.0" y="376.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="341.0" y="376.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<text x="48.0" y="414.0" font-size="11" fill="#2b5fd9" text-anchor="start" font-weight="700" >bottom − rail (GND)</text>
+<rect x="78.0" y="344.0" width="7.0" height="30.0" rx="1.5" fill="#222" stroke="none" stroke-width="1" />
+<line x1="81.0" y1="344.0" x2="81.0" y2="334.0" stroke="#9aa0a6" stroke-width="2" stroke-linecap="round" />
+<text x="48.0" y="432.0" font-size="11" fill="#333" text-anchor="start" font-weight="400" >the clip grips a spare jumper pushed into the − rail</text>
+<line x1="203.0" y1="278.0" x2="210.4" y2="266.1" stroke="#9aa0a6" stroke-width="2.5" stroke-linecap="round" />
+<line x1="210.4" y1="266.1" x2="218.9" y2="252.6" stroke="#cfd3d8" stroke-width="9" stroke-linecap="round" />
+<line x1="218.9" y1="252.6" x2="258.6" y2="189.0" stroke="#2d2f33" stroke-width="13" stroke-linecap="round" />
+<line x1="258.6" y1="189.0" x2="290.4" y2="138.1" stroke="#444" stroke-width="4" stroke-linecap="round" />
+<text x="296.4" y="142.1" font-size="12" fill="#2d2f33" text-anchor="start" font-weight="800" >scope probe (CH1)</text>
+<path d="M240.1,218.6 Q160.5,384.0 81.0,320.0" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="75.0" y="312.0" width="12.0" height="18.0" rx="3" fill="#111" stroke="none" stroke-width="1" />
+<path d="M75,330 l3,6 l3,-6 l3,6 l3,-6" fill="none" stroke="#9aa0a6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="93.0" y="324.0" font-size="11.5" fill="#111" text-anchor="start" font-weight="800" >ground clip</text>
+<rect x="430.0" y="90.0" width="150.0" height="90.0" rx="6" fill="#101418" stroke="#2a2f36" stroke-width="1.5" />
+<line x1="467.5" y1="94.0" x2="467.5" y2="176.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="505.0" y1="94.0" x2="505.0" y2="176.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="542.5" y1="94.0" x2="542.5" y2="176.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="434.0" y1="120.0" x2="576.0" y2="120.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="434.0" y1="150.0" x2="576.0" y2="150.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<path d="M438.0,160.2 L438.0,109.8 L449.2,109.8 L449.2,160.2 L460.3,160.2 L460.3,109.8 L471.5,109.8 L471.5,160.2 L482.7,160.2 L482.7,109.8 L493.8,109.8 L493.8,160.2 L505.0,160.2 L505.0,109.8 L516.2,109.8 L516.2,160.2 L527.3,160.2 L527.3,109.8 L538.5,109.8 L538.5,160.2 L549.7,160.2 L549.7,109.8 L560.8,109.8 L560.8,160.2 L572.0,160.2" fill="none" stroke="#2e9e44" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<text x="505.0" y="197.0" font-size="12" fill="#222" text-anchor="middle" font-weight="800" >LRC</text>
+<text x="505.0" y="212.0" font-size="11" fill="#6b7280" text-anchor="middle" font-weight="400" >0–3.3 V square, ≈44 kHz</text>
+<rect x="610.0" y="90.0" width="150.0" height="90.0" rx="6" fill="#101418" stroke="#2a2f36" stroke-width="1.5" />
+<line x1="647.5" y1="94.0" x2="647.5" y2="176.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="685.0" y1="94.0" x2="685.0" y2="176.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="722.5" y1="94.0" x2="722.5" y2="176.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="614.0" y1="120.0" x2="756.0" y2="120.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="614.0" y1="150.0" x2="756.0" y2="150.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<path d="M618.0,160.2 L618.0,109.8 L621.0,109.8 L621.0,160.2 L624.1,160.2 L624.1,109.8 L627.1,109.8 L627.1,160.2 L630.2,160.2 L630.2,109.8 L633.2,109.8 L633.2,160.2 L636.3,160.2 L636.3,109.8 L639.3,109.8 L639.3,160.2 L642.4,160.2 L642.4,109.8 L645.4,109.8 L645.4,160.2 L648.5,160.2 L648.5,109.8 L651.5,109.8 L651.5,160.2 L654.5,160.2 L654.5,109.8 L657.6,109.8 L657.6,160.2 L660.6,160.2 L660.6,109.8 L663.7,109.8 L663.7,160.2 L666.7,160.2 L666.7,109.8 L669.8,109.8 L669.8,160.2 L672.8,160.2 L672.8,109.8 L675.9,109.8 L675.9,160.2 L678.9,160.2 L678.9,109.8 L682.0,109.8 L682.0,160.2 L685.0,160.2 L685.0,109.8 L688.0,109.8 L688.0,160.2 L691.1,160.2 L691.1,109.8 L694.1,109.8 L694.1,160.2 L697.2,160.2 L697.2,109.8 L700.2,109.8 L700.2,160.2 L703.3,160.2 L703.3,109.8 L706.3,109.8 L706.3,160.2 L709.4,160.2 L709.4,109.8 L712.4,109.8 L712.4,160.2 L715.5,160.2 L715.5,109.8 L718.5,109.8 L718.5,160.2 L721.5,160.2 L721.5,109.8 L724.6,109.8 L724.6,160.2 L727.6,160.2 L727.6,109.8 L730.7,109.8 L730.7,160.2 L733.7,160.2 L733.7,109.8 L736.8,109.8 L736.8,160.2 L739.8,160.2 L739.8,109.8 L742.9,109.8 L742.9,160.2 L745.9,160.2 L745.9,109.8 L749.0,109.8 L749.0,160.2 L752.0,160.2" fill="none" stroke="#2e9e44" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<text x="685.0" y="197.0" font-size="12" fill="#222" text-anchor="middle" font-weight="800" >BCLK</text>
+<text x="685.0" y="212.0" font-size="11" fill="#6b7280" text-anchor="middle" font-weight="400" >0–3.3 V square, ≈1.4–2.8 MHz</text>
+<rect x="790.0" y="90.0" width="150.0" height="90.0" rx="6" fill="#101418" stroke="#2a2f36" stroke-width="1.5" />
+<line x1="827.5" y1="94.0" x2="827.5" y2="176.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="865.0" y1="94.0" x2="865.0" y2="176.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="902.5" y1="94.0" x2="902.5" y2="176.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="794.0" y1="120.0" x2="936.0" y2="120.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="794.0" y1="150.0" x2="936.0" y2="150.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<path d="M798.0,160.2 L798.0,109.8 L803.2,109.8 L803.2,109.8 L808.3,109.8 L808.3,160.2 L813.5,160.2 L813.5,109.8 L818.6,109.8 L818.6,160.2 L823.8,160.2 L823.8,109.8 L828.9,109.8 L828.9,109.8 L834.1,109.8 L834.1,160.2 L839.2,160.2 L839.2,109.8 L844.4,109.8 L844.4,109.8 L849.5,109.8 L849.5,109.8 L854.7,109.8 L854.7,109.8 L859.8,109.8 L859.8,109.8 L865.0,109.8 L865.0,160.2 L870.2,160.2 L870.2,109.8 L875.3,109.8 L875.3,109.8 L880.5,109.8 L880.5,160.2 L885.6,160.2 L885.6,160.2 L890.8,160.2 L890.8,160.2 L895.9,160.2 L895.9,109.8 L901.1,109.8 L901.1,160.2 L906.2,160.2 L906.2,109.8 L911.4,109.8 L911.4,160.2 L916.5,160.2 L916.5,109.8 L921.7,109.8 L921.7,109.8 L926.8,109.8 L926.8,109.8 L932.0,109.8 L932.0,109.8" fill="none" stroke="#2e9e44" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<text x="865.0" y="197.0" font-size="12" fill="#222" text-anchor="middle" font-weight="800" >DIN, sound playing</text>
+<text x="865.0" y="212.0" font-size="11" fill="#6b7280" text-anchor="middle" font-weight="400" >busy 0–3.3 V pulses</text>
+<rect x="520.0" y="270.0" width="150.0" height="90.0" rx="6" fill="#101418" stroke="#2a2f36" stroke-width="1.5" />
+<line x1="557.5" y1="274.0" x2="557.5" y2="356.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="595.0" y1="274.0" x2="595.0" y2="356.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="632.5" y1="274.0" x2="632.5" y2="356.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="524.0" y1="300.0" x2="666.0" y2="300.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="524.0" y1="330.0" x2="666.0" y2="330.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<path d="M528.0,340.2 L662.0,340.2" fill="none" stroke="#8aa0b4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<text x="595.0" y="377.0" font-size="12" fill="#222" text-anchor="middle" font-weight="800" >DIN, nothing playing</text>
+<text x="595.0" y="392.0" font-size="11" fill="#6b7280" text-anchor="middle" font-weight="400" >flat at 0 V is normal</text>
+<rect x="700.0" y="270.0" width="150.0" height="90.0" rx="6" fill="#101418" stroke="#2a2f36" stroke-width="1.5" />
+<line x1="737.5" y1="274.0" x2="737.5" y2="356.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="775.0" y1="274.0" x2="775.0" y2="356.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="812.5" y1="274.0" x2="812.5" y2="356.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="704.0" y1="300.0" x2="846.0" y2="300.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="704.0" y1="330.0" x2="846.0" y2="330.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<path d="M708.0,340.2 L842.0,340.2" fill="none" stroke="#d32f2f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<text x="775.0" y="377.0" font-size="12" fill="#222" text-anchor="middle" font-weight="800" >Any pin flat while playing</text>
+<text x="775.0" y="392.0" font-size="11" fill="#6b7280" text-anchor="middle" font-weight="400" >that signal is not arriving</text>
+<text x="430.0" y="420.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="700" >Tip: probe LRC on CH1 and DIN on CH2 to see both at once.</text>
+<text x="430.0" y="438.0" font-size="11.5" fill="#6b7280" text-anchor="start" font-weight="400" >DIN should change in step with LRC.</text>
+</svg>
+<table><tr><th>Pin</th><th>Healthy, with sound playing</th><th>If it's flat</th></tr>
+<tr><td>LRC</td><td>Square wave 0–3.3 V, about 44 kHz (16 kHz for the built-in beep)</td><td>The LRC jumper or hole a9 is not connected to ESP32 pin 16.</td></tr>
+<tr><td>BCLK</td><td>Square wave 0–3.3 V, about 1.4–2.8 MHz</td><td>The BCLK jumper or hole a8 is not connected to pin 15.</td></tr>
+<tr><td>DIN</td><td>Busy, ever-changing pulses 0–3.3 V</td><td>The DIN jumper or hole a10 is not connected to pin 17, or nothing is playing.</td></tr></table>
+<div class="test">All three look right but there's still no sound? Go to check 3.</div>
+</div>
+
+<div class="card">
+<h2>Check 3: the amp's output</h2>
+<ol>
+<li>Keep the ground clip on the − rail.</li>
+<li>Touch only the probe tip to the <b>+</b> speaker screw.</li>
+</ol>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" class="fig" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+<rect width="960" height="400" fill="#fbfaf6"/>
+<text x="20.0" y="30.0" font-size="16" fill="#222" text-anchor="start" font-weight="800" >Check 3: the amp&#x27;s output (sound playing)</text>
+<text x="20.0" y="52.0" font-size="12" fill="#555" text-anchor="start" font-weight="400" >Ground clip stays on GND. Touch only the probe tip to the + speaker screw.</text>
+<rect x="190.0" y="150.0" width="250.0" height="180.0" rx="10.0" fill="#2f5fae" stroke="#1f437d" stroke-width="1.5" />
+<rect x="293.0" y="222.0" width="44.0" height="36.0" rx="3" fill="#1d1d1d" stroke="none" stroke-width="1" />
+<text x="315.0" y="274.0" font-size="10.0" fill="#dce6f7" text-anchor="middle" font-weight="700" >MAX98357A</text>
+<circle cx="218.0" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="218.0" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="218.0" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >LRC</text>
+<circle cx="250.5" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="250.5" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="250.5" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >BCLK</text>
+<circle cx="283.0" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="283.0" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="283.0" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >DIN</text>
+<circle cx="315.5" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="315.5" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="315.5" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >GAIN</text>
+<circle cx="348.0" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="348.0" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="348.0" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >SD</text>
+<circle cx="380.5" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="380.5" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="380.5" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >GND</text>
+<circle cx="413.0" cy="308.0" r="9.0" fill="#e3c26a" stroke="#a8862e" stroke-width="1"/>
+<circle cx="413.0" cy="308.0" r="5.0" fill="#c3c8cf" stroke="#8e949c" stroke-width="0.8"/>
+<text x="413.0" y="292.0" font-size="10.0" fill="#ffffff" text-anchor="middle" font-weight="800" >VIN</text>
+<rect x="265.0" y="140.0" width="100.0" height="46.0" rx="5" fill="#2f9ad1" stroke="#1d6f99" stroke-width="1.5" />
+<circle cx="290.0" cy="162.0" r="13.0" fill="#d7dbe0" stroke="#e8743b" stroke-width="3"/>
+<line x1="282.0" y1="162.0" x2="298.0" y2="162.0" stroke="#555" stroke-width="2.5" stroke-linecap="round" />
+<text x="290.0" y="206.0" font-size="16.0" fill="#ffffff" text-anchor="middle" font-weight="800" >+</text>
+<circle cx="340.0" cy="162.0" r="13.0" fill="#d7dbe0" stroke="#8a9099" stroke-width="1.2"/>
+<line x1="332.0" y1="162.0" x2="348.0" y2="162.0" stroke="#555" stroke-width="2.5" stroke-linecap="round" />
+<text x="340.0" y="206.0" font-size="16.0" fill="#ffffff" text-anchor="middle" font-weight="800" >−</text>
+<line x1="290.0" y1="162.0" x2="300.7" y2="153.0" stroke="#9aa0a6" stroke-width="2.5" stroke-linecap="round" />
+<line x1="300.7" y1="153.0" x2="313.0" y2="142.7" stroke="#cfd3d8" stroke-width="9" stroke-linecap="round" />
+<line x1="313.0" y1="142.7" x2="370.4" y2="94.5" stroke="#2d2f33" stroke-width="13" stroke-linecap="round" />
+<line x1="370.4" y1="94.5" x2="412.6" y2="59.2" stroke="#444" stroke-width="4" stroke-linecap="round" />
+<text x="418.6" y="63.2" font-size="12" fill="#2d2f33" text-anchor="start" font-weight="800" >scope probe (CH1)</text>
+<rect x="40.0" y="330.0" width="330.0" height="40.0" rx="4" fill="#f3f1ea" stroke="#cfcabc" stroke-width="1" />
+<line x1="48.0" y1="350.0" x2="362.0" y2="350.0" stroke="#2b5fd9" stroke-width="1" stroke-linecap="round" />
+<rect x="52.0" y="346.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="69.0" y="346.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="86.0" y="346.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="103.0" y="346.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="120.0" y="346.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="137.0" y="346.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="154.0" y="346.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="171.0" y="346.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="188.0" y="346.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="205.0" y="346.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="222.0" y="346.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="239.0" y="346.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="256.0" y="346.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="273.0" y="346.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="290.0" y="346.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="307.0" y="346.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="324.0" y="346.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="341.0" y="346.0" width="5.0" height="5.0" rx="1" fill="#8a8577" stroke="none" stroke-width="1" />
+<rect x="60.0" y="314.0" width="7.0" height="30.0" rx="1.5" fill="#222" stroke="none" stroke-width="1" />
+<line x1="63.0" y1="314.0" x2="63.0" y2="304.0" stroke="#9aa0a6" stroke-width="2" stroke-linecap="round" />
+<path d="M343.6,117.0 Q203.3,354.0 63.0,290.0" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="57.0" y="282.0" width="12.0" height="18.0" rx="3" fill="#111" stroke="none" stroke-width="1" />
+<path d="M57,300 l3,6 l3,-6 l3,6 l3,-6" fill="none" stroke="#9aa0a6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="75.0" y="294.0" font-size="11.5" fill="#111" text-anchor="start" font-weight="800" >ground clip</text>
+<rect x="490.0" y="100.0" width="180.0" height="100.0" rx="6" fill="#101418" stroke="#2a2f36" stroke-width="1.5" />
+<line x1="535.0" y1="104.0" x2="535.0" y2="196.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="580.0" y1="104.0" x2="580.0" y2="196.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="625.0" y1="104.0" x2="625.0" y2="196.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="494.0" y1="133.3" x2="666.0" y2="133.3" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="494.0" y1="166.7" x2="666.0" y2="166.7" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<path d="M498.0,178.0 L498.0,122.0 L502.6,122.0 L502.6,178.0 L507.1,178.0 L507.1,122.0 L512.9,122.0 L512.9,178.0 L516.2,178.0 L516.2,122.0 L523.1,122.0 L523.1,178.0 L525.3,178.0 L525.3,122.0 L533.0,122.0 L533.0,178.0 L534.4,178.0 L534.4,122.0 L542.6,122.0 L542.6,178.0 L543.6,178.0 L543.6,122.0 L551.7,122.0 L551.7,178.0 L552.7,178.0 L552.7,122.0 L560.4,122.0 L560.4,178.0 L561.8,178.0 L561.8,122.0 L568.7,122.0 L568.7,178.0 L570.9,178.0 L570.9,122.0 L576.7,122.0 L576.7,178.0 L580.0,178.0 L580.0,122.0 L584.6,122.0 L584.6,178.0 L589.1,178.0 L589.1,122.0 L592.4,122.0 L592.4,178.0 L598.2,178.0 L598.2,122.0 L600.4,122.0 L600.4,178.0 L607.3,178.0 L607.3,122.0 L608.7,122.0 L608.7,178.0 L616.4,178.0 L616.4,122.0 L617.4,122.0 L617.4,178.0 L625.6,178.0 L625.6,122.0 L626.5,122.0 L626.5,178.0 L634.7,178.0 L634.7,122.0 L636.1,122.0 L636.1,178.0 L643.8,178.0 L643.8,122.0 L646.0,122.0 L646.0,178.0 L652.9,178.0 L652.9,122.0 L656.2,122.0 L656.2,178.0 L662.0,178.0" fill="none" stroke="#2e9e44" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<text x="580.0" y="217.0" font-size="12" fill="#222" text-anchor="middle" font-weight="800" >Working: fast 5 V pulses</text>
+<text x="580.0" y="232.0" font-size="11" fill="#6b7280" text-anchor="middle" font-weight="400" >their width follows the sound</text>
+<rect x="720.0" y="100.0" width="180.0" height="100.0" rx="6" fill="#101418" stroke="#2a2f36" stroke-width="1.5" />
+<line x1="765.0" y1="104.0" x2="765.0" y2="196.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="810.0" y1="104.0" x2="810.0" y2="196.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="855.0" y1="104.0" x2="855.0" y2="196.0" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="724.0" y1="133.3" x2="896.0" y2="133.3" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<line x1="724.0" y1="166.7" x2="896.0" y2="166.7" stroke="#25303a" stroke-width="1" stroke-linecap="round" />
+<path d="M728.0,178.0 L892.0,178.0" fill="none" stroke="#d32f2f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+<text x="810.0" y="217.0" font-size="12" fill="#222" text-anchor="middle" font-weight="800" >Flat line</text>
+<text x="810.0" y="232.0" font-size="11" fill="#6b7280" text-anchor="middle" font-weight="400" >the amp is not running</text>
+<rect x="490.0" y="260.0" width="420.0" height="110.0" rx="10" fill="#fff3e0" stroke="#ffd59a" stroke-width="1.2" />
+<text x="510.0" y="288.0" font-size="13" fill="#d32f2f" text-anchor="start" font-weight="800" >✗ Never put the ground clip on a speaker screw</text>
+<text x="510.0" y="310.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >The amp drives both speaker wires. The scope ground is the</text>
+<text x="510.0" y="326.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >same as the circuit ground (through USB), so clipping it to</text>
+<text x="510.0" y="342.0" font-size="11.5" fill="#333" text-anchor="start" font-weight="400" >either screw shorts that output and can damage the amp.</text>
+</svg>
+<div class="warn">⚠️ <b>Never clip the ground lead to either speaker screw.</b> The amp drives both speaker wires, and the scope's ground is joined to the circuit's ground through USB, so the clip would short an output.</div>
+<table><tr><th>You see</th><th>Means</th></tr>
+<tr><td>Fast 5 V pulses that change with the sound</td><td>The amp works. Check the speaker wires are clamped tight and the speaker clicks on an AA battery.</td></tr>
+<tr><td>A flat line, with power and all three signals good</td><td>The amp board itself is faulty, or a header joint is cracked. Reflow its 7 joints; if that doesn't help, try a spare amp.</td></tr></table>
+</div>
+</main>
+<footer>Ceiling Clock · drawn by <code>hardware/make_amp_test_page.py</code></footer>
+</body></html>

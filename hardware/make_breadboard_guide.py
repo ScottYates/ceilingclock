@@ -415,8 +415,9 @@ def build_steps():
                 W_('white', esp(str(G('PIN_I2S_DOUT'))), md('amp', 'DIN', 'amp DIN')),
                 W_('5v', md('amp', 'VIN', 'amp VIN'), rl('b+', 6, '(5 V)')),
                 W_('gnd', md('amp', 'GND', 'amp GND'), rl('b-', 7))],
-         test='Screw the speaker leads into the amp\'s + and − terminals. Under <b>Sounds</b>, press <b>Play</b> on beep.wav: four beeps. Then give an alarm a radio or podcast URL and press <b>Preview stream</b>.',
-         fix=[('Silent', 'Is the 5 V adapter plugged in? Check BCLK, LRC and DIN aren\'t swapped. Leave GAIN and SD unconnected.'),
+         test='Screw the speaker leads into the amp\'s + and − terminals. (No sound? See <a href="amp-test.html">Testing the amplifier</a>.) Under <b>Sounds</b>, press <b>Play</b> on beep.wav: four beeps. Then give an alarm a radio or podcast URL and press <b>Preview stream</b>.',
+         fix=[('Still silent after the checks below', 'Follow <a href="amp-test.html"><b>Testing the amplifier</b></a>: illustrated checks of the amp\'s power, the three signals from the ESP32 and the amp\'s output, with a multimeter and an oscilloscope.'),
+              ('Silent', 'Is the 5 V adapter plugged in? Check BCLK, LRC and DIN aren\'t swapped. Leave GAIN and SD unconnected.'),
               ('Crackles', 'Push the capacitor\'s legs fully into the rails (long leg to +).')])
 
     if one:
