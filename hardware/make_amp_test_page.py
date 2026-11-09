@@ -172,19 +172,19 @@ def fig_pieces():
     return s.done()
 
 def fig_meter():
-    s = Svg(960, 470)
+    s = Svg(960, 500)
     s.text(20, 30, 'Check 1: power, with the multimeter', 16, '#222', 'start', 800)
     s.text(20, 52, 'Multimeter mode, DC volts. Black on GND for every reading; move only the red one.', 12, '#555')
     for k, (pin, read, ok) in enumerate((('VIN', '5.2 V', 'about 5 V: powered'), ('SD', '0.6 V', 'about 0.5–0.8 V: switched on'))):
         x0 = 40 + k * 470
-        pts = amp_board(s, x0 + 60, 150, 1.0, hilite=('GND', pin))
+        pts = amp_board(s, x0 + 60, 182, 1.0, hilite=('GND', pin))
         left_is_gnd = pts['GND'][0] < pts[pin][0]
         meter_probe(s, pts['GND'], '#222', 'black: GND', ang=115 if left_is_gnd else 65, length=105)
         meter_probe(s, pts[pin], RED, f'red: {pin}', ang=65 if left_is_gnd else 115, length=105)
         s.rect(x0 + 250, 76, 120, 52, '#d8e3c8', '#7a8a62', 8, 1.5)
         s.text(x0 + 310, 112, read, 24, '#1f2a14', 'middle', 800, extra='font-family="ui-monospace,monospace"')
         s.text(x0 + 310, 146, ok, 11.5, GREEN, 'middle', 800)
-    s.text(40, 458, 'VIN reads 0: the amp has no power. SD reads 0: the amp is switched off (look for solder joining SD to GND, they sit side by side).', 11.5, RED, 'start', 700)
+    s.text(40, 488, 'VIN reads 0: the amp has no power. SD reads 0: the amp is switched off (look for solder joining SD to GND, they sit side by side).', 11.5, RED, 'start', 700)
     return s.done()
 
 def fig_scope():
