@@ -178,8 +178,9 @@ def fig_meter():
     for k, (pin, read, ok) in enumerate((('VIN', '5.2 V', 'about 5 V: powered'), ('SD', '0.6 V', 'about 0.5–0.8 V: switched on'))):
         x0 = 40 + k * 470
         pts = amp_board(s, x0 + 60, 150, 1.0, hilite=('GND', pin))
-        meter_probe(s, pts['GND'], '#222', 'black: GND', ang=115, length=105)
-        meter_probe(s, pts[pin], RED, f'red: {pin}', ang=65, length=105)
+        left_is_gnd = pts['GND'][0] < pts[pin][0]
+        meter_probe(s, pts['GND'], '#222', 'black: GND', ang=115 if left_is_gnd else 65, length=105)
+        meter_probe(s, pts[pin], RED, f'red: {pin}', ang=65 if left_is_gnd else 115, length=105)
         s.rect(x0 + 250, 76, 120, 52, '#d8e3c8', '#7a8a62', 8, 1.5)
         s.text(x0 + 310, 112, read, 24, '#1f2a14', 'middle', 800, extra='font-family="ui-monospace,monospace"')
         s.text(x0 + 310, 146, ok, 11.5, GREEN, 'middle', 800)
@@ -236,7 +237,7 @@ def fig_output():
 
 def fig_scope_panel():
     """The FNIRSI 2C53T's front, drawn from a photo: buttons, the four banana sockets, and the three BNCs on top."""
-    s = Svg(960, 660)
+    s = Svg(960, 665)
     s.text(20, 30, 'Your 2C53T: where each lead goes and which buttons you use', 16, '#222', 'start', 800)
     X0, Y0, BW, BH = 330, 150, 300, 480
     # three BNC sockets on the top edge
@@ -276,11 +277,16 @@ def fig_scope_panel():
         pos[lab] = (x, jy)
     s.add(f'<line x1="{X0 + 30}" y1="{jy + 46}" x2="{X0 + 140}" y2="{jy + 46}" stroke="{RED}" stroke-width="3"/>')
     # leads
-    for lab, col, txt, ex in (('VΩ', RED, 'red lead → VΩ', 790), ('COM', '#111', 'black lead → COM', 760)):
-        x, y = pos[lab]
-        s.circle(x, y, 7, col)
-        s.path(f'M{x},{y} C{x + 40},{y + 70} {ex - 80},{y + 60} {ex},{y - 10}', col, 5)
-        s.text(ex + 8, y - 6 if lab == 'VΩ' else y + 14, txt, 13, col, 'start', 800)
+    # both leads leave to the right: red straight out from VΩ, black up and over from COM, so they never cross
+    # each other or any label
+    x, y = pos['VΩ']
+    s.circle(x, y, 7, RED)
+    s.path(f'M{x},{y} C{x + 60},{y + 10} {x + 140},{y + 14} {x + 210},{y + 10}', RED, 5)
+    s.text(x + 218, y + 15, 'red lead → VΩ', 13, RED, 'start', 800)
+    x, y = pos['COM']
+    s.circle(x, y, 7, '#111')
+    s.path(f'M{x},{y} C{x + 10},{y - 40} {x + 60},{y - 46} {x + 120},{y - 46} L{x + 278},{y - 46}', '#111', 5)
+    s.text(x + 286, y - 41, 'black lead → COM', 13, '#111', 'start', 800)
     s.text(X0 + 84, jy + 64, 'never 10A or mA here', 11.5, RED, 'middle', 800)
     # probe into a top BNC
     bx = X0 + 70
@@ -290,9 +296,9 @@ def fig_scope_panel():
     s.text(bx - 196, Y0 - 34, 'labelled CH1 (push, twist to lock)', 12, '#555', 'end')
     s.text(X0 + 260, Y0 - 100, 'three BNC sockets on top: CH1, CH2 and the generator output', 11.5, '#555', 'middle')
     # callouts for the buttons
-    callout(s, X0 + 18, row + 93, 40, 400, ['AUTO', 'press once to find', 'and show the signal'], 'start')
-    callout(s, X0 + BW - 16, row + 133, 700, 380, ['MENU', 'switch between oscilloscope', 'and multimeter'], 'start')
-    callout(s, X0 + 45, row + 40 + 13, 40, 300, ['CH1', 'channel 1 settings, including', 'the probe ×1/×10 setting'], 'start')
+    callout(s, X0 + 18, row + 53, 300, row + 53, ['CH1', 'channel 1 settings and ×1/×10'], 'end')
+    callout(s, X0 + 18, row + 93, 300, row + 93, ['AUTO', 'press once to show the signal'], 'end')
+    callout(s, X0 + BW - 16, row + 133, 760, row + 133, ['MENU', 'oscilloscope ↔ multimeter'], 'start')
     return s.done()
 
 def page():
