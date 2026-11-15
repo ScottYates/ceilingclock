@@ -26,7 +26,7 @@
 #include "feed_scan.h"
 #include "net_fetch.h"
 
-#define FW_VERSION "1.1.0"   // bump on every release
+#define FW_VERSION "1.1.1"   // bump on every release
 #ifndef FW_BUILD
 #define FW_BUILD __DATE__ " " __TIME__   // set by build_stamp.py in PlatformIO builds
 #endif
@@ -114,12 +114,38 @@ bool resolveStream(const char* url, std::string& out, std::string& title, std::s
   return true;
 }
 
+// ---- audio diagnostics (/api/audiodiag): the library's last messages and the loudest sample seen,
+// before and after volume, since the last play started. Helps tell "no data" from "silent data".
+static char audioLog[8][96];
+static uint8_t audioLogN = 0;
+static volatile int32_t peakRaw = 0, peakOut = 0;
+static volatile uint32_t samplesOut = 0;
+static void audioLogAdd(const char* m) {
+  strlcpy(audioLog[audioLogN % 8], m, sizeof audioLog[0]);
+  audioLogN++;
+}
+#ifndef NATIVE_SIM
+static int32_t absPeak(const int32_t* b, int n) {
+  int32_t p = 0;
+  for (int i = 0; i < n; i++) { int32_t v = b[i] < 0 ? -(b[i] + 1) : b[i]; if (v > p) p = v; }
+  return p;
+}
+void audio_process_raw_samples(int32_t* outBuff, int16_t validSamples) {
+  int32_t p = absPeak(outBuff, validSamples); if (p > peakRaw) peakRaw = p;
+}
+void audio_process_i2s(int32_t* outBuff, int16_t validSamples, bool* continueI2S) {
+  int32_t p = absPeak(outBuff, validSamples); if (p > peakOut) peakOut = p;
+  samplesOut += validSamples;
+}
+#endif
+
 void audioInit() {
   audioPlayer = new Audio();
   audioPlayer->setPinout(PIN_I2S_BCLK, PIN_I2S_LRC, PIN_I2S_DOUT);
   audioPlayer->setVolume(0);
   Audio::audio_info_callback = [](Audio::msg_t m) {
     if (!m.msg || !*m.msg) return;
+    audioLogAdd(m.msg);
     if (m.e == Audio::evt_streamtitle || (m.e == Audio::evt_name && !streamTitle[0])) strlcpy(streamTitle, m.msg, sizeof streamTitle);
   };
 }
@@ -130,8 +156,11 @@ void audioStep() {
   while (xQueueReceive(audioQ, &c, 0) == pdTRUE) {
     if (c.type == AC_PLAY) {
       audioPlayer->stopSong();
+      peakRaw = peakOut = 0; samplesOut = 0;
       audioPlayer->setVolume(c.vol);
-      audioPlayer->connecttoFS(LittleFS, c.path);
+      bool ok = audioPlayer->connecttoFS(LittleFS, c.path);
+      char m[96]; snprintf(m, sizeof m, "play %s vol %u: %s", c.path, c.vol, ok ? "started" : "FAILED");
+      audioLogAdd(m);
     } else if (c.type == AC_STREAM) {
       audioPlayer->stopSong();
       audioPlayer->setVolume(c.vol);
@@ -741,6 +770,16 @@ void apiAction() {
 void setupServer() {
   server.on("/", HTTP_GET, [] { if (authed()) server.send_P(200, "text/html", INDEX_HTML); });
   server.on("/api/state", HTTP_GET, apiState);
+  server.on("/api/audiodiag", HTTP_GET, [] {
+    JsonDocument d;
+    d["peakRaw"] = peakRaw; d["peakOut"] = peakOut; d["samplesOut"] = samplesOut;
+    d["volume"] = audioPlayer ? audioPlayer->getVolume() : -1;
+    JsonArray a = d["log"].to<JsonArray>();
+    uint8_t n = audioLogN < 8 ? audioLogN : 8;
+    for (uint8_t i = 0; i < n; i++) a.add(audioLog[(audioLogN - n + i) % 8]);
+    String out; serializeJson(d, out);
+    server.send(200, "application/json", out);
+  });
   server.on("/api/config", HTTP_GET, apiGetConfig);
   server.on("/api/config", HTTP_POST, apiPostConfig);
   server.on("/api/sounds", HTTP_GET, apiSounds);
