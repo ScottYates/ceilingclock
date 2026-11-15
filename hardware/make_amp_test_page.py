@@ -398,6 +398,86 @@ def fig_step_touch():
     return s.done()
 
 
+def fig_spare_header():
+    """Side view: a 7-pin header pushed through the spare amp's holes, each pin pushed against one side of its
+    hole's metal lining, the board and plastic strip squeezed together with a clothes peg at the end,
+    the five jumpers on the long ends, GAIN and SD left empty."""
+    s = Svg(960, 480)
+    step_head(s, 'A', 'Header pins: push sideways and clamp, no solder', 'Side view of the spare amp. A pin only connects where it presses against the metal lining of its hole.')
+    bx0, bx1, by = 130, 650, 190                       # amp board, edge on
+    xs = [bx0 + 50 + i * 70 for i in range(7)]
+    s.text(bx0 - 8, by + 4, 'amp board,', 12, '#1f437d', 'end', 800)
+    s.text(bx0 - 8, by + 20, 'chip side up', 12, '#1f437d', 'end', 800)
+    s.rect(bx0, by, bx1 - bx0, 14, PCB, PCBE, 2, 1)
+    s.rect(bx0 + 20, by + 22, bx1 - bx0 - 40, 14, '#1d1d1d', rx=2)          # plastic strip under the board
+    for x in xs:
+        s.rect(x - 8, by - 1, 16, 16, '#fbfaf6')                            # the hole through the board
+        s.line(x - 8, by - 1, x - 8, by + 15, PAD, 3); s.line(x + 8, by - 1, x + 8, by + 15, PAD, 3)
+        s.rect(x - 13, by - 3, 26, 3, PAD, rx=1)
+        px = x + 5                                                          # pin pushed against the right lining
+        s.line(px, by - 16, px, by + 22, '#c9ccd1', 4)
+        s.line(px, by + 36, px, by + 118, '#c9ccd1', 4)
+        s.circle(px + 3, by + 7, 3.5, ORANGE)
+    callout(s, xs[0] + 8, by + 7, 260, by - 70, ['each pin pressed against', 'the metal lining of its hole'])
+    # clothes peg past the last pin, squeezing board and strip together
+    gx = bx1 - 12
+    s.rect(gx - 8, by - 34, 14, 92, '#c8a26b', '#8a6a3a', 4, 1.2)
+    s.rect(gx + 8, by - 34, 14, 92, '#c8a26b', '#8a6a3a', 4, 1.2)
+    s.circle(gx + 7, by - 14, 6, '#9aa0a6', '#555')
+    callout(s, gx + 24, by + 10, 720, by + 10, ['clothes peg or binder clip', 'squeezes board and strip', 'together so the pins', 'stay pressed sideways'])
+    names = ['LRC', 'BCLK', 'DIN', 'GAIN', 'SD', 'GND', 'VIN']
+    cols = {'LRC': '#14a3b8', 'BCLK': '#8e44ad', 'DIN': '#9aa0a6', 'GND': '#222', 'VIN': RED}
+    for x, nm in zip(xs, names):
+        px = x + 5
+        if nm in cols:
+            s.rect(px - 9, by + 112, 18, 38, '#1d1d1d', rx=3)
+            s.path(f'M{px},{by + 150} C{px},{by + 190} {px},{by + 210} {px},{by + 236}', cols[nm], 5)
+        s.text(px, by + 258, nm, 12.5, '#222' if nm in cols else '#9aa0a6', 'middle', 800)
+        if nm not in cols: s.text(px, by + 274, 'leave empty', 11, '#9aa0a6', 'middle')
+    s.text(bx0, by + 300, 'Move the five jumpers from the old amp onto the same five pins of the spare: LRC, BCLK, DIN, GND, VIN.', 12, '#333', 'start', 700)
+    return s.done()
+
+def fig_spare_speaker():
+    """Top view of the spare amp's speaker pads (no screw terminal): bare speaker wire poked through each hole
+    and folded back over the pad, or held with a crocodile clip."""
+    s = Svg(960, 400)
+    step_head(s, 'B', 'Speaker wires: through the hole, folded back', 'Top view of the spare amp, at the edge where the blue screw terminal would go.')
+    bx0, by0 = 110, 160
+    s.rect(bx0, by0, 360, 210, PCB, PCBE, 10, 1.5)
+    s.rect(bx0 + 150, by0 + 120, 60, 50, '#1d1d1d', rx=4)
+    holes = {'+': (bx0 + 120, by0 + 50), '−': (bx0 + 240, by0 + 50)}
+    for lab, (x, y) in holes.items():
+        s.circle(x, y, 16, PAD, '#a8862e', 1.5); s.circle(x, y, 7, '#fbfaf6')
+        s.text(x, y + 42, lab, 20, '#ffffff', 'middle', 800)
+    x, y = holes['+']                                   # red: through the hole, end folded back over the pad
+    s.path(f'M{x - 80},{by0 - 50} C{x - 50},{by0 - 30} {x - 10},{y - 40} {x - 4},{y - 18}', RED, 6)
+    s.path(f'M{x - 4},{y - 18} L{x},{y}', '#c9a227', 3)
+    s.path(f'M{x},{y} C{x + 14},{y + 6} {x + 18},{y - 12} {x + 6},{y - 16}', '#c9a227', 3)
+    s.text(x - 86, by0 - 54, 'speaker red (+)', 12.5, RED, 'end', 800)
+    x2, y2 = holes['−']                                 # black: held on with a crocodile clip
+    s.path(f'M{x2 + 80},{by0 - 50} C{x2 + 50},{by0 - 30} {x2 + 10},{y2 - 40} {x2 + 4},{y2 - 18}', '#222', 6)
+    s.path(f'M{x2 + 4},{y2 - 18} L{x2},{y2}', '#c9a227', 3)
+    s.rect(x2 + 10, y2 - 12, 34, 16, '#9aa0a6', '#555', 3, 1)
+    s.path(f'M{x2 + 10},{y2 + 4} l5,6 l5,-6 l5,6 l5,-6 l5,6 l5,-6', '#555', 1.5)
+    s.text(x2 + 86, by0 - 54, 'speaker black (−)', 12.5, '#222', 'start', 800)
+    callout(s, x + 14, y + 4, bx0 + 30, by0 + 190, ['red: end folded back', 'over the pad'], 'start', '#fff')
+    callout(s, x2 + 40, y2 + 6, bx0 + 230, by0 + 190, ['black: small', 'crocodile clip'], 'start', '#fff')
+    tx = 520
+    lines = ['1. Strip about 1 cm of each speaker wire',
+             '    and twist the strands tight.',
+             '2. Push each bare end down through its hole:',
+             '    red into +, black into −.',
+             '3. Fold the end back so it presses on the',
+             '    gold pad, or hold it there with a small',
+             '    crocodile clip.',
+             '4. Make sure the two bare ends can’t touch.']
+    for i, t in enumerate(lines):
+        first = t[0].isdigit()
+        s.text(tx if first else tx + 20, by0 + 10 + i * 21, t.strip(), 12.5, '#333', 'start', 700 if first else 400)
+    s.text(tx, by0 + 196, 'A loose contact only crackles. Bare ends touching', 12, RED, 'start', 800)
+    s.text(tx, by0 + 214, 'each other can damage the amp: keep them apart.', 12, RED, 'start', 800)
+    return s.done()
+
 def page():
     style = open(os.path.join(HERE, '..', 'docs', 'breadboard.html')).read()
     ver = style[style.index('style.css?v='):].split('"')[0]
@@ -486,6 +566,13 @@ ol li{{margin:5px 0}}
 <table><tr><th>You see</th><th>Means</th></tr>
 <tr><td>Fast 5 V pulses that change with the sound</td><td>The amp works. Check the speaker wires are clamped tight and the speaker clicks on an AA battery.</td></tr>
 <tr><td>A flat line, with power and all three signals good</td><td>The amp board itself is faulty, or a header joint is cracked. Reflow its 7 joints; if that doesn't help, try a spare amp.</td></tr></table>
+</div>
+<div class="card" id="spare">
+<h2>Trying a spare amp without soldering</h2>
+<p>Good for a quick yes/no: does the spare amp make sound? The pins only need to press against the metal lining of each hole. Expect the odd crackle.</p>
+{fig_spare_header()}
+{fig_spare_speaker()}
+<div class="test">Hear the tone, even crackly? Then the first amp is faulty: solder the header and terminal onto the spare and use that. Still silent? The amp isn't the problem; next suspect is the BCLK clock signal on long jumper wires.</div>
 </div>
 </main>
 <footer>Ceiling Clock · drawn by <code>hardware/make_amp_test_page.py</code></footer>
