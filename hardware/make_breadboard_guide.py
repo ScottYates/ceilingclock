@@ -123,10 +123,7 @@ MODS = {
   'tm1637': (30, 150, 200, 225, 'right', ['CLK', 'DIO', 'VCC', 'GND'], '#c0392b', 'TM1637 display', ''),
   'amp':    (30, 250, 200, 370, 'right', ['LRC', 'BCLK', 'DIN', 'GAIN', 'SD', 'GND', 'VIN'], '#7b3fa0', 'MAX98357A amp', ''),
   'usbc':   (30, 560, 170, 625, 'right', ['VBUS', 'GND'], '#2a6f9e', 'USB-C breakout', '5 V 3 A supply'),
-  'lcd':    (800, 30, 980, 175, 'left', ['RST', 'CE', 'DC', 'DIN', 'CLK', 'VCC', 'BL', 'GND'], '#b03030', 'Nokia 5110 LCD', ''),
-  'ring':   (800, 200, 980, 320, 'left', ['DI', '5V', 'GND'], '#1d1d1d', 'WS2812B ring', ''),
-  'mosfet': (800, 345, 980, 455, 'left', ['TRIG', 'GND', 'VIN+', 'VIN−', 'OUT+', 'OUT−'], '#2a6f9e', 'MOSFET module', ''),
-  'led':    (840, 490, 980, 570, 'left', ['LED +', 'LED −'], '#d39a00', '3 W LED star', 'on metal'),
+  'proj':   (800, 150, 980, 225, 'left', ['CLK', 'DIO', 'VCC', 'GND'], '#c0392b', 'Projector display', ''),
 }
 def mod_box(mod):
     x0, y0, x1, y1, side, *rest = MODS[mod]
@@ -168,8 +165,10 @@ def bez(p, q):
     c1 = (a[0] + da[0] * d, a[1] + da[1] * d)
     c2 = (b[0] + db[0] * d, b[1] + db[1] * d)
     path = f'M{a[0]:.1f},{a[1]:.1f} C{c1[0]:.1f},{c1[1]:.1f} {c2[0]:.1f},{c2[1]:.1f} {b[0]:.1f},{b[1]:.1f}'
-    m = [(a[i] + 3 * c1[i] + 3 * c2[i] + b[i]) / 8 for i in (0, 1)]   # midpoint, for the number badge
-    return path, m
+    def at(t):   # a point on the curve, for the number badge
+        u = 1 - t
+        return [u ** 3 * a[i] + 3 * u * u * t * c1[i] + 3 * u * t * t * c2[i] + t ** 3 * b[i] for i in (0, 1)]
+    return path, at
 
 PRE = {'plug': 'p:', 'one': 'o:', 'beside': ''}     # checkbox / highlight id prefix per layout
 SID = {'plug': 'p-', 'one': 'o-', 'beside': 's-'}   # section id prefix
@@ -214,8 +213,7 @@ def power_debug():
     ]
 
 BANDS = {'10 kΩ': 'bands brown-black-orange, or brown-black-black-red on 5-band resistors; the BOJACK bag says 10KΩ',
-         '330 Ω': 'bands orange-orange-brown, or orange-orange-black-black',
-         '4.7 Ω 2 W': 'the big one; bands yellow-violet-gold, or yellow-violet-black-silver'}
+}
 def place_lines(parts):
     """One plain instruction per part on the breadboard, with this layout's hole names."""
     out = []
@@ -342,22 +340,18 @@ def build_steps():
          fix=[('Display stays blank', 'CLK and DIO swapped? VCC must go to the + rail (3.3 V).'),
               ('Shows 88:88 or garbage', 'A loose jumper: push each one firmly onto its pin.')])
 
-    step(id='lcd', title='Projector LCD (Nokia 5110)', time='10 min', mods=['lcd'], parts=[],
-         need=['Nokia 5110 LCD (no need to cut it yet)'],
-         intro='The LCD makes the image on the ceiling. Test it as it comes, before cutting its window: lighting its own backlight lets you read it on the bench.',
-         wires=[W_('brown', esp(str(G('PIN_LCD_RST'))), md('lcd', 'RST', 'LCD RST')),
-                W_('purple', esp(str(G('PIN_LCD_CE'))), md('lcd', 'CE', 'LCD CE')),
-                W_('cyan', esp(str(G('PIN_LCD_DC'))), md('lcd', 'DC', 'LCD DC')),
-                W_('green', esp(str(G('PIN_LCD_DIN'))), md('lcd', 'DIN', 'LCD DIN')),
-                W_('yellow', esp(str(G('PIN_LCD_CLK'))), md('lcd', 'CLK', 'LCD CLK')),
-                W_('3v3', md('lcd', 'VCC', 'LCD VCC'), rl('t+', 28)),
-                W_('gnd', md('lcd', 'BL', 'LCD BL (bench only: lights it)'), rl('t-', 27)),
-                W_('gnd', md('lcd', 'GND', 'LCD GND'), rl('t-', 29))],
-         test='The LCD shows the time, <b>back to front</b>: the clock mirrors it for the projector. Untick <b>Mirror left/right</b> in the projector settings to read it, and tick it again before testing the optics.',
-         fix=[('Blank or solid black', 'Adjust <b>LCD contrast</b> on the settings page. Check RST and CE.'),
-              ('No backlight', 'On some boards BL lights when connected to + instead of −. Move that one wire to the top + rail.')])
-
+    step(id='proj', title='Projector display (second TM1637)', time='5 min', mods=['proj'], parts=[],
+         need=['A second TM1637 display, the same kind as the front one'],
+         intro='The ceiling projector is a second four-digit display: in the clock, a lens images its glowing digits onto the ceiling. It wires up exactly like the front display, on two other pins.',
+         wires=[W_('yellow', esp(str(G('PIN_PROJ_CLK'))), md('proj', 'CLK', 'projector CLK')),
+                W_('white', esp(str(G('PIN_PROJ_DIO'))), md('proj', 'DIO', 'projector DIO')),
+                W_('3v3', md('proj', 'VCC', 'projector VCC'), rl('t+', 28)),
+                W_('gnd', md('proj', 'GND', 'projector GND'), rl('t-', 29))],
+         test='The display shows the time, <b>flipped</b>: the clock pre-flips the digits so they read correctly after the lens and mirror. Untick <b>Mirror left/right</b> and <b>Mirror top/bottom</b> in the projector settings to read it on the bench, then set them again once it projects. The <b>Right now</b> card on the page shows both what the module lights up and what the ceiling should read.',
+         fix=[('Display stays blank', 'Is the projector on? Its mode may be <b>Night only</b> or <b>Always off</b>: press <b>Show 15 s</b> on the page. Otherwise CLK and DIO are swapped, or VCC isn\'t on the + rail.'),
+              ('The front display changes instead', 'The two displays\' wires are crossed: the front one uses GPIO ' + str(G('PIN_TM_CLK')) + '/' + str(G('PIN_TM_DIO')) + ', the projector GPIO ' + str(G('PIN_PROJ_CLK')) + '/' + str(G('PIN_PROJ_DIO')) + '.')])
     L1, L2 = (45, 48) if one else (13, 16)
+
     step(id='ldr', title='Light sensor', time='5 min', mods=[],
          need=['GL5528 light sensor (round disc)', '10 kΩ resistor (a separate part: striped cylinder)'],
          intro='This step uses <b>two separate parts</b>: the light sensor <b>and</b> a 10 kΩ resistor. The sensor alone does nothing: the resistor sits under it, between the sensor and ground, and the ESP32 reads the voltage where the two meet. That voltage rises as the room gets brighter. Neither part has a right way round.'
@@ -420,43 +414,6 @@ def build_steps():
               ('Silent', 'Is the 5 V adapter plugged in? Check BCLK, LRC and DIN aren\'t swapped. Leave GAIN and SD unconnected.'),
               ('Crackles', 'Push the capacitor\'s legs fully into the rails (long leg to +).')])
 
-    if one:
-        rr, rw = ('res', 50, 54, 'h', '330 Ω', None), [W_('green', esp(str(G('PIN_RING'))), hl(50, 'j', note='one end of the 330 Ω')),
-                                                   W_('green', hl(54, 'j', note='other end of the 330 Ω'), md('ring', 'DI', 'ring DI (data in)'))]
-    elif plug:
-        rr, rw = ('res', 15, 19, 'h', '330 Ω', 'L'), [W_('green', esp(str(G('PIN_RING'))), hl(15, 'f', 'L', 'one end of the 330 Ω')),
-                                                  W_('green', hl(19, 'f', 'L', 'other end of the 330 Ω'), md('ring', 'DI', 'ring DI (data in)'))]
-    else:
-        rr, rw = ('res', 21, 25, 'c', '330 Ω', None), [W_('green', esp(str(G('PIN_RING'))), hl(21, 'a', note='one end of the 330 Ω')),
-                                                   W_('green', hl(25, 'a', note='other end of the 330 Ω'), md('ring', 'DI', 'ring DI (data in)'))]
-    step(id='ring', title='Sunrise ring', time='10 min', mods=['ring'],
-         need=['WS2812B 16-LED ring (with leads soldered on)', '330 Ω resistor (orange-orange-brown)', '1000 µF capacitor'],
-         intro='The sunrise light. The 330 Ω resistor protects the ring\'s data input; the big capacitor smooths the current the LEDs draw. Mind the capacitor\'s stripe: it goes to −.',
-         parts=[rr, ('cap', 23, '1000 µF')],
-         wires=rw + [W_('5v', md('ring', '5V', 'ring 5V'), rl('b+', 27)),
-                     W_('gnd', md('ring', 'GND', 'ring GND'), rl('b-', 28))],
-         test='Give an alarm a sunrise time (for example 15 minutes) and press <b>Ring now</b>: the ring glows warm white until you press <b>Dismiss</b> (or hold button A for 2 seconds).',
-         fix=[('Nothing lights', 'Make sure the wire goes to DI (in), not DO (out). Check the 5 V adapter is on.'),
-              ('Flickers or wrong colours', 'Keep the data wire short. If it persists, a 74AHCT125 level shifter on the data line fixes it.')])
-
-    lr = ('res', 22, 26, 'h', '4.7 Ω 2 W', 'L') if plug else ('res', 56, 60, 'c', '4.7 Ω 2 W', None) if one else ('res', 26, 30, 'g', '4.7 Ω 2 W', None)
-    lb = 'L' if plug else None
-    lc = 'a' if one else 'j'               # design letter of the free hole in the resistor's rows
-    step(id='led', title='Projector LED', time='15 min', mods=['mosfet', 'led'],
-         need=['MOSFET module', '3 W LED on its star (leads soldered on)', '4.7 Ω 2 W resistor', 'Something metal to sit the LED on'],
-         intro='The bright LED that lights the LCD. The MOSFET module switches and dims it for the ESP32. The 4.7 Ω resistor limits the current to about 400 mA, and it gets warm, so keep it off the plastic.',
-         parts=[lr],
-         wires=[W_('grey', esp(str(G('PIN_PROJ_LED'))), md('mosfet', 'TRIG', 'module TRIG / PWM')),
-                W_('gnd', md('mosfet', 'GND', 'module trigger GND'), rl('b-', 26)),
-                W_('5v', md('mosfet', 'VIN+', 'module VIN+', None), rl('b+', 29, '(5 V)'), 'screw terminal–male'),
-                W_('gnd', md('mosfet', 'VIN−', 'module VIN−', None), rl('b-', 25), 'screw terminal–male'),
-                W_('5v', md('mosfet', 'OUT+', 'module OUT+', None), hl(lr[1], lc, lb, 'one end of the 4.7 Ω'), 'screw terminal–male'),
-                W_('5v', hl(lr[2], lc, lb, 'other end of the 4.7 Ω'), md('led', 'LED +', 'LED +', None), 'male–soldered lead'),
-                W_('gnd', md('led', 'LED −', 'LED −', None), md('mosfet', 'OUT−', 'module OUT−', None), 'soldered lead–screw terminal')],
-         test='On the clock\'s page, switch the <b>Projector</b> off and on: the LED goes off and on. Change the projector\'s day brightness: it dims.',
-         fix=[('LED never lights', 'LED + and − swapped? Check OUT+ goes through the resistor to LED +.'),
-              ('Always on full', 'TRIG is on the wrong pin, or the module\'s trigger GND isn\'t connected.')],
-         warn='Don\'t look straight into the lit LED. Without its heatsink it heats up in seconds: sit the star on metal and don\'t leave it at full brightness for more than a few seconds.')
     return S
 
 def check_holes(S):
@@ -600,14 +557,6 @@ def draw_step(S, k):
             s.circle(x0 + 55, y1 + 32, 22, '#3b3b3b'); s.circle(x0 + 55, y1 + 32, 9, '#777')
             s.line(x0 + 50, y1, x0 + 48, y1 + 12, '#d32f2f', 2); s.line(x0 + 62, y1, x0 + 64, y1 + 12, '#222', 2)
             s.text(x0 + 85, y1 + 36, 'speaker', 9, '#6b7280')
-        if m == 'ring':
-            s.add(f'<circle cx="{x0 + 120}" cy="{y0 + 66}" r="30" fill="none" stroke="#1d1d1d" stroke-width="9"/>')
-            for a in range(16):
-                s.circle(x0 + 120 + 30 * math.cos(a * math.pi / 8), y0 + 66 + 30 * math.sin(a * math.pi / 8), 3, '#ffe9a8')
-        if m == 'led':
-            s.rect(x0 + 50, y0 + 26, 80, 40, '#9aa0a8', rx=3)
-            for i in range(6): s.line(x0 + 56 + i * 13, y0 + 66, x0 + 56 + i * 13, y0 + 74, '#7b8088', 3)
-            s.circle(x0 + 90, y0 + 36, 13, '#e9edf2', '#b8bec6'); s.circle(x0 + 90, y0 + 36, 4, '#ffe07a')
         if m == 'usbc':
             s.rect(x0 - 26, y0 + 22, 22, 26, '#e8eaed', '#9aa0a8', 3); s.text(x0 - 15, y0 + 60, '5 V', 8.5, '#6b7280', 'middle')
             s.line(x0 - 4, y0 + 35, x0 + 6, y0 + 35, '#555', 4)
@@ -615,20 +564,35 @@ def draw_step(S, k):
     # wires: earlier steps faded, this step bright with number badges
     n = 0
     pre = PRE[LAY]
+    badges, late = [], []
+    def badge_at(at):
+        # the midpoint unless another badge is already there; then the nearest free spot along the wire
+        for t in (0.5, 0.42, 0.58, 0.34, 0.66, 0.27, 0.73, 0.2, 0.8):
+            p = at(t)
+            if all((p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 >= 22 ** 2 for q in badges): break
+        else:
+            p = at(0.5)
+        badges.append(p)
+        return p
     for idx, st in enumerate(S[:k + 1]):
         cur = idx == k
         for w in st['wires']:
-            path, m = bez(w['a'], w['b'])
+            path, at = bez(w['a'], w['b'])
             col = COL[w['col']]
             if cur:
                 n += 1
+                m = badge_at(at)
                 s.add(f'<g class="wire" data-w="{pre}{S[k]["id"]}-{n}"><path d="{path}" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round"/>'
                       f'<path d="{path}" fill="none" stroke="{col}" stroke-width="3.6" stroke-linecap="round"/>')
                 for e in (w['a'], w['b']): s.circle(*e['pt'], 3.6, col, '#fff', 1.2)
-                s.circle(m[0], m[1], 9, '#fff', col, 2); s.text(m[0], m[1] + 3.8, n, 10.5, '#111', 'middle', 700)
                 s.add('</g>')
+                late.append((f'{pre}{S[k]["id"]}-{n}', m, col, n))
             else:
                 s.add(f'<path d="{path}" fill="none" stroke="{col}" stroke-width="2.4" stroke-linecap="round" opacity="0.28"/>')
+    for wid, m, col, n in late:   # badges last, so no wire covers one
+        s.add(f'<g class="wire" data-w="{wid}">')
+        s.circle(m[0], m[1], 9, '#fff', col, 2); s.text(m[0], m[1] + 3.8, n, 10.5, '#111', 'middle', 700)
+        s.add('</g>')
     s.add('</svg>')
     return '\n'.join(s.o)
 
@@ -859,12 +823,12 @@ def svg_optics():
         s.text(370 + 7.2 * len(lab) + 8, y + h / 2 + 4, sub, 10.5, '#aab0b8')
     s.add('<ellipse cx="290" cy="110" rx="34" ry="5" fill="#9fd3ff" opacity="0.8"/>')
     s.text(370, 106, 'lens (50 mm, f = 100)', 12, '#e8e8e8', 'start', 700); s.text(370, 122, 'move it up and down to focus', 10.5, '#aab0b8')
-    part(232, 46, 4, '#c8ccd2', 'LCD, glass up', '30 mm above the LED')
-    part(266, 50, 2, '#ffffff', 'baking paper', '10 mm above the LED')
-    s.rect(272, 296, 36, 8, '#9aa0a8', rx=2); s.circle(290, 294, 5, '#ffe07a')
-    s.line(314, 298, 362, 298, '#5b6068', 1); s.text(370, 302, 'LED, pointing up', 12, '#e8e8e8', 'start', 700)
-    s.line(230, 112, 230, 232, '#ffd696', 1.2); s.line(224, 112, 236, 112, '#ffd696', 1.2); s.line(224, 232, 236, 232, '#ffd696', 1.2)
-    s.text(222, 176, 'about 106 mm', 11, '#ffd696', 'end', 700)
+    s.rect(262, 282, 56, 14, '#20242b', '#5b6068', 2)
+    for i, x in enumerate((268, 280, 296, 308)): s.rect(x, 285, 6, 8, '#ff4a35', rx=1)
+    s.line(324, 289, 362, 289, '#5b6068', 1); s.text(370, 293, 'projector display, digits up', 12, '#e8e8e8', 'start', 700)
+    s.text(370, 309, 'on its jumpers, the room dark', 10.5, '#aab0b8')
+    s.line(230, 112, 230, 282, '#ffd696', 1.2); s.line(224, 112, 236, 112, '#ffd696', 1.2); s.line(224, 282, 236, 282, '#ffd696', 1.2)
+    s.text(222, 201, 'about 106 mm', 11, '#ffd696', 'end', 700)
     s.add('</svg>')
     return '\n'.join(s.o)
 
@@ -967,7 +931,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </div></header>
 <main>
 <h1>Breadboard test</h1>
-<p class="lead">Wire the clock's electronics up on a breadboard and check every part works, before you solder anything or print the case. You add one part at a time and test it, so if something doesn't work you know exactly where to look. No soldering is needed except for the parts that only come with solder pads (the USB-C breakout, the LED and the ring). Allow an evening.</p>
+<p class="lead">Wire the clock's electronics up on a breadboard and check every part works, before you solder anything or print the case. You add one part at a time and test it, so if something doesn't work you know exactly where to look. No soldering is needed except for the parts that only come with solder pads or loose pins (the ESP32's headers, the USB-C breakout and the amplifier). Allow an evening.</p>
 
 <h2>Where does the ESP32 go?</h2>
 <p>Pick one; the pictures and wire lists below change to match. Your ticks are kept separately for each.</p>
@@ -995,12 +959,12 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 
 <section class="bbstep" id="s-optics">
   <div class="bbhead"><span class="num">★</span><h2>Bonus: see it on the ceiling</h2><span class="time">⏱ 15 min</span></div>
-  <p>Once the LCD has its window cut (<a href="assembly.html#step-5">assembly step 5</a>), you can try the projector by hand in a dark room before printing anything.</p>
+  <p>With the projector display wired up, you can try the projection by hand in a dark room before printing anything. The digits are dim next to a lamp, so turn the lights off and let your eyes adjust for a minute.</p>
   <div class="two"><div>{svg_optics()}</div><div><ol class="todo">
-  <li>Point the LED up, sitting on its metal.</li>
-  <li>Hold a piece of baking paper about 10 mm above it, and the LCD, glass up, about 30 mm above it.</li>
-  <li>Hold the lens about 106 mm above the LCD, look at the ceiling, and move the lens up and down until the digits are sharp. That's what the focus ring does in the finished clock.</li>
-  <li>Use <b>Mirror left/right</b> and <b>Flip projection</b> on the clock's page until it reads right from where you lie. In the clock the mirror adds one more flip, so expect to change Mirror left/right once it's built.</li></ol></div></div>
+  <li>On the clock's page set the projector's brightness to 7 and press <b>Show 15 s</b> (or set its mode to <b>Always on</b> while you try this).</li>
+  <li>Lay the projector display on the table, digits up.</li>
+  <li>Hold the lens about 106 mm above the digits, look at the ceiling, and move the lens up and down until the digits are sharp. That's what the focus ring does in the finished clock.</li>
+  <li>Use <b>Mirror left/right</b>, <b>Mirror top/bottom</b> and <b>Upside down</b> on the clock's page until it reads right from where you lie. In the clock the mirror adds one more flip, so expect to change Mirror left/right once it's built.</li></ol></div></div>
 </section>
 
 <h2>Done?</h2>

@@ -13,7 +13,7 @@
 <p class="lead">Flash once over USB. After that, updates, alarms, sounds and display settings all happen from your phone.</p>
 
 <h2>See it running</h2>
-<p>The real firmware running in the PC simulator (no hardware), showing the phone page's live view through an alarm: sunrise, ringing, snooze, then switching the displays off.</p>
+<p>The real firmware running in the PC simulator (no hardware), showing the phone page's live view through an alarm: ringing, snooze, then flipping the projection upside down and back. The ceiling picture stays readable while the projector module's own digits are mirrored.</p>
 <video src="downloads/ceilingclock-simulator.mp4" controls muted playsinline style="width:100%;max-width:430px;border-radius:12px;border:1px solid var(--line);background:#111"></video>
 
 <h2>Flash the firmware</h2>
@@ -46,14 +46,14 @@
 
 <h2>Settings page</h2>
 <table><thead><tr><th>Setting</th><th>What it does</th></tr></thead><tbody>
-<tr><td>Right now</td><td>A live picture of the clock: the exact image on the ceiling, the front display, the sunrise light colour and the sound. It updates every second.</td></tr>
-<tr><td>Alarms (up to 8)</td><td>Time, days (none = one-time), sound, volume 0–21, fade-in seconds, sunrise minutes, snooze minutes, auto-stop minutes. Each alarm also has <b>Skip next</b> and <b>Ring now</b>.</td></tr>
+<tr><td>Right now</td><td>A live picture of the clock: the time as it reads on the ceiling, the projector module's own (mirrored) digits, the front display and the sound. It updates every second.</td></tr>
+<tr><td>Alarms (up to 8)</td><td>Time, days (none = one-time), sound, volume 0–21, fade-in seconds, snooze minutes, auto-stop minutes. Each alarm also has <b>Skip next</b> and <b>Ring now</b>.</td></tr>
 <tr><td>Stream or podcast alarm</td><td>Give an alarm a URL and it plays that instead of its sound file: an internet radio stream, a link to an MP3, or a <b>podcast feed</b>, in which case it plays the newest episode. The sound file becomes the <b>backup</b>: if the stream hasn't started within 25 seconds, the feed can't be read, or the stream drops out, the backup rings so you still wake up. The speaker panel shows the episode or station, and why a stream failed. <b>Preview stream</b> tries it out.</td></tr>
-<tr><td>Front display / projector mode</td><td><b>Always on</b>, <b>Always off</b> (fully dark), <b>Only at night</b>, <b>Only in daytime</b>, with separate day and night brightness.</td></tr>
+<tr><td>Front display / projector mode</td><td><b>Always on</b>, <b>Always off</b> (fully dark), <b>Only at night</b>, <b>Only in daytime</b>, with separate day and night brightness (0–7 for both).</td></tr>
 <tr><td>Turn displays on while an alarm rings</td><td>Overrides "off" while an alarm is going off. Untick it to keep them dark.</td></tr>
 <tr><td>Night hours / light sensor</td><td>Choose the night window. You can also treat a dark room as night; the page shows the live sensor reading to help you set the threshold.</td></tr>
 <tr><td>Flip projection</td><td>A button on the main card that turns the ceiling picture upside down (180°), and back. Use it when the time reads upside down from where you lie. The same setting is <b>Upside down</b> under Projector, and the "Right now" picture turns with it.</td></tr>
-<tr><td>Mirror left/right, mirror top/bottom, bright digits on dark, LCD contrast</td><td>Make the ceiling image read correctly (the projector's mirror flips it once) and look as clean as possible.</td></tr>
+<tr><td>Mirror left/right, mirror top/bottom</td><td>Make the ceiling image read correctly. The lens and the projector's mirror flip the picture; the clock sends the projector display's digits pre-flipped to undo it.</td></tr>
 <tr><td>Sounds</td><td>Upload MP3, WAV, M4A/AAC, FLAC or OGG (about 9.9 MB of space). The built-in beep can't be deleted, so there's always a fallback.</td></tr>
 <tr><td>Time zone / NTP server</td><td>Defaults to US Central (<code>CST6CDT,M3.2.0,M11.1.0</code>) and pool.ntp.org. Other zones: <a href="https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv">POSIX TZ list</a>.</td></tr>
 <tr><td>Web password</td><td>Blank means no login. If set, the user name is <code>admin</code>.</td></tr>
@@ -68,14 +68,13 @@
 <h2>Troubleshooting</h2>
 <table><thead><tr><th>Symptom</th><th>Fix</th></tr></thead><tbody>
 <tr><td>Build error <code>undefined reference to vtable for Decoder</code></td><td>Make sure <code>src/audio_lib_fix.cpp</code> is present. The audio library (pinned to 4.0.1 in <code>platformio.ini</code>) leaves two functions undefined, and that file supplies them.</td></tr>
-<tr><td>Build error on <code>ledcAttach</code></td><td>Old Arduino core 2.x. Update the espressif32 platform in PlatformIO.</td></tr>
-<tr><td>Projector shows <code>NO TIME YET</code></td><td>No Wi-Fi and no RTC time yet. Check the DS3231 wiring; the page should say "RTC backup ok".</td></tr>
-<tr><td>Bright rectangle with dark digits</td><td>Tick <b>Bright digits on dark</b>, raise LCD contrast, and tape over the glass border.</td></tr>
-<tr><td>LCD turns black or blotchy</td><td>It's too hot. Lower the projector brightness and check the vents on the left side aren't blocked.</td></tr>
+<tr><td>Projector and front display show <code>-- --</code></td><td>No Wi-Fi and no RTC time yet. Check the DS3231 wiring; the page should say "RTC backup ok".</td></tr>
+<tr><td>Ceiling digits too faint</td><td>The projected digits are meant for a dark room. Set the projector's brightness to 7, focus carefully, and keep the lens clean. Light from a lamp or a window will wash them out.</td></tr>
+<tr><td>Ceiling digits lean the wrong way</td><td>Many TM1637 modules have slanted digits; mirroring flips the slant. Nothing is wrong.</td></tr>
 <tr><td>No sound</td><td>Check the amplifier has 5 V and the speaker is connected, then press Play on beep.wav. If your own file won't play, re-save it as 44.1 kHz MP3.</td></tr>
-<tr><td>Resets when the alarm starts</td><td>The power supply is too weak or the wires too thin. Lower the sunrise max brightness.</td></tr>
+<tr><td>Resets when the alarm starts</td><td>The power supply is too weak or the wires too thin. Try a lower alarm volume, and check the 100 µF capacitor is at the amplifier.</td></tr>
 </tbody></table>
-<p class="note">Build status: the firmware compiles for the ESP32-S3 (74% of program space, 20% of RAM) and runs in the PC simulator. It hasn't run on real hardware yet, so report anything odd from the first boot.</p>
+<p class="note">Build status: the firmware compiles for the ESP32-S3 (74% of program space, 20% of RAM) and runs in the PC simulator. It runs on a breadboard build (version 2.0.0, with both displays and the amplifier).</p>
 </main>
 <footer>Ceiling Clock · <a href="https://github.com/ScottYates/ceilingclock/tree/main/firmware">firmware source</a></footer>
 </body></html>
