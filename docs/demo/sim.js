@@ -162,34 +162,50 @@
     const css = document.createElement('style');
     css.textContent = `#simintro{background:#1f2a1f;border-bottom:1px solid #345234;color:#d9f2d9;font:13px/1.45 system-ui,sans-serif}
 #simintro div{max-width:640px;margin:auto;padding:8px 12px}#simintro b{color:#fff}
-#simbar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(24,36,24,.97);border-top:1px solid #345234;color:#d9f2d9;font:13px/1.4 system-ui,sans-serif;box-shadow:0 -6px 20px rgba(0,0,0,.45)}
+#simbar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:#182418;border-top:1px solid #345234;color:#d9f2d9;font:13px/1.4 system-ui,sans-serif;box-shadow:0 -6px 20px rgba(0,0,0,.45)}
 #simbar .in{max-width:640px;margin:auto;padding:6px 12px 8px}
-#simbar summary{cursor:pointer;color:#cfeccf;font-weight:600;padding:2px 0;list-style-position:inside}
-#simbar .row{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:5px}
-#simbar .row>span:first-child{min-width:74px;color:#a8d8a8}
+#simbar .hd{display:flex;align-items:center;gap:10px;color:#cfeccf;font-weight:600;padding:2px 0}
+#simbar .hd #simtoggle{margin-left:8px;font-weight:600}
+#simbar.hidden .body{display:none}
+#simbar .body{max-height:50vh;overflow-y:auto;overscroll-behavior:contain}
+#simbar .srow{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:5px}
+#simbar .srow>span:first-child{min-width:74px;color:#a8d8a8}
 #simbar button{background:#2f4a2f;color:#e8ffe8;border:1px solid #446a44;border-radius:7px;padding:5px 8px;font:inherit;cursor:pointer}
 #simbar button:active{background:#467046}#simbar input{accent-color:#7cc47c;width:120px}
 #simbar .simled{display:inline-block;width:9px;height:9px;border-radius:50%;background:#203020;margin-right:6px;vertical-align:0}#simbar .simled.on{background:#7dff6a;box-shadow:0 0 8px #7dff6a}
-#simclock{margin-left:auto;font-variant-numeric:tabular-nums;color:#a8d8a8;font-weight:400}
-body{padding-bottom:330px}`;
+#simclock{margin-left:auto;font-variant-numeric:tabular-nums;color:#a8d8a8;font-weight:400}`;
     document.head.appendChild(css);
     const intro = document.createElement('div'); intro.id = 'simintro';
     intro.innerHTML = `<div><b>Live demo:</b> the real clock firmware, running in your browser (WebAssembly). Nothing touches a real clock, and everything resets when you reload. Use the controls at the bottom to fast-forward time and press the clock's buttons. Try: press <b>Alarm 1</b> below and watch its switch flip on the page, or set an alarm a few minutes ahead and press +1 min. Sounds really play. "Use sample podcast" makes the first alarm play a podcast; switch the internet off to hear the backup sound take over.</div>`;
     document.body.prepend(intro);
     const bar = document.createElement('div'); bar.id = 'simbar';
-    bar.innerHTML = `<div class="in"><details open><summary>Simulator controls <span id="simclock"></span></summary>
-<div class="row"><span>Time</span><button data-f="60">+1 min</button><button data-f="600">+10 min</button><button data-f="3600">+1 hour</button></div>
-<div class="row"><span>Alarm buttons</span><button data-b="1&ms=150"><i class="simled" id="simled0"></i>Alarm 1</button><button data-b="2&ms=150"><i class="simled" id="simled1"></i>Alarm 2</button></div>
-<div class="row"><span>Snooze</span><button data-b="A&ms=150">Press</button><button data-b="A&ms=2300">Hold 2 s</button></div>
-<div class="row"><span>Side button</span><button data-b="B&ms=150">Press</button><button data-b="B&ms=3300">Hold 3 s</button></div>
-<div class="row"><span>Room light</span>dark <input type="range" min="0" max="4095" value="2000" id="simldr"> bright</div>
-<div class="row"><span>Internet</span><button id="simnet">On</button><label style="display:inline-flex;gap:4px;align-items:center"><input type="checkbox" id="simsound" checked style="width:auto;margin:0"> Play sounds</label><button id="simsample">Use sample podcast</button></div>
-<div class="row"><span>Lens focus</span>down <input type="range" min="-5" max="5" step="0.5" value="0" id="simfocus"> up</div>
-<div class="row"><span>Tilt</span>-5° <input type="range" min="-5" max="30" step="5" value="0" id="simtilt"> 30° <b id="simtiltv" style="color:#e8ffe8">0°</b></div>
-<div class="row" style="color:#a8d8a8" id="simoptics"></div>
+    bar.innerHTML = `<div class="in"><div class="hd">Simulator controls <span id="simclock"></span><button id="simtoggle" aria-expanded="true">Hide</button></div><div class="body">
+<div class="srow"><span>Time</span><button data-f="60">+1 min</button><button data-f="600">+10 min</button><button data-f="3600">+1 hour</button></div>
+<div class="srow"><span>Alarm buttons</span><button data-b="1&ms=150"><i class="simled" id="simled0"></i>Alarm 1</button><button data-b="2&ms=150"><i class="simled" id="simled1"></i>Alarm 2</button></div>
+<div class="srow"><span>Snooze</span><button data-b="A&ms=150">Press</button><button data-b="A&ms=2300">Hold 2 s</button></div>
+<div class="srow"><span>Side button</span><button data-b="B&ms=150">Press</button><button data-b="B&ms=3300">Hold 3 s</button></div>
+<div class="srow"><span>Room light</span>dark <input type="range" min="0" max="4095" value="2000" id="simldr"> bright</div>
+<div class="srow"><span>Internet</span><button id="simnet">On</button><label style="display:inline-flex;gap:4px;align-items:center"><input type="checkbox" id="simsound" checked style="width:auto;margin:0"> Play sounds</label><button id="simsample">Use sample podcast</button></div>
+<div class="srow"><span>Lens focus</span>down <input type="range" min="-5" max="5" step="0.5" value="0" id="simfocus"> up</div>
+<div class="srow"><span>Tilt</span>-5° <input type="range" min="-5" max="30" step="5" value="0" id="simtilt"> 30° <b id="simtiltv" style="color:#e8ffe8">0°</b></div>
+<div class="srow" style="color:#a8d8a8" id="simoptics"></div>
 <div id="simnote" style="display:none;margin-top:6px;color:#ffe2a8"></div>
-</details></div>`;
+</div></div>`;
     document.body.appendChild(bar);
+    // Hide/show the controls; the page keeps just enough room at the bottom to scroll everything above the bar
+    const fit = () => { document.body.style.paddingBottom = (bar.offsetHeight + 16) + 'px'; };
+    const setHidden = (h) => {
+      bar.classList.toggle('hidden', h);
+      const t = bar.querySelector('#simtoggle');
+      t.textContent = h ? 'Show' : 'Hide'; t.setAttribute('aria-expanded', String(!h));
+      try { localStorage.setItem('ceilingclock-demo-bar', h ? 'hidden' : 'shown'); } catch (e) {}
+      fit();
+    };
+    bar.querySelector('#simtoggle').onclick = () => setHidden(!bar.classList.contains('hidden'));
+    let startHidden = false;
+    try { startHidden = localStorage.getItem('ceilingclock-demo-bar') === 'hidden'; } catch (e) {}
+    setHidden(startHidden);
+    if (window.ResizeObserver) new ResizeObserver(fit).observe(bar); else window.addEventListener('resize', fit);
     bar.querySelectorAll('[data-f]').forEach((b) => b.onclick = () => forward(+b.dataset.f));
     bar.querySelectorAll('[data-b]').forEach((b) => b.onclick = () => sim('/sim/button?b=' + b.dataset.b));
     bar.querySelector('#simldr').oninput = (e) => sim('/sim/ldr?v=' + e.target.value);
@@ -200,8 +216,6 @@ body{padding-bottom:330px}`;
     bar.querySelector('#simfocus').oninput = (e) => { focus = +e.target.value; applyOptics(); };
     bar.querySelector('#simtilt').oninput = (e) => { tilt = +e.target.value; document.getElementById('simtiltv').textContent = tilt + '°'; applyOptics(); };
     applyOptics();
-    const det = bar.querySelector('details');
-    det.addEventListener('toggle', () => { document.body.style.paddingBottom = det.open ? '330px' : '44px'; });
     setInterval(async () => {
       await ready;
       const h = JSON.parse(td.decode(request('GET', '/sim/hw').body));
