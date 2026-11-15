@@ -181,9 +181,10 @@ details[open]>summary{border-bottom:1px solid var(--line)}
 
  <h2>Buttons on the clock</h2>
  <div class="grp">
-  <div class="row"><div class="grow">Alarm 1 and Alarm 2<small>Press to switch that alarm on or off. The front display shows its time or OFF, and the button lights up for a moment. While an alarm rings, either one stops it.</small></div></div>
-  <div class="row"><div class="grow">Snooze (top)<small>Snoozes a ringing alarm; hold 2 s to stop it. Otherwise shows the time on the ceiling and lights the buttons of the alarms that are on.</small></div></div>
-  <div class="row"><div class="grow">Side button<small>Press: front display on or off. Hold 3 s: ceiling projection on or off. Hold 10 s: forget Wi-Fi.</small></div></div>
+  <div class="row"><div class="grow">Alarm 1 and Alarm 2<small>Press: switch that alarm on (the front display shows "1 on", then its time, and the button lights for a moment) or off ("1 oF", two blinks). While an alarm rings, either one stops it. Holding longer does the same as a press.</small></div></div>
+  <div class="row"><div class="grow">Snooze (top)<small>While ringing: press to snooze ("SnoZ", then when it rings again); hold 2 s to stop ("StoP"). Otherwise: shows which alarms are on ("AL12" both, "AL1-" only alarm 1, "AL--" none), lights their buttons, and shows the time on the ceiling for 15 s.</small></div></div>
+  <div class="row"><div class="grow">Side button<small>Press: front display on or off ("d on" / "d oF"). Hold 3 s: ceiling projection on or off ("P on" / "P oF"). Keep holding to 10 s: forget the Wi-Fi and restart in setup mode ("rSEt").</small></div></div>
+  <div class="row"><div class="grow">Messages<small>Changes made on this page show on the front display too, so the clock always says what just happened.</small></div></div>
  </div>
 
  <h2>Security and updates</h2>
@@ -195,7 +196,7 @@ details[open]>summary{border-bottom:1px solid var(--line)}
  <p class="note" id="sys"></p>
 </section>
 </main><div id="toast" role="status"></div>
-<script src="sim.js?v=8"></script>
+<script src="sim.js?v=10"></script>
 <script>
 const $=id=>document.getElementById(id);let C=null,S=[],ST=null,cur=-1;
 const DN=['S','M','T','W','T','F','S'],DNL=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -329,6 +330,7 @@ async function poll(){try{const s=await(await fetch('/api/state')).json();ST=s;
  $('ringTxt').textContent=s.ring=='ringing'?(s.ringLabel||'Alarm'):'Snoozed';
  $('ringSub').textContent=s.ring=='snoozed'?'Rings again '+fmtWhen(s.snoozeUntil):s.source=='stream'&&s.stream&&s.stream.title?s.stream.title:'';
  if(C&&typeof s.alarmsOn=='number'&&!saveT&&!busy){let ch=false;C.alarms.forEach((a,i)=>{const on=!!(s.alarmsOn>>i&1);if(a.enabled!=on){a.enabled=on;ch=true}});
+  for(const k of['front','proj'])if(typeof s[k+'Mode']=='number'&&C[k].mode!=s[k+'Mode']){C[k].mode=s[k+'Mode'];ch=true;if(!$('vSettings').hidden)$(k=='front'?'sFMode':'sPMode').value=C[k].mode}
   if(ch){if(!$('vHome').hidden)renderHome();if(cur>=0)$('eOn').checked=C.alarms[cur].enabled}}
  if(!$('vSettings').hidden){drawCeil(s);$('sLdrNow').textContent='Light sensor reads '+s.ldr+' now (0 is dark)';
   $('fs').textContent='Storage: '+(s.fsUsed/1048576).toFixed(1)+' of '+(s.fsTotal/1048576).toFixed(1)+' MB used';

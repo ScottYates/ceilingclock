@@ -158,6 +158,12 @@
     // would not fire an alarm that falls inside the jump
     for (let left = seconds; left > 0; left -= 150) { request('POST', '/sim/time?add=' + Math.min(150, left)); X.sim_loop(3); }
   }
+  // the front display: four TM1637 segment bytes (bit 0x80 of digit 2 is the colon)
+  function segs(g, col) {
+    const P = [[4, 0, 26, 5], [27, 3, 5, 22], [27, 30, 5, 22], [4, 51, 26, 5], [0, 30, 5, 22], [0, 3, 5, 22], [4, 25.5, 26, 5]];
+    const dig = (x, m) => P.map((p, i) => `<rect x="${x + p[0]}" y="${4 + p[1]}" width="${p[2]}" height="${p[3]}" rx="2" fill="${(m >> i) & 1 ? col : '#2a0f0d'}"/>`).join('');
+    return dig(14, g[0]) + dig(52, g[1]) + `<circle cx="99" cy="22" r="3" fill="${g[1] & 0x80 ? col : '#2a0f0d'}"/><circle cx="99" cy="40" r="3" fill="${g[1] & 0x80 ? col : '#2a0f0d'}"/>` + dig(114, g[2]) + dig(152, g[3]);
+  }
   function controls() {
     const css = document.createElement('style');
     css.textContent = `#simintro{background:#1f2a1f;border-bottom:1px solid #345234;color:#d9f2d9;font:13px/1.45 system-ui,sans-serif}
@@ -175,10 +181,11 @@
 #simbar button{background:#2f4a2f;color:#e8ffe8;border:1px solid #446a44;border-radius:7px;padding:5px 8px;font:inherit;cursor:pointer}
 #simbar button:active{background:#467046}#simbar input{accent-color:#7cc47c;width:120px}
 #simbar .simled{display:inline-block;width:9px;height:9px;border-radius:50%;background:#203020;margin-right:6px;vertical-align:0}#simbar .simled.on{background:#7dff6a;box-shadow:0 0 8px #7dff6a}
+#simbar .hint{color:#a8d8a8;font-size:12px}#simbar .srow b{color:#fff}#simfront{background:#0a0505;border-radius:4px}
 #simclock{margin-left:auto;font-variant-numeric:tabular-nums;color:#a8d8a8;font-weight:400}`;
     document.head.appendChild(css);
     const intro = document.createElement('div'); intro.id = 'simintro';
-    intro.innerHTML = `<div class="in"><div class="txt"><b>Live demo</b><span class="more">: the real clock firmware, running in your browser (WebAssembly). Nothing touches a real clock, and everything resets when you reload. Use the controls at the bottom to fast-forward time and press the clock's buttons. Try: press <b>Alarm 1</b> below and watch its switch flip on the page, or set an alarm a few minutes ahead and press +1 min. Sounds really play. "Use sample podcast" makes the first alarm play a podcast; switch the internet off to hear the backup sound take over.</span></div><button id="simintrotoggle" aria-expanded="true">Hide</button></div>`;
+    intro.innerHTML = `<div class="in"><div class="txt"><b>Live demo</b><span class="more">: the real clock firmware, running in your browser (WebAssembly). Nothing touches a real clock, and everything resets when you reload. Use the controls at the bottom to fast-forward time and press the clock's buttons. Try: press <b>Alarm 1</b> below and watch the front display in the controls and the switch on the page, or set an alarm a few minutes ahead and press +1 min. Sounds really play. "Use sample podcast" makes the first alarm play a podcast; switch the internet off to hear the backup sound take over.</span></div><button id="simintrotoggle" aria-expanded="true">Hide</button></div>`;
     {
       const setIntro = (h) => {
         intro.classList.toggle('hidden', h);
@@ -194,9 +201,13 @@
     const bar = document.createElement('div'); bar.id = 'simbar';
     bar.innerHTML = `<div class="in"><div class="hd">Simulator controls <span id="simclock"></span><button id="simtoggle" aria-expanded="true">Hide</button></div><div class="body">
 <div class="srow"><span>Time</span><button data-f="60">+1 min</button><button data-f="600">+10 min</button><button data-f="3600">+1 hour</button></div>
-<div class="srow"><span>Alarm buttons</span><button data-b="1&ms=150"><i class="simled" id="simled0"></i>Alarm 1</button><button data-b="2&ms=150"><i class="simled" id="simled1"></i>Alarm 2</button></div>
-<div class="srow"><span>Snooze</span><button data-b="A&ms=150">Press</button><button data-b="A&ms=2300">Hold 2 s</button></div>
+<div class="srow"><span>Front display</span><svg id="simfront" viewBox="0 0 200 60" width="120" height="36" role="img" aria-label="Front display"></svg><span id="simdisp" class="hint"></span></div>
+<div class="srow"><span>Alarm buttons</span><button data-b="1&ms=150"><i class="simled" id="simled0"></i>Alarm 1: <b id="simal0">off</b></button><button data-b="2&ms=150"><i class="simled" id="simled1"></i>Alarm 2: <b id="simal1">off</b></button></div>
+<div class="srow"><span></span><span class="hint">Press: switch that alarm on (front display: 1 on, then its time) or off (1 oF). While an alarm rings: stop it. Holding longer does the same as a press. The dot is the button's light: like on the real clock, it lights only for a moment after a change, while that alarm rings, or when you press Snooze.</span></div>
+<div class="srow"><span>Snooze (top)</span><button data-b="A&ms=150">Press</button><button data-b="A&ms=2300">Hold 2 s</button></div>
+<div class="srow"><span></span><span class="hint">While ringing: press snoozes (SnoZ, then when it rings again); hold 2 s stops (StoP). Otherwise a press shows which alarms are on (AL12, AL1-, AL-2, AL--) and the time on the ceiling.</span></div>
 <div class="srow"><span>Side button</span><button data-b="B&ms=150">Press</button><button data-b="B&ms=3300">Hold 3 s</button></div>
+<div class="srow"><span></span><span class="hint">Press: front display on or off (d on / d oF). Hold 3 s: ceiling projection on or off (P on / P oF). On the real clock, holding on to 10 s forgets the Wi-Fi and restarts in setup mode (rSEt).</span></div>
 <div class="srow"><span>Room light</span>dark <input type="range" min="0" max="4095" value="2000" id="simldr"> bright</div>
 <div class="srow"><span>Internet</span><button id="simnet">On</button><label style="display:inline-flex;gap:4px;align-items:center"><input type="checkbox" id="simsound" checked style="width:auto;margin:0"> Play sounds</label><button id="simsample">Use sample podcast</button></div>
 <div class="srow"><span>Lens focus</span>down <input type="range" min="-5" max="5" step="0.5" value="0" id="simfocus"> up</div>
@@ -220,7 +231,16 @@
     setHidden(startHidden);
     if (window.ResizeObserver) new ResizeObserver(fit).observe(bar); else window.addEventListener('resize', fit);
     bar.querySelectorAll('[data-f]').forEach((b) => b.onclick = () => forward(+b.dataset.f));
-    bar.querySelectorAll('[data-b]').forEach((b) => b.onclick = () => sim('/sim/button?b=' + b.dataset.b));
+    // Presses queue up so quick double presses both count; the page catches up right after each one
+    let presses = Promise.resolve();
+    bar.querySelectorAll('[data-b]').forEach((b) => b.onclick = () => {
+      const ms = +(b.dataset.b.split('ms=')[1] || 150);
+      presses = presses.then(async () => {
+        await sim('/sim/button?b=' + b.dataset.b);
+        await new Promise((r) => setTimeout(r, ms + 80));
+        if (typeof window.poll === 'function') window.poll();
+      });
+    });
     bar.querySelector('#simldr').oninput = (e) => sim('/sim/ldr?v=' + e.target.value);
     let netOn = true;
     bar.querySelector('#simnet').onclick = (e) => { netOn = !netOn; e.target.textContent = netOn ? 'On' : 'Off (test the backup sound)'; sim('/sim/net?ok=' + (netOn ? 1 : 0)); };
@@ -234,6 +254,15 @@
       const h = JSON.parse(td.decode(request('GET', '/sim/hw').body));
       syncSound(h.audio);
       (h.alarmLeds || []).forEach((v, i) => { const e = document.getElementById('simled' + i); if (e) e.classList.toggle('on', v > 0); });
+      if (h.front) {
+        const col = h.front.on ? `rgba(255,74,53,${0.35 + 0.65 * h.front.bright / 7})` : '#2a0f0d';
+        document.getElementById('simfront').innerHTML = segs(h.front.on ? h.front.segs : [0, 0, 0, 0], col);
+        document.getElementById('simdisp').textContent = h.front.on ? '' : 'off (dark)';
+      }
+      try {
+        const st = JSON.parse(td.decode(request('GET', '/api/state').body));
+        for (let i = 0; i < 2; i++) { const e = document.getElementById('simal' + i); if (e) e.textContent = st.alarmsOn >> i & 1 ? 'on' : 'off'; }
+      } catch (e) {}
       const d = new Date(h.time * 1000), ahead = h.timeOffset;
       document.getElementById('simclock').textContent = '· clock ' + d.toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }) +
         (ahead ? ' (+' + Math.round(ahead / 60) + ' min)' : '');

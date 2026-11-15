@@ -24,7 +24,7 @@
 #include "feed_scan.h"
 #include "net_fetch.h"
 
-#define FW_VERSION "2.1.0"   // bump on every release
+#define FW_VERSION "2.2.0"   // bump on every release
 #ifndef FW_BUILD
 #define FW_BUILD __DATE__ " " __TIME__   // set by build_stamp.py in PlatformIO builds
 #endif
@@ -284,11 +284,17 @@ void startRing(int i, uint32_t rampSec) {
   Serial.printf("Alarm %d (%s) ringing\n", i, cfg.alarms[i].label.c_str());
 }
 
+void showFront(const uint8_t m[4], uint32_t ms);
+void thenFront(const uint8_t m[4], uint32_t ms);
+void showClockTime(time_t t, uint32_t ms);
 void snooze() {
   if (ringState != RS_RINGING) return;
   audioStop();
   ringState = RS_SNOOZED;
   snoozeUntil = time(nullptr) + cfg.alarms[ringAlarm].snoozeMin * 60;
+  const uint8_t m[4] = {0x6D, 0x54, 0x5C, 0x5B};  // SnoZ
+  showFront(m, 1200);
+  showClockTime(snoozeUntil, 2000);
 }
 
 void dismiss() {
@@ -296,6 +302,8 @@ void dismiss() {
   audioStop();
   ringState = RS_IDLE;
   ringAlarm = -1;
+  const uint8_t m[4] = {0x6D, 0x78, 0x5C, 0x73};  // StoP
+  showFront(m, 1500);
 }
 
 void checkAlarms(time_t now) {
@@ -394,17 +402,45 @@ void renderProj(const struct tm& lt, bool visible, uint8_t bright) {
 }
 
 // ---------------------------------------------------------------- front display
-// A short message on the front display after a button press, so you can tell the press registered
-// (shown even when the display is switched off). Letters: P projector, d front display.
+// Short messages on the front display whenever something changes, from a button or from the web page,
+// so you can tell what happened (shown even when the display is switched off):
+//   1 on / 1 oF   alarm 1 switched on (then its time) or off; 2..8 likewise
+//   d on / d oF   front display on or off        P on / P oF   ceiling projection on or off
+//   SnoZ          snoozed (then the time it rings again)        StoP   alarm stopped
+//   AL12 / AL1- / AL-2 / AL--   which of alarms 1 and 2 are on (snooze button when nothing rings)
+//   FLIP          projection turned upside down    rSEt   Wi-Fi forgotten, restarting
 const uint8_t LET_P = SEG_A | SEG_B | SEG_E | SEG_F | SEG_G, LET_d = SEG_B | SEG_C | SEG_D | SEG_E | SEG_G;
 const uint8_t LET_o = SEG_C | SEG_D | SEG_E | SEG_G, LET_n = SEG_C | SEG_E | SEG_G, LET_F = SEG_A | SEG_E | SEG_F | SEG_G;
 const uint8_t LET_O = SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F, LET_E = SEG_A | SEG_D | SEG_E | SEG_F | SEG_G;
+const uint8_t LET_S = 0x6D, LET_Z = 0x5B, LET_t = 0x78, LET_A = 0x77, LET_L = 0x38, LET_I = 0x06, LET_r = 0x50, LET_DASH = 0x40;
 uint8_t frontMsg[4];
 uint32_t frontMsgUntil = 0, frontMsgSeq = 0;
+struct QueuedMsg { uint8_t s[4]; uint16_t ms; };
+QueuedMsg frontNext[3];
+uint8_t frontNextN = 0;
+// Show a message now, replacing whatever message is up (and anything queued after it)
 void showFront(const uint8_t m[4], uint32_t ms) {
   memcpy(frontMsg, m, 4);
   frontMsgUntil = millis() + ms;
   frontMsgSeq++;
+  frontNextN = 0;
+}
+// Show a message after the current one (or now, if none is up)
+void thenFront(const uint8_t m[4], uint32_t ms) {
+  if (!frontMsgUntil || (int32_t)(millis() - frontMsgUntil) >= 0) { showFront(m, ms); return; }
+  if (frontNextN == 3) return;
+  memcpy(frontNext[frontNextN].s, m, 4);
+  frontNext[frontNextN++].ms = ms;
+}
+// The current message has run out: move to the next queued one. Returns false when there is none.
+bool nextFront() {
+  if (!frontNextN) return false;
+  memcpy(frontMsg, frontNext[0].s, 4);
+  frontMsgUntil = millis() + frontNext[0].ms;
+  frontMsgSeq++;
+  for (int i = 1; i < frontNextN; i++) frontNext[i - 1] = frontNext[i];
+  frontNextN--;
+  return true;
 }
 void flashFront(uint8_t who, bool on) {
   const uint8_t m[4] = {who, 0, LET_o, on ? LET_n : LET_F};
@@ -416,6 +452,7 @@ void renderFront(const struct tm& lt, bool visible, uint8_t bright) {
   live.frontBright = bright;
   static int lastKey = -2;
   static uint32_t shownSeq = 0;
+  if (frontMsgUntil && (int32_t)(millis() - frontMsgUntil) >= 0) nextFront();
   if (frontMsgUntil && (int32_t)(millis() - frontMsgUntil) < 0) {
     if (shownSeq != frontMsgSeq) {
       shownSeq = frontMsgSeq;
@@ -478,12 +515,47 @@ void renderAlarmLeds(bool night) {
   }
 }
 
-// The time of alarm i on the front display, e.g. " 6:30"
-void showAlarmTime(int i) {
+// A clock time on the front display after the current message, e.g. " 6:30"
+void showClockTime(int hour, int minute, uint32_t ms) {
   uint8_t d[4];
-  seg::timeDigits(cfg.alarms[i].t.hour, cfg.alarms[i].t.minute, cfg.hour24, true, d);
+  seg::timeDigits(hour, minute, cfg.hour24, true, d);
   d[1] |= seg::COLON;
-  showFront(d, 2500);
+  thenFront(d, ms);
+}
+void showClockTime(time_t t, uint32_t ms) {
+  struct tm lt;
+  localtime_r(&t, &lt);
+  showClockTime(lt.tm_hour, lt.tm_min, ms);
+}
+
+// Watches the settings for changes, whatever made them (a button, the web page), and says on the front
+// display what happened; the alarm buttons' lights give the same feedback. Changes an alarm makes to
+// itself when it fires (a one-time alarm switching off) are not announced.
+void announceChanges() {
+  static bool first = true;
+  static uint8_t count = 0;
+  static uint16_t bits = 0;
+  static bool frontOn = false, projOn = false, upside = false;
+  uint16_t nb = 0;
+  for (int i = 0; i < cfg.alarmCount; i++) if (cfg.alarms[i].t.enabled) nb |= 1 << i;
+  bool fOn = cfg.front.mode != DM_OFF, pOn = cfg.proj.mode != DM_OFF;
+  if (!first && ringState == RS_IDLE) {
+    if (cfg.alarmCount == count && nb != bits) {
+      for (int i = 0; i < count; i++) {
+        bool on = nb >> i & 1;
+        if (on == (bool)(bits >> i & 1)) continue;
+        const uint8_t m[4] = {seg::DIGIT[(i + 1) % 10], 0, LET_o, on ? LET_n : LET_F};
+        showFront(m, 1200);
+        if (on) showClockTime(cfg.alarms[i].t.hour, cfg.alarms[i].t.minute, 2000);
+        if (i < 2) ledFeedback(i, on ? LS_SHOW : LS_OFF);
+      }
+    }
+    if (fOn != frontOn) flashFront(LET_d, fOn);
+    if (pOn != projOn) flashFront(LET_P, pOn);
+    if (cfg.projUpsideDown != upside) { const uint8_t m[4] = {LET_F, LET_L, LET_I, LET_P}; showFront(m, 1500); }
+  }
+  first = false;
+  count = cfg.alarmCount; bits = nb; frontOn = fOn; projOn = pOn; upside = cfg.projUpsideDown;
 }
 
 // Alarm button i: switch alarm i on or off. While an alarm rings, either button stops it (it stays on
@@ -500,14 +572,14 @@ void alarmButton(int i) {
   AlarmTime& t = cfg.alarms[i].t;
   t.enabled = !t.enabled;
   t.skipNext = false;
-  saveConfig();
-  if (t.enabled) { showAlarmTime(i); ledFeedback(i, LS_SHOW); }
-  else { const uint8_t m[4] = {0, LET_O, LET_F, LET_F}; showFront(m, 2500); ledFeedback(i, LS_OFF); }
+  saveConfig();   // announceChanges() shows "1 on" and the time, or "1 oF", and drives the light
 }
 
 // Snooze button while nothing rings: light the buttons of the alarms that are on, for a quick check
 void showAlarmStatus() {
-  for (int i = 0; i < 2; i++) if (i < cfg.alarmCount && cfg.alarms[i].t.enabled) ledFeedback(i, LS_SHOW);
+  uint8_t m[4] = {LET_A, LET_L, LET_DASH, LET_DASH};
+  for (int i = 0; i < 2; i++) if (i < cfg.alarmCount && cfg.alarms[i].t.enabled) { ledFeedback(i, LS_SHOW); m[2 + i] = seg::DIGIT[i + 1]; }
+  showFront(m, 2500);
 }
 
 void toggleFront() {
@@ -551,12 +623,15 @@ void handleButtons() {
   static const uint32_t noLevels[] = {0};
   for (int i = 0; i < 2; i++) if (pollButton(btnAl[i], noLevels, 0) == 1) alarmButton(i);
   int b = pollButton(btnB, bLevels, 2);
-  if (b == 1) { toggleFront(); flashFront(LET_d, cfg.front.mode != DM_OFF); }
-  else if (b == 2) { toggleProjector(); flashFront(LET_P, cfg.proj.mode != DM_OFF); }
+  if (b == 1) toggleFront();            // announceChanges() shows "d on" / "d oF"
+  else if (b == 2) toggleProjector();   // "P on" / "P oF"
   else if (b == 3) {
     Serial.println("Wi-Fi reset");
+    const uint8_t m[4] = {LET_r, LET_S, LET_E, LET_t};
+    front.setBrightness(4, true);
+    front.setSegments(m);
     wm.resetSettings();
-    delay(200);
+    delay(1500);
     ESP.restart();
   }
 }
@@ -595,6 +670,8 @@ void apiState() {
   int on = 0;
   for (int k = 0; k < cfg.alarmCount; k++) if (cfg.alarms[k].t.enabled) on |= 1 << k;
   d["alarmsOn"] = on;   // so the page notices the alarm buttons
+  d["frontMode"] = cfg.front.mode;  // and the side button
+  d["projMode"] = cfg.proj.mode;
   d["frontOn"] = displayVisible(cfg.front);
   d["projOn"] = displayVisible(cfg.proj);
   d["playing"] = soundPlaying();
@@ -847,6 +924,7 @@ void loop() {
   serviceRing(now);
   if (testPlaying && !soundPlaying() && streamState != SS_CONNECTING) testPlaying = false;
 
+  announceChanges();
   renderAlarmLeds(nightNow);  // every pass: the blinks are faster than a frame
   static uint32_t lastFrame = 0;
   if (millis() - lastFrame >= 250) {
