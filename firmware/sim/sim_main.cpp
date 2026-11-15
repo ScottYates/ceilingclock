@@ -7,6 +7,7 @@ int main() {
   setvbuf(stdout, nullptr, _IOLBF, 0);
   signal(SIGPIPE, SIG_IGN);   // a browser closing a connection must not kill the simulator
   printf("[sim] Ceiling Clock firmware simulator (hardware is simulated; see /sim/hw)\n");
+  sim::powerOn();   // RTC memory as after a power-on, or kept from before a reset (SIM_RESET=warm)
   setup();
   for (;;) { loop(); sim::tick(); }
 }

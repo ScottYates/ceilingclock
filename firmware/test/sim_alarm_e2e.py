@@ -345,6 +345,74 @@ def s_two_alarms_same_time(c):
     ring_and_check(c, at, 'rings')
 
 
+
+# ---- daylight saving, with the ESP32's own date library (newlib) linked into the simulator
+CST = 'CST6CDT,M3.2.0,M11.1.0'
+
+
+def utc(y, mo, d, h, mi, s=0):
+    import calendar
+    return calendar.timegm((y, mo, d, h, mi, s))
+
+
+def set_world_time(c, t):
+    c.post(f'/sim/time?set={int(t)}')
+    c.wait(lambda: abs(c.state()['now'] - t) < 5, 5, 'clock follows the new time')
+
+
+def rings_at(c, t, wait=5):
+    """Move to 2 s after t; True if the alarm rings (then stops it)."""
+    c.advance(t + 2 - c.state()['now'])
+    try:
+        c.wait(lambda: ringing(c), wait, 'ring')
+    except AssertionError:
+        return False
+    c.post('/api/action?do=dismiss')
+    c.wait(lambda: c.state()['ring'] == 'idle', 5, 'stopped')
+    return True
+
+
+def s_dst_skipped_hour(c):
+    """An alarm at 2:30 on the night 2:00-3:00 is skipped (clocks go forward) rings once, at 3:30, then normally."""
+    c.start()
+    c.set_alarms([alarm(0, hour=2, minute=30)], tz=CST)
+    set_world_time(c, utc(2027, 3, 14, 7, 50))           # 1:50 CST, ten minutes before the change
+    assert not rings_at(c, utc(2027, 3, 14, 8, 0), 2), 'no ring at 3:00 CDT'
+    assert not rings_at(c, utc(2027, 3, 14, 8, 29), 2), 'no ring before 3:30 CDT'
+    assert rings_at(c, utc(2027, 3, 14, 8, 30)), 'rings at 3:30 CDT (2:30 does not exist that night)'
+    assert not rings_at(c, utc(2027, 3, 14, 9, 30), 2), 'only once that night'
+    assert rings_at(c, utc(2027, 3, 15, 7, 30)), 'next night at 2:30 CDT as usual'
+
+
+def s_dst_repeated_hour(c):
+    """An alarm at 1:30 on the night 1:00-2:00 happens twice (clocks go back) rings exactly once, then normally."""
+    c.start()
+    c.set_alarms([alarm(0, hour=1, minute=30)], tz=CST)
+    set_world_time(c, utc(2027, 11, 7, 5, 50))           # 0:50 CDT
+    first = rings_at(c, utc(2027, 11, 7, 6, 30))          # 1:30 CDT
+    second = rings_at(c, utc(2027, 11, 7, 7, 30))         # 1:30 CST, an hour later
+    assert first + second == 1, f'rang {first + second} times in the repeated hour'
+    assert not rings_at(c, utc(2027, 11, 7, 8, 30), 2), 'not again after it'
+    assert rings_at(c, utc(2027, 11, 8, 7, 30)), 'next night at 1:30 CST as usual'
+    c.which = 'the second 1:30 (standard time)' if second else 'the first 1:30 (daylight time)'
+
+
+def s_loop_hang(c):
+    """The main loop freezes while ringing: the task watchdog resets the clock, and it carries on ringing."""
+    c.start()
+    at = next_minute(c)
+    c.set_alarms([alarm(at)])
+    ring_and_check(c, at, 'alarm rings')
+    try: c.post('/sim/hang')
+    except Exception: pass
+    t0 = time.time()
+    c.wait(c.crashed, 45, 'the task watchdog resets the clock')
+    assert time.time() - t0 > 25, 'not before the 30-second watchdog time'
+    c.start(warm=True)
+    assert c.state()['lastStart'] == 'reset', 'started after a reset, not a power-on'
+    c.wait(lambda: ringing(c), 10, 'rings after the reset')
+
+
 SCENARIOS = {n[2:]: f for n, f in globals().items() if n.startswith('s_')}
 
 if __name__ == '__main__':
@@ -355,7 +423,8 @@ if __name__ == '__main__':
         t0 = time.time()
         try:
             SCENARIOS[n](c)
-            print(f'PASS {n:34} {time.time() - t0:5.1f}s  {SCENARIOS[n].__doc__.strip().splitlines()[0]}')
+            print(f'PASS {n:34} {time.time() - t0:5.1f}s  {SCENARIOS[n].__doc__.strip().splitlines()[0]}'
+                  + (f' [{c.which}]' if getattr(c, 'which', None) else ''))
         except Exception as e:
             failed.append(n)
             print(f'FAIL {n:34} {time.time() - t0:5.1f}s  {e}')

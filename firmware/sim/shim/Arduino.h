@@ -15,8 +15,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#define NATIVE_SIM 1
-// glibc declares time() noexcept; wasi-libc (browser build) does not. sim_time must match.
+// glibc declares time() noexcept; wasi-libc (browser build) does not. The simulator's time() must match.
 #ifdef __wasi__
 #define SIM_NOEXCEPT
 #else
@@ -125,24 +124,30 @@ int analogRead(int pin);
 void analogReadResolution(int bits);
 bool ledcAttach(int pin, int freq, int res);
 void ledcWrite(int pin, uint32_t duty);
-extern "C" time_t sim_time(time_t* t) SIM_NOEXCEPT;
-#ifndef SIM_WASM
-// The firmware's settimeofday() sets the simulated system clock (see sim_hw.cpp).
-extern "C" int sim_settimeofday(const struct timeval* tv, const struct timezone* tz) SIM_NOEXCEPT;
-#endif
-#ifdef SIM_WASM
-// wasi-libc has no time zones, so the browser build asks the browser (see sim_wasm.cpp).
-extern "C" struct tm* sim_localtime_r(const time_t* t, struct tm* out);
-extern "C" time_t sim_mktime(struct tm* tm);
-#endif
+// time(), settimeofday() and the date functions are the real names: the simulator supplies time() and
+// settimeofday() itself (sim_hw.cpp) and links in the ESP32's own mktime/localtime_r/tzset (newlib/), which
+// replace the PC C library's for the whole program.
 #ifdef __wasi__
-inline void tzset() {}                                                    // time zones come from the browser
-inline int settimeofday(const struct timeval*, const void*) { return 0; } // no RTC to load time from
+struct timezone;
+extern "C" int settimeofday(const struct timeval* tv, const struct timezone* tz);   // wasi-libc leaves these out
+extern "C" void tzset(void);
 #endif
 void configTzTime(const char* tz, const char* s1, const char* s2 = nullptr, const char* s3 = nullptr);
 
 struct EspClass { [[noreturn]] void restart(); };
 extern EspClass ESP;
+
+// ---------------------------------------------------------------- reset reason and RTC memory (esp_system.h)
+typedef enum {
+  ESP_RST_UNKNOWN, ESP_RST_POWERON, ESP_RST_EXT, ESP_RST_SW, ESP_RST_PANIC, ESP_RST_INT_WDT, ESP_RST_TASK_WDT,
+  ESP_RST_WDT, ESP_RST_DEEPSLEEP, ESP_RST_BROWNOUT, ESP_RST_SDIO
+} esp_reset_reason_t;
+esp_reset_reason_t esp_reset_reason();
+// Variables marked RTC_NOINIT_ATTR keep their contents across a reset but not a power cut. The simulator
+// writes them out when the clock resets and reads them back when it starts "warm" (see sim_hw.cpp).
+#define RTC_NOINIT_ATTR
+typedef int esp_err_t;
+#define ESP_OK 0
 
 // ---------------------------------------------------------------- FreeRTOS (threads + a queue)
 typedef void* QueueHandle_t;
@@ -177,7 +182,9 @@ struct Hw {
   bool rtcPresent = false;            // a DS3231 is fitted (SIM_RTC=1)
 };
 extern Hw hw;
-bool wifiLinked();                    // joined and the router is up
+bool wifiLinked();
+void powerOn();                                  // before setup(): RTC memory as after power-on or a reset
+[[noreturn]] void reset(esp_reset_reason_t why);  // the clock resets (keeps RTC memory)                    // joined and the router is up
 void tick();                          // called by the simulator's main loop: background NTP sync
 extern long timeOffset;
 }

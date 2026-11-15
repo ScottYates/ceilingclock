@@ -30,11 +30,8 @@
     },
     proc_exit: (c) => { throw new Error('firmware stopped (' + c + ')'); },
   };
-  // ---- local time from the browser's time zone
+  // ---- the one thing the page supplies besides the clock itself: web requests for podcast feeds
   const env = {
-    js_local_offset: (t) => -new Date(t * 1000).getTimezoneOffset(),
-    js_std_offset: (t) => { const y = new Date(t * 1000).getFullYear(); return Math.min(-new Date(y, 0, 1).getTimezoneOffset(), -new Date(y, 6, 1).getTimezoneOffset()); },
-    js_mktime: (y, mo, d, h, mi, s) => new Date(y, mo, d, h, mi, s).getTime() / 1000,
     // the firmware reads a podcast feed: a synchronous request, so the browser's cross-origin
     // rules apply (the real clock has no such limit). Anything that doesn't look like a feed is
     // left to the player, so a radio stream is never downloaded here.
@@ -76,9 +73,62 @@
     X._initialize();
     X.sim_setup();
     X.sim_loop(3);                              // first loop() passes start the web server, as on the clock
+    setVisitorTimeZone();
     setInterval(() => X.sim_loop(4), 25);       // the firmware's loop(), ~160 times a second
   })();
   window.__simReady = ready;
+
+  // ---- the demo starts in the visitor's time zone. The firmware works out local time itself, with the
+  // ESP32's own date code, from its time zone setting (a POSIX TZ string), exactly as the real clock does.
+  const NAMED_TZ = {
+    'EST5EDT,M3.2.0,M11.1.0': ['America/New_York', 'America/Detroit', 'America/Toronto', 'America/Indiana/Indianapolis', 'America/Kentucky/Louisville'],
+    'CST6CDT,M3.2.0,M11.1.0': ['America/Chicago', 'America/Winnipeg', 'America/Menominee', 'America/Indiana/Knox'],
+    'MST7MDT,M3.2.0,M11.1.0': ['America/Denver', 'America/Edmonton', 'America/Boise'],
+    'MST7': ['America/Phoenix'],
+    'PST8PDT,M3.2.0,M11.1.0': ['America/Los_Angeles', 'America/Vancouver'],
+    'AKST9AKDT,M3.2.0,M11.1.0': ['America/Anchorage', 'America/Juneau'],
+    'HST10': ['Pacific/Honolulu'],
+    'GMT0BST,M3.5.0/1,M10.5.0': ['Europe/London', 'Europe/Dublin'],
+    'CET-1CEST,M3.5.0,M10.5.0/3': ['Europe/Paris', 'Europe/Berlin', 'Europe/Madrid', 'Europe/Rome', 'Europe/Amsterdam', 'Europe/Brussels',
+      'Europe/Vienna', 'Europe/Stockholm', 'Europe/Oslo', 'Europe/Copenhagen', 'Europe/Warsaw', 'Europe/Prague', 'Europe/Zurich', 'Europe/Budapest'],
+    'EET-2EEST,M3.5.0/3,M10.5.0/4': ['Europe/Athens', 'Europe/Helsinki', 'Europe/Kyiv', 'Europe/Kiev', 'Europe/Bucharest', 'Europe/Sofia',
+      'Europe/Riga', 'Europe/Tallinn', 'Europe/Vilnius'],
+    'UTC0': ['UTC', 'Etc/UTC'],
+  };
+  function browserPosixTz() {
+    let name = '';
+    try { name = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) {}
+    for (const [tz, names] of Object.entries(NAMED_TZ)) if (names.includes(name)) return tz;
+    // Any other zone: this year's offsets and changeovers, written as a POSIX rule.
+    const east = (ms) => -new Date(ms).getTimezoneOffset();   // minutes east of UTC
+    const y = new Date().getFullYear(), t0 = Date.UTC(y, 0, 1), H = 3600000;
+    const changes = [];
+    for (let t = t0; t < Date.UTC(y + 1, 0, 1); t += H) {
+      if (east(t + H) === east(t)) continue;
+      let lo = t, hi = t + H;                                   // the minute it changes
+      while (hi - lo > 60000) { const m = lo + Math.floor((hi - lo) / 120000) * 60000; if (east(m) === east(t)) lo = m; else hi = m; }
+      changes.push({ at: hi, from: east(t), to: east(hi) });
+    }
+    const off = (m) => { const p = -m, a = Math.abs(p); return (p < 0 ? '-' : '') + Math.floor(a / 60) + (a % 60 ? ':' + String(a % 60).padStart(2, '0') : ''); };
+    if (changes.length !== 2) return 'STD' + off(east(Date.now()));
+    const rule = (c) => {                                       // as local time before the change: Mm.w.d/hh:mm
+      const w = new Date(c.at + c.from * 60000), d = w.getUTCDate();
+      const last = new Date(Date.UTC(w.getUTCFullYear(), w.getUTCMonth() + 1, 0)).getUTCDate();
+      const week = d + 7 > last ? 5 : Math.ceil(d / 7);
+      return `M${w.getUTCMonth() + 1}.${week}.${w.getUTCDay()}/${w.getUTCHours()}:${String(w.getUTCMinutes()).padStart(2, '0')}`;
+    };
+    const [on, offc] = changes[0].to > changes[0].from ? changes : [changes[1], changes[0]];
+    return `STD${off(on.from)}DST${off(on.to)},${rule(on)},${rule(offc)}`;
+  }
+  function setVisitorTimeZone() {
+    const tz = browserPosixTz();
+    const cur = request('GET', '/api/config');
+    if (cur.code !== 200) return;
+    const c = JSON.parse(td.decode(cur.body));
+    if (c.tz === tz) return;
+    c.tz = tz;
+    request('POST', '/api/config', 'application/json', te.encode(JSON.stringify(c)));
+  }
 
   // ---- answer the page's requests from the firmware
   const realFetch = window.fetch.bind(window);

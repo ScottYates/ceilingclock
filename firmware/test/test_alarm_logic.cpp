@@ -1,4 +1,5 @@
-// Native test: g++ -std=c++17 -I../src test_alarm_logic.cpp && ./a.out
+// Native test, with the ESP32's own date library (see test_alarm_schedule.cpp; without it, the PC's is used):
+//   g++ -std=c++17 -Isrc test/test_alarm_logic.cpp sim/build/newlib/libnltime.a && ./a.out
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -9,7 +10,12 @@ static time_t mk(int y, int mo, int d, int h, int mi, int s = 0) {
   struct tm t = {}; t.tm_year = y - 1900; t.tm_mon = mo - 1; t.tm_mday = d;
   t.tm_hour = h; t.tm_min = mi; t.tm_sec = s; t.tm_isdst = -1; return mktime(&t);
 }
-static void fmt(time_t t, char* b) { struct tm l; localtime_r(&t, &l); strftime(b, 40, "%a %Y-%m-%d %H:%M %Z", &l); }
+// (no %Z: newlib's struct tm has no zone name for the PC's strftime to read)
+static void fmt(time_t t, char* b) {
+  struct tm l = {}; localtime_r(&t, &l);
+  size_t n = strftime(b, 40, "%a %Y-%m-%d %H:%M", &l);
+  snprintf(b + n, 40 - n, " %s", l.tm_isdst > 0 ? "DST" : "std");
+}
 static void expect(const char* name, time_t got, time_t want) {
   char g[40] = "0", w[40] = "0"; if (got) fmt(got, g); if (want) fmt(want, w);
   bool ok = got == want; if (!ok) fails++;

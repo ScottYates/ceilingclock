@@ -5,6 +5,17 @@
 #include "Arduino.h"
 #include "LittleFS.h"
 #include <functional>
+// Called by the library with each block of samples on its way to the amplifier, as in ESP32-audioI2S.
+// The simulator calls them with stand-in samples while a sound is playing (see Audio::loop()).
+extern __attribute__((weak)) void audio_process_raw_samples(int32_t* outBuff, int16_t validSamples);
+extern __attribute__((weak)) void audio_process_i2s(int32_t* outBuff, int16_t validSamples, bool* continueI2S);
+// The library's decoder base class (the firmware's audio_lib_fix.cpp defines two of its functions).
+class Decoder {
+ public:
+  virtual ~Decoder() = default;
+  virtual const char* getStreamTitle();
+  virtual const char* whoIsIt();
+};
 class Audio {
  public:
   typedef enum { evt_info = 0, evt_id3data, evt_eof, evt_name, evt_icydescription, evt_streamtitle } event_t;
@@ -14,12 +25,11 @@ class Audio {
   void setVolume(uint8_t v);
   using VolumeCurveFn = std::function<float(float t)>;
   void setVolumeCurve(VolumeCurveFn) {}
-  bool simProducing();   // sound is reaching the amplifier (false while a simulated failure stalls it)
   uint8_t getVolume() { return 0; }
   bool connecttoFS(fs::FS& fs, const char* path);
   bool connecttohost(const char* url, const char* user = nullptr, const char* pwd = nullptr);
   void stopSong();
-  void loop() {}
+  void loop();   // passes stand-in samples to the hooks above while sound is reaching the amplifier
   bool isRunning();
  private:
   unsigned long start_ = 0, durMs_ = 0;

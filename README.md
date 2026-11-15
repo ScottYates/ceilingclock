@@ -34,15 +34,19 @@ Live demo in the browser: https://scottyates.github.io/ceilingclock/demo/ (the r
 3. On first boot, join the `CeilingClock-Setup` Wi-Fi network from your phone and choose your home network.
 4. Open `http://ceilingclock.local/` to set alarms.
 
-The alarm scheduling, the podcast feed reader and the projector's digit mirroring have unit tests that run on a PC:
+The alarm scheduling, the podcast feed reader and the projector's digit mirroring have unit tests that run on a PC. The alarm tests link in the ESP32's own date code (newlib, see `firmware/sim/README.md`), so daylight saving behaves as on the clock:
 
 ```
-g++ -std=c++17 -Ifirmware/src firmware/test/test_alarm_logic.cpp && ./a.out
-g++ -std=c++17 -Ifirmware/src firmware/test/test_feed_scan.cpp && ./a.out
-g++ -std=c++17 -Ifirmware/src firmware/test/test_segments.cpp && ./a.out
-g++ -std=c++17 -O2 -Ifirmware/src firmware/test/test_alarm_schedule.cpp && ./a.out   # three years, 7 time zones
-(cd firmware/sim && make) && python3 firmware/test/sim_alarm_e2e.py                   # 16 ways an alarm could fail
+cd firmware
+make -C sim                                                                     # simulator, and the newlib date code
+g++ -std=c++17 -Isrc test/test_alarm_logic.cpp sim/build/newlib/libnltime.a && ./a.out
+g++ -std=c++17 -Isrc test/test_feed_scan.cpp && ./a.out
+g++ -std=c++17 -Isrc test/test_segments.cpp && ./a.out
+g++ -std=c++17 -O2 -Isrc test/test_alarm_schedule.cpp sim/build/newlib/libnltime.a -ldl && ./a.out   # three years, 7 time zones
+python3 test/sim_alarm_e2e.py                                                   # 19 ways an alarm could fail
 ```
+
+The simulator compiles every firmware source file unchanged; the firmware has no simulator-only code.
 
 ## Rebuild the 3D files
 

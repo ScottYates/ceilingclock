@@ -1,6 +1,6 @@
 // Downloads a URL (following redirects) for the podcast feed lookup. Gives the Content-Type,
 // then the body in chunks to sink until sink returns false or the body ends. Returns false if
-// the request failed. On the clock: net_fetch_esp.cpp. In the simulator: sim/sim_hw.cpp.
+// the request failed. In net_fetch_esp.cpp (the simulator supplies its own HTTPClient underneath).
 #pragma once
 #include <functional>
 #include <string>

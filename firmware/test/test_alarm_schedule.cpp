@@ -1,5 +1,9 @@
 // Exhaustive PC test of the alarm schedule: an alarm must ring exactly once for every day it is set for.
-//   g++ -std=c++17 -O2 -Isrc test/test_alarm_schedule.cpp -o /tmp/tsched && /tmp/tsched
+// Linked with the ESP32's own date library (newlib, built by the simulator), so mktime/localtime_r behave
+// as on the clock, including in the hours daylight saving skips or repeats:
+//   make -C sim build/newlib/libnltime.a
+//   g++ -std=c++17 -O2 -Isrc test/test_alarm_schedule.cpp sim/build/newlib/libnltime.a -ldl -o /tmp/tsched && /tmp/tsched
+// It first checks that newlib and the PC's own C library agree on every local time in the test range.
 // Drives alarmToRing() the way checkAlarms() does, with checks at irregular intervals (1 s to 10 min, plus
 // forward clock jumps of up to 29 min) through three years, for many alarm times (including the hour that
 // daylight saving skips or repeats), every weekday pattern, and several time zones.
@@ -10,6 +14,7 @@
 #include <map>
 #include <vector>
 #include <random>
+#include <dlfcn.h>
 
 static int fails = 0;
 #define CHECK(c, ...) do { if (!(c)) { if (fails++ < 40) { printf("FAIL: "); printf(__VA_ARGS__); printf("\n"); } } } while (0)
@@ -61,11 +66,51 @@ static void scheduleTest(const char* tz, int hour, int minute, uint8_t days, uns
   printf("%-34s %02d:%02d days=%02x  %d of %d days rang\n", tz, hour, minute, days, got, expected);
 }
 
+// newlib (linked in) against the PC's C library (reached with RTLD_NEXT): both directions, every 15 min.
+typedef struct tm* (*LocalFn)(const time_t*, struct tm*);
+typedef time_t (*MkFn)(struct tm*);
+static void compareLibraries(const char* const* zones, int nz) {
+  LocalFn sysLocal = (LocalFn)dlsym(RTLD_NEXT, "localtime_r");
+  MkFn sysMk = (MkFn)dlsym(RTLD_NEXT, "mktime");
+  void (*sysTzset)() = (void (*)())dlsym(RTLD_NEXT, "tzset");
+  if (!sysLocal || !sysMk || (void*)sysMk == (void*)&mktime) {
+    printf("date library: the PC's own (newlib not linked in; see the top of this file)\n\n");
+    return;
+  }
+  long checked = 0, ambiguous = 0;
+  for (int z = 0; z < nz; z++) {
+    setenv("TZ", zones[z], 1); tzset(); sysTzset();
+    for (time_t t = 1767225600 - 86400; t < 1861920000 + 86400; t += 900) {   // 2026 to 2029
+      struct tm a = {}, b = {};
+      localtime_r(&t, &a); sysLocal(&t, &b);
+      CHECK(a.tm_year == b.tm_year && a.tm_yday == b.tm_yday && a.tm_hour == b.tm_hour && a.tm_min == b.tm_min &&
+            a.tm_wday == b.tm_wday && a.tm_isdst == b.tm_isdst, "%s: localtime_r differs at %ld", zones[z], (long)t);
+      struct tm la = a, lb = a;   // the same local wall time back to an instant, leaving DST to the library
+      la.tm_isdst = lb.tm_isdst = -1;
+      time_t ra = mktime(&la), rb = sysMk(&lb);
+      checked++;
+      if (ra == rb && la.tm_wday == lb.tm_wday) continue;
+      // The one allowed difference: a wall time that happens twice (the hour repeated when daylight saving
+      // ends). Both answers are that wall time; newlib always takes the second (standard time).
+      struct tm ca = {}, cb = {};
+      localtime_r(&ra, &ca); localtime_r(&rb, &cb);
+      bool repeated = ca.tm_hour == a.tm_hour && ca.tm_min == a.tm_min && cb.tm_hour == a.tm_hour && cb.tm_min == a.tm_min &&
+                      ca.tm_yday == a.tm_yday && cb.tm_yday == a.tm_yday && ra > rb && !ca.tm_isdst;
+      CHECK(repeated, "%s: mktime differs for %04d-%02d-%02d %02d:%02d (%ld vs %ld)", zones[z],
+            a.tm_year + 1900, a.tm_mon + 1, a.tm_mday, a.tm_hour, a.tm_min, (long)ra, (long)rb);
+      if (repeated) ambiguous++;
+    }
+  }
+  printf("date library: newlib (as on the ESP32); agrees with the PC's on %ld local times, except %ld in hours\n"
+         "that happen twice, where newlib always takes the second (standard time)\n\n", checked - ambiguous, ambiguous);
+}
+
 int main() {
   const char* zones[] = {"CST6CDT,M3.2.0,M11.1.0", "EST5EDT,M3.2.0,M11.1.0", "GMT0BST,M3.5.0/1,M10.5.0",
                          "AEST-10AEDT,M10.1.0,M4.1.0/3", "IST-5:30", "NST3:30NDT,M3.2.0,M11.1.0", "UTC0"};
   int times[][2] = {{0, 0}, {1, 30}, {2, 0}, {2, 30}, {3, 0}, {6, 30}, {12, 0}, {23, 59}};
   uint8_t masks[] = {0x7F, 0x3E, 0x41, 0x01, 0x40, 0x15};
+  compareLibraries(zones, sizeof zones / sizeof zones[0]);
   unsigned seed = 1;
   for (const char* z : zones)
     for (auto& t : times)

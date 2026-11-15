@@ -61,24 +61,27 @@ void delay(unsigned long ms) { usleep(ms * 1000); }
 // Two clocks: the real time in the simulated world (host clock + /sim/time offset), and the clock's own
 // system time, which (in the PC build) starts unknown at power-on like the ESP32's: it reads "uptime since
 // 1970" until NTP, the backup clock or the firmware sets it. /sim/clockerror makes it run wrong by N seconds.
-uint32_t simRealTime() { return (uint32_t)(::time(nullptr) + sim::timeOffset); }
+static time_t hostTime() { return (time_t)std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count(); }
+uint32_t simRealTime() { return (uint32_t)(hostTime() + sim::timeOffset); }
 namespace sim { bool sysValid = false; long sysDelta = 0; }
-extern "C" time_t sim_time(time_t* t) SIM_NOEXCEPT {
+// The firmware's time() and settimeofday(): these replace the C library's for the whole program.
+static time_t sim_time(time_t* t) {
 #ifdef SIM_WASM
-  time_t v = ::time(nullptr) + sim::timeOffset;   // the browser demo always knows the time
+  time_t v = hostTime() + sim::timeOffset;   // the browser demo always knows the time
 #else
   time_t v = sim::sysValid ? (time_t)simRealTime() + sim::sysDelta : (time_t)(millis() / 1000);
 #endif
   if (t) *t = v;
   return v;
 }
+extern "C" time_t time(time_t* t) SIM_NOEXCEPT { return sim_time(t); }
+extern "C" int settimeofday(const struct timeval* tv, const struct timezone*) SIM_NOEXCEPT {
 #ifndef SIM_WASM
-extern "C" int sim_settimeofday(const struct timeval* tv, const struct timezone*) SIM_NOEXCEPT {
   sim::sysValid = true;
   sim::sysDelta = (long)(tv->tv_sec - (time_t)simRealTime());
+#endif
   return 0;
 }
-#endif
 static sntp_sync_cb g_sntpCb = nullptr;
 static bool g_ntpConfigured = false;
 void sntp_set_sync_interval(uint32_t) {}
@@ -112,35 +115,79 @@ static void saveWorldTime() {
 }
 #endif
 
-// ---------------------------------------------------------------- state kept across resets (persist.h)
+// ---------------------------------------------------------------- reset reason and RTC memory
+// The firmware's RTC_NOINIT_ATTR variable (persist, in main.cpp) is written to sim_fs/.rtcmem when the
+// simulated clock resets, with why it reset. A "warm" start (SIM_RESET=warm) reads both back before setup();
+// any other start is a power-on, where RTC memory holds whatever the chip powered up with (random bytes).
 #include "persist.h"
-Persist persist;
+extern Persist persist;
+static esp_reset_reason_t g_resetReason = ESP_RST_POWERON;
+esp_reset_reason_t esp_reset_reason() { return g_resetReason; }
 #ifndef SIM_WASM
-static std::string persistPath() { const char* e = getenv("SIM_FS_DIR"); return std::string(e ? e : "sim_fs") + "/.rtcmem"; }
+static std::string fsPath(const char* name) { const char* e = getenv("SIM_FS_DIR"); return std::string(e ? e : "sim_fs") + "/" + name; }
 #endif
-bool persistLoad() {
-  bool ok = false;
+void sim::powerOn() {
+  uint8_t* p = (uint8_t*)&persist;
+  for (size_t i = 0; i < sizeof persist; i++) p[i] = (uint8_t)rand();
+  g_resetReason = ESP_RST_POWERON;
 #ifndef SIM_WASM
   const char* r = getenv("SIM_RESET");
-  if (r && !strcmp(r, "warm")) {
-    FILE* f = fopen(persistPath().c_str(), "rb");
-    if (f) { ok = fread(&persist, sizeof persist, 1, f) == 1; fclose(f); }
-    ok = ok && persist.magic == PERSIST_MAGIC && persist.crc == persistCrc(persist);
-  }
+  if (!r || strcmp(r, "warm")) return;
+  FILE* f = fopen(fsPath(".rtcmem").c_str(), "rb");
+  if (!f) return;
+  int why = ESP_RST_SW;
+  if (fread(&persist, sizeof persist, 1, f) != 1 || fread(&why, sizeof why, 1, f) != 1) why = ESP_RST_SW;
+  fclose(f);
+  g_resetReason = (esp_reset_reason_t)why;
 #endif
-  if (!ok) { memset(&persist, 0, sizeof persist); persist.magic = PERSIST_MAGIC; persist.ringAlarm = -1; persistSave(); }
-  return ok;
 }
-void persistSave() {
-  persist.crc = persistCrc(persist);
+[[noreturn]] void sim::reset(esp_reset_reason_t why) {
 #ifndef SIM_WASM
-  static uint32_t written = 0;
-  if (persist.crc == written) return;   // only when it changed
-  written = persist.crc;
-  FILE* f = fopen(persistPath().c_str(), "wb");
-  if (f) { fwrite(&persist, sizeof persist, 1, f); fclose(f); }
+  FILE* f = fopen(fsPath(".rtcmem").c_str(), "wb");
+  if (f) { int w = why; fwrite(&persist, sizeof persist, 1, f); fwrite(&w, sizeof w, 1, f); fclose(f); }
 #endif
+  fflush(stdout);
+  exit(0);
 }
+
+// ---------------------------------------------------------------- task watchdog (esp_task_wdt.h)
+#include "esp_task_wdt.h"
+#ifndef SIM_WASM
+#include <atomic>
+static std::atomic<unsigned long> g_wdtFed{0};
+static std::atomic<uint32_t> g_wdtTimeout{5000};
+static std::atomic<bool> g_wdtWatching{false};
+#endif
+esp_err_t esp_task_wdt_init(const esp_task_wdt_config_t* c) { return esp_task_wdt_reconfigure(c); }
+esp_err_t esp_task_wdt_reconfigure(const esp_task_wdt_config_t* c) {
+#ifndef SIM_WASM
+  g_wdtTimeout = c->timeout_ms;
+#endif
+  return ESP_OK;
+}
+esp_err_t esp_task_wdt_reset() {
+#ifndef SIM_WASM
+  g_wdtFed = millis();
+#endif
+  return ESP_OK;
+}
+esp_err_t esp_task_wdt_add(TaskHandle_t) {
+#ifndef SIM_WASM
+  g_wdtFed = millis();
+  if (!g_wdtWatching.exchange(true))
+    std::thread([] {
+      for (;;) {
+        usleep(200000);
+        if (millis() - g_wdtFed > g_wdtTimeout) {
+          printf("[sim] task watchdog: loop() stuck for %u ms, resetting\n", (unsigned)g_wdtTimeout);
+          sim::reset(ESP_RST_TASK_WDT);
+        }
+      }
+    }).detach();
+#endif
+  return ESP_OK;
+}
+
 // NTP: answers with the real time, but only when the clock is on Wi-Fi and the internet is up
 static void fakeSync() {
   if (!g_ntpConfigured || !sim::wifiLinked() || !sim::hw.netOk) return;
@@ -165,12 +212,10 @@ bool sntp_restart() { fakeSync(); return true; }
 void configTzTime(const char* tz, const char*, const char*, const char*) {
   g_ntpConfigured = true;
   setenv("TZ", tz, 1);
-#ifndef SIM_WASM
   tzset();
-#endif
   fakeSync();   // the simulator's "NTP server" answers immediately with the host clock
 }
-void EspClass::restart() { printf("ESP.restart()\n"); exit(0); }
+void EspClass::restart() { printf("ESP.restart()\n"); sim::reset(ESP_RST_SW); }
 
 // ---------------------------------------------------------------- GPIO
 void pinMode(int, int) {}
@@ -383,7 +428,15 @@ static void audioMaybeHang(const std::string& mode) {
 #endif
 }
 void Audio::setVolume(uint8_t v) { sim::hw.audioVol = v; }
-bool Audio::simProducing() { return playing_ && !stalled_; }
+void Audio::loop() {
+  if (!isRunning() || stalled_) return;   // a stalled sound sends nothing on to the amplifier
+  static int32_t buf[64];
+  int32_t a = 1000 + (int32_t)sim::hw.audioVol * 50000;
+  for (int i = 0; i < 64; i++) buf[i] = (i & 8) ? a : -a;   // a stand-in square wave at the set volume
+  bool more = true;
+  if (audio_process_raw_samples) audio_process_raw_samples(buf, 64);
+  if (audio_process_i2s) audio_process_i2s(buf, 64, &more);
+}
 bool Audio::connecttoFS(fs::FS& f, const char* path) {
   std::string fm = audioFailMode(path);
   audioMaybeHang(fm);
@@ -421,37 +474,63 @@ bool Audio::isRunning() {
   return playing_;
 }
 
-// ---------------------------------------------------------------- netFetch (podcast feed lookup)
-#include "net_fetch.h"
+// ---------------------------------------------------------------- HTTPClient (podcast feed lookup)
+#include "HTTPClient.h"
+static const size_t HTTP_MAX = 512 * 1024;
 #ifdef SIM_WASM
 // The page fetches it (synchronous request; the browser's cross-origin rules apply).
 extern "C" __attribute__((import_module("env"), import_name("js_http_get"))) int js_http_get(const char* url, char* buf, int max);
-bool netFetch(const char* url, std::string& contentType, const std::function<bool(const char*, size_t)>& sink) {
-  if (!sim::hw.netOk) return false;
-  static std::vector<char> buf(512 * 1024);
-  int n = js_http_get(url, buf.data(), (int)buf.size());
-  if (n < 0) return false;
-  contentType.clear();
-  for (int p = 0; p < n; p += 4096) if (!sink(buf.data() + p, std::min(4096, n - p))) break;
-  return true;
+int HTTPClient::GET() {
+  if (!client_ || !sim::wifiLinked() || !sim::hw.netOk) return -1;
+  static std::vector<char> buf(HTTP_MAX);
+  int n = js_http_get(url_.c_str(), buf.data(), (int)buf.size());
+  if (n < 0) return -1;
+  headers_.clear();
+  client_->simSetBody(std::string(buf.data(), n));
+  size_ = n;
+  return HTTP_CODE_OK;
 }
 #else
-// Uses curl. Reads at most 512 KB, so a radio stream doesn't download forever.
-bool netFetch(const char* url, std::string& contentType, const std::function<bool(const char*, size_t)>& sink) {
-  if (!sim::hw.netOk) return false;
-  for (const char* c = url; *c; c++)
-    if (*c <= ' ' || *c == '\'' || *c == '"' || *c == '\\' || *c == '`') return false;
-  std::string cmd = std::string("curl -sfL --max-time 12 -A CeilingClock/1.0 '") + url + "' 2>/dev/null | head -c 524288";
-  FILE* p = popen(cmd.c_str(), "r");
-  if (!p) return false;
-  contentType.clear();
+// Uses curl, with the response headers first (one block per redirect) and then the body.
+int HTTPClient::GET() {
+  if (!client_ || !sim::wifiLinked() || !sim::hw.netOk) return -1;
+  for (char c : url_)
+    if (c <= ' ' || c == '\'' || c == '"' || c == '\\' || c == '`') return -1;
+  char opts[160];
+  snprintf(opts, sizeof opts, "curl -s -D - %s--max-redirs %d --connect-timeout %d --max-time %d -A '%s' '",
+           follow_ ? "-L " : "", redirects_, (connectMs_ + 999) / 1000, 12, ua_.c_str());
+  FILE* p = popen((opts + url_ + "' 2>/dev/null").c_str(), "r");
+  if (!p) return -1;
+  int code = -1;
+  char line[1024];
+  headers_.clear();
+  while (fgets(line, sizeof line, p)) {   // header blocks: keep the last one (after any redirects)
+    if (!strncmp(line, "HTTP/", 5)) { headers_.clear(); const char* sp = strchr(line, ' '); code = sp ? atoi(sp + 1) : -1; continue; }
+    if (line[0] == '\r' || line[0] == '\n') { if (code < 300 || code >= 400 || !follow_) break; continue; }
+    const char* colon = strchr(line, ':');
+    if (!colon) continue;
+    std::string k(line, colon - line), v(colon + 1);
+    for (auto& ch : k) ch = (char)tolower((unsigned char)ch);
+    while (!v.empty() && (v[0] == ' ')) v.erase(0, 1);
+    while (!v.empty() && (v.back() == '\r' || v.back() == '\n')) v.pop_back();
+    headers_[k] = v;
+  }
+  std::string body;
   char buf[4096];
-  size_t n, total = 0;
-  while ((n = fread(buf, 1, sizeof buf, p)) > 0) { total += n; if (!sink(buf, n)) break; }
+  size_t n;
+  while (body.size() < HTTP_MAX && (n = fread(buf, 1, std::min(sizeof buf, HTTP_MAX - body.size()), p)) > 0) body.append(buf, n);
   pclose(p);
-  return total > 0;
+  client_->simSetBody(body);
+  size_ = (int)body.size();
+  return code;
 }
 #endif
+String HTTPClient::header(const char* name) {
+  std::string k(name);
+  for (auto& ch : k) ch = (char)tolower((unsigned char)ch);
+  auto it = headers_.find(k);
+  return String(it == headers_.end() ? "" : it->second.c_str());
+}
 
 // ---------------------------------------------------------------- HTTP server
 static std::string urlDecode(const std::string& s) {
@@ -624,7 +703,7 @@ bool WebServer::simRoute(const std::string& path) {
     return true;
   }
   if (path == "/sim/time") {
-    sim::timeOffset += atol(arg("add").c_str()); if (hasArg("set")) sim::timeOffset = atol(arg("set").c_str()) - ::time(nullptr);
+    sim::timeOffset += atol(arg("add").c_str()); if (hasArg("set")) sim::timeOffset = atol(arg("set").c_str()) - hostTime();
 #ifndef SIM_WASM
     saveWorldTime();
 #endif
@@ -648,7 +727,11 @@ bool WebServer::simRoute(const std::string& path) {
     { FAIL_LOCK; if (arg("mode") == "ok") g_audioFail.erase(arg("path").c_str()); else g_audioFail[arg("path").c_str()] = arg("mode").c_str(); }
     send(200, "text/plain", "ok"); return true;
   }
-  if (path == "/sim/crash") { send(200, "text/plain", "restarting"); fflush(stdout); ESP.restart(); }
+  if (path == "/sim/hang") {   // loop() stops coming back (runs inside it): the task watchdog must reset the clock
+    send(200, "text/plain", "hanging"); printf("[sim] loop() hangs\n"); fflush(stdout);
+    for (;;) usleep(1000000);
+  }
+  if (path == "/sim/crash") { send(200, "text/plain", "restarting"); printf("[sim] crash\n"); sim::reset(ESP_RST_PANIC); }
   if (path == "/sim/clock") {   // the clock's own idea of the time, and what it is really
     send(200, "application/json", "{\"system\":" + std::to_string(sim_time(nullptr)) + ",\"real\":" + std::to_string(simRealTime()) +
          ",\"wifi\":" + (sim::wifiLinked() ? "true" : "false") + ",\"portal\":" + (hw.portalActive ? "true" : "false") + "}");

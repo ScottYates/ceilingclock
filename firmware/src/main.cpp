@@ -24,9 +24,7 @@
 #include "feed_scan.h"
 #include "net_fetch.h"
 #include "persist.h"
-#ifndef NATIVE_SIM
 #include <esp_task_wdt.h>
-#endif
 
 #define FW_VERSION "2.3.0"   // bump on every release
 #ifndef FW_BUILD
@@ -56,15 +54,10 @@ bool serverStarted = false;
 
 // The loop watchdog (set up at the end of setup()). Long uploads are handled inside one web server call,
 // so they feed it as each chunk arrives.
-inline void feedWatchdog() {
-#ifndef NATIVE_SIM
-  esp_task_wdt_reset();
-#endif
-}
+inline void feedWatchdog() { esp_task_wdt_reset(); }
 
 // ---------------------------------------------------------------- state kept across resets
 bool startedWarm = false;   // this start was a reset (kept state was intact), not a power-on
-#ifndef NATIVE_SIM
 RTC_NOINIT_ATTR Persist persist;
 bool persistLoad() {
   esp_reset_reason_t why = esp_reset_reason();
@@ -73,7 +66,6 @@ bool persistLoad() {
   return ok;
 }
 void persistSave() { persist.crc = persistCrc(persist); }
-#endif
 
 // ---------------------------------------------------------------- time state
 volatile time_t lastNtpSync = 0;
@@ -148,7 +140,6 @@ static void audioLogAdd(const char* m) {
   strlcpy(audioLog[audioLogN % 8], m, sizeof audioLog[0]);
   audioLogN++;
 }
-#ifndef NATIVE_SIM
 static int32_t absPeak(const int32_t* b, int n) {
   int32_t p = 0;
   for (int i = 0; i < n; i++) { int32_t v = b[i] < 0 ? -(b[i] + 1) : b[i]; if (v > p) p = v; }
@@ -162,7 +153,6 @@ void audio_process_i2s(int32_t* outBuff, int16_t validSamples, bool* continueI2S
   samplesOut += validSamples;
   audioFrames += validSamples;
 }
-#endif
 
 void audioInit() {
   audioPlayer = new Audio();
@@ -210,9 +200,6 @@ void audioStep() {
   }
   audioPlayer->loop();
   audioRunning = audioPlayer->isRunning();
-#ifdef NATIVE_SIM
-  if (audioRunning && audioPlayer->simProducing()) audioFrames += 64;  // the simulator's stand-in for samples
-#endif
   static bool streamRan = false;
   if (streamState != SS_PLAYING) streamRan = false;
   else if (audioRunning) streamRan = true;
@@ -1001,11 +988,7 @@ void setup() {
   if (warm) lastCheck = persist.lastCheck;
 
   audioQ = xQueueCreate(8, sizeof(AudioCmd));
-#ifdef SIM_NO_THREADS   // browser simulator has no threads: audio work runs from loop() instead
-  audioInit();
-#else
   xTaskCreatePinnedToCore(audioTask, "audio", 8192, nullptr, 3, nullptr, 0);
-#endif
 
   WiFi.setHostname(HOSTNAME);
   wm.setConfigPortalBlocking(false);
@@ -1033,12 +1016,10 @@ void setup() {
     persist.useBeep = 0;
   }
 
-#ifndef NATIVE_SIM
   // If the loop ever hangs, the watchdog resets the clock; an alarm then carries on (above).
   esp_task_wdt_config_t wdt = {.timeout_ms = 30000, .idle_core_mask = 0, .trigger_panic = true};
   if (esp_task_wdt_reconfigure(&wdt) != ESP_OK) esp_task_wdt_init(&wdt);
   esp_task_wdt_add(NULL);
-#endif
 }
 
 // Keeps the state that must survive a reset up to date (see persist.h).
@@ -1054,12 +1035,7 @@ void keepPersist(time_t now) {
 }
 
 void loop() {
-#ifndef NATIVE_SIM
   esp_task_wdt_reset();
-#endif
-#ifdef SIM_NO_THREADS
-  audioStep();
-#endif
   wm.process();
   // Not connected and the setup portal has closed: retry the saved network every 30 s.
   static uint32_t lastWifiTry = 0;

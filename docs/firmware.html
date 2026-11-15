@@ -41,7 +41,7 @@
 <p><b>Later updates:</b> upload <a href="downloads/ceilingclock-esp32s3-update.bin">ceilingclock-esp32s3-update.bin</a> (or your own <code>.pio/build/esp32s3/firmware.bin</code>) in the page's <b>Firmware update</b> box. Alarms and sounds are kept.</p>
 
 <h2>Try the web page</h2>
-<p><b><a href="demo/">Live demo</a>:</b> the actual firmware compiled to WebAssembly, running in your browser with simulated hardware. The page is the same one the clock serves. A control bar lets you fast-forward time, press the buttons and change the room light. Two differences from the real clock: it uses your browser's time zone, and it forgets everything when you reload.</p>
+<p><b><a href="demo/">Live demo</a>:</b> the actual firmware compiled to WebAssembly, running in your browser with simulated hardware. The page is the same one the clock serves. A control bar lets you fast-forward time, press the buttons and change the room light. It starts in your time zone and forgets everything when you reload.</p>
 <p><b>On your computer:</b> the <a href="https://github.com/ScottYates/ceilingclock/tree/main/firmware/sim">simulator</a> also builds as a normal Linux or Mac program, keeping its files in a folder. Run <code>pio pkg install</code> in <code>firmware/</code>, then <code>make run</code> in <code>firmware/sim/</code>, and open <a href="http://localhost:8080/">localhost:8080</a>.</p>
 
 <h2>The clock's web page</h2>
@@ -78,10 +78,11 @@
 <tr><td>The router starts after the clock (common after a power cut)</td><td>Opens the setup hotspot for 3 minutes, then keeps rejoining your Wi-Fi every 30 seconds.</td></tr>
 <tr><td>Settings are being saved when the power goes</td><td>Keeps a backup copy and checks each save, so the alarms are never lost.</td></tr>
 <tr><td>Settings are saved while an alarm rings</td><td>Keeps ringing, even if that alarm is edited or deleted. Use Stop.</td></tr>
+<tr><td>An alarm is set inside the hour daylight saving skips or repeats</td><td>Rings once either way. At 2:30 on the night the clocks go forward (2:30 never happens), it rings at 3:30. At 1:30 on the night they go back (1:30 happens twice), it rings at the second 1:30.</td></tr>
 <tr><td>An alarm's volume is set very low</td><td>Never rings quieter than about 30% (6 of 21), and every step is audible. A fade-in always finishes within the first third of the ringing time.</td></tr>
 </tbody></table>
 <p><b>The one case it can't cover:</b> a power cut while the internet is also down, with no DS3231 fitted. When the power returns the clock doesn't know the time, so it can't ring until the internet is back. Fit the DS3231 (in the parts list) so the clock always knows the time.</p>
-<p>All of this is tested. <code>firmware/test/test_alarm_schedule.cpp</code> runs every weekday pattern and alarm time through three years in seven time zones, with irregular checks and clock jumps, including the hour that daylight saving skips or repeats. <code>firmware/test/sim_alarm_e2e.py</code> runs 16 failure scenarios against the simulator.</p>
+<p>All of this is tested. <code>firmware/test/test_alarm_schedule.cpp</code> runs every weekday pattern and alarm time through three years in seven time zones, with irregular checks and clock jumps, including the hour that daylight saving skips or repeats. <code>firmware/test/sim_alarm_e2e.py</code> runs 19 failure scenarios against the simulator, including a frozen main loop and both daylight-saving nights. The simulator compiles every firmware source file exactly as it is built for the clock, with the ESP32's own date code (newlib) in place of the PC's, so what passes there is what runs on the clock.</p>
 
 <h2>Troubleshooting</h2>
 <table><thead><tr><th>Symptom</th><th>Fix</th></tr></thead><tbody>
