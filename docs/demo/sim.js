@@ -159,10 +159,12 @@
     for (let left = seconds; left > 0; left -= 150) { request('POST', '/sim/time?add=' + Math.min(150, left)); X.sim_loop(3); }
   }
   // the front display: four TM1637 segment bytes (bit 0x80 of digit 2 is the colon)
+  // Unlit segments are barely visible, as on a real module.
   function segs(g, col) {
+    const off = '#130808';
     const P = [[4, 0, 26, 5], [27, 3, 5, 22], [27, 30, 5, 22], [4, 51, 26, 5], [0, 30, 5, 22], [0, 3, 5, 22], [4, 25.5, 26, 5]];
-    const dig = (x, m) => P.map((p, i) => `<rect x="${x + p[0]}" y="${4 + p[1]}" width="${p[2]}" height="${p[3]}" rx="2" fill="${(m >> i) & 1 ? col : '#2a0f0d'}"/>`).join('');
-    return dig(14, g[0]) + dig(52, g[1]) + `<circle cx="99" cy="22" r="3" fill="${g[1] & 0x80 ? col : '#2a0f0d'}"/><circle cx="99" cy="40" r="3" fill="${g[1] & 0x80 ? col : '#2a0f0d'}"/>` + dig(114, g[2]) + dig(152, g[3]);
+    const dig = (x, m) => P.map((p, i) => `<rect x="${x + p[0]}" y="${4 + p[1]}" width="${p[2]}" height="${p[3]}" rx="2" fill="${(m >> i) & 1 ? col : off}"/>`).join('');
+    return dig(14, g[0]) + dig(52, g[1]) + `<circle cx="99" cy="22" r="3" fill="${g[1] & 0x80 ? col : off}"/><circle cx="99" cy="40" r="3" fill="${g[1] & 0x80 ? col : off}"/>` + dig(114, g[2]) + dig(152, g[3]);
   }
   function controls() {
     const css = document.createElement('style');
@@ -181,7 +183,7 @@
 #simbar button{background:#2f4a2f;color:#e8ffe8;border:1px solid #446a44;border-radius:7px;padding:5px 8px;font:inherit;cursor:pointer}
 #simbar button:active{background:#467046}#simbar input{accent-color:#7cc47c;width:120px}
 #simbar .simled{display:inline-block;width:9px;height:9px;border-radius:50%;background:#203020;margin-right:6px;vertical-align:0}#simbar .simled.on{background:#7dff6a;box-shadow:0 0 8px #7dff6a}
-#simbar .hint{color:#a8d8a8;font-size:12px}#simbar .srow b{color:#fff}#simfront{background:#0a0505;border-radius:4px}
+#simbar .hint{color:#a8d8a8;font-size:12px}#simbar .srow b{color:#fff}#simfront{background:#070404;border-radius:5px;padding:2px 4px}
 #simclock{margin-left:auto;font-variant-numeric:tabular-nums;color:#a8d8a8;font-weight:400}`;
     document.head.appendChild(css);
     const intro = document.createElement('div'); intro.id = 'simintro';
@@ -201,7 +203,7 @@
     const bar = document.createElement('div'); bar.id = 'simbar';
     bar.innerHTML = `<div class="in"><div class="hd">Simulator controls <span id="simclock"></span><button id="simtoggle" aria-expanded="true">Hide</button></div><div class="body">
 <div class="srow"><span>Time</span><button data-f="60">+1 min</button><button data-f="600">+10 min</button><button data-f="3600">+1 hour</button></div>
-<div class="srow"><span>Front display</span><svg id="simfront" viewBox="0 0 200 60" width="120" height="36" role="img" aria-label="Front display"></svg><span id="simdisp" class="hint"></span></div>
+<div class="srow"><span>Front display</span><svg id="simfront" viewBox="0 0 200 60" width="160" height="48" role="img" aria-label="Front display"></svg><span id="simdisp" class="hint"></span></div>
 <div class="srow"><span>Alarm buttons</span><button data-b="1&ms=150"><i class="simled" id="simled0"></i>Alarm 1: <b id="simal0">off</b></button><button data-b="2&ms=150"><i class="simled" id="simled1"></i>Alarm 2: <b id="simal1">off</b></button></div>
 <div class="srow"><span></span><span class="hint">Press: switch that alarm on (front display: 1 on, then its time) or off (1 oF). While an alarm rings: stop it. Holding longer does the same as a press. The dot is the button's light: like on the real clock, it lights only for a moment after a change, while that alarm rings, or when you press Snooze.</span></div>
 <div class="srow"><span>Snooze (top)</span><button data-b="A&ms=150">Press</button><button data-b="A&ms=2300">Hold 2 s</button></div>
@@ -255,7 +257,7 @@
       syncSound(h.audio);
       (h.alarmLeds || []).forEach((v, i) => { const e = document.getElementById('simled' + i); if (e) e.classList.toggle('on', v > 0); });
       if (h.front) {
-        const col = h.front.on ? `rgba(255,74,53,${0.35 + 0.65 * h.front.bright / 7})` : '#2a0f0d';
+        const col = `rgba(255,74,53,${0.6 + 0.4 * h.front.bright / 7})`;  // dimmer at low brightness, never muddy
         document.getElementById('simfront').innerHTML = segs(h.front.on ? h.front.segs : [0, 0, 0, 0], col);
         document.getElementById('simdisp').textContent = h.front.on ? '' : 'off (dark)';
       }
