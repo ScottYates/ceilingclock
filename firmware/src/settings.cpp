@@ -94,24 +94,48 @@ bool configFromJson(Config& c, JsonVariantConst v) {
   return true;
 }
 
-bool loadConfig() {
-  configDefaults(cfg);
-  File f = LittleFS.open(CFG_PATH, "r");
+// Settings survive a power cut at any moment: a save writes /config.tmp, reads it back to check it,
+// keeps the previous good file as /config.bak, then renames the new one into place (LittleFS renames are
+// atomic). Loading tries /config.json, then /config.tmp, then /config.bak, so the alarms are never lost.
+static bool loadFrom(const char* path) {
+  File f = LittleFS.open(path, "r");
   if (!f) return false;
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, f);
   f.close();
-  if (err) return false;
-  return configFromJson(cfg, doc.as<JsonVariantConst>());
+  if (err || !doc["alarms"].is<JsonArrayConst>()) return false;
+  Config c;
+  configDefaults(c);
+  if (!configFromJson(c, doc.as<JsonVariantConst>())) return false;
+  cfg = c;
+  return true;
+}
+
+bool loadConfig() {
+  configDefaults(cfg);
+  for (const char* p : {CFG_PATH, "/config.tmp", "/config.bak"}) {
+    if (loadFrom(p)) {
+      if (strcmp(p, CFG_PATH) != 0) { Serial.printf("Settings recovered from %s\n", p); saveConfig(); }
+      return true;
+    }
+  }
+  return false;
 }
 
 bool saveConfig() {
   JsonDocument doc;
   configToJson(cfg, doc);
+  size_t want = measureJson(doc);
   File f = LittleFS.open("/config.tmp", "w");
   if (!f) return false;
-  serializeJson(doc, f);
+  size_t wrote = serializeJson(doc, f);
   f.close();
-  LittleFS.remove(CFG_PATH);
+  // check it reads back whole (a full file system writes short files)
+  File chk = LittleFS.open("/config.tmp", "r");
+  bool ok = chk && wrote == want && chk.size() == want;
+  if (ok) { JsonDocument back; ok = !deserializeJson(back, chk); }
+  if (chk) chk.close();
+  if (!ok) { LittleFS.remove("/config.tmp"); Serial.println("Settings NOT saved: storage full or failing"); return false; }
+  if (LittleFS.exists(CFG_PATH)) LittleFS.rename(CFG_PATH, "/config.bak");
   return LittleFS.rename("/config.tmp", CFG_PATH);
 }

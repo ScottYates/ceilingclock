@@ -40,6 +40,8 @@ The alarm scheduling, the podcast feed reader and the projector's digit mirrorin
 g++ -std=c++17 -Ifirmware/src firmware/test/test_alarm_logic.cpp && ./a.out
 g++ -std=c++17 -Ifirmware/src firmware/test/test_feed_scan.cpp && ./a.out
 g++ -std=c++17 -Ifirmware/src firmware/test/test_segments.cpp && ./a.out
+g++ -std=c++17 -O2 -Ifirmware/src firmware/test/test_alarm_schedule.cpp && ./a.out   # three years, 7 time zones
+(cd firmware/sim && make) && python3 firmware/test/sim_alarm_e2e.py                   # 16 ways an alarm could fail
 ```
 
 ## Rebuild the 3D files

@@ -58,21 +58,112 @@ void delay(unsigned long) {}          // the browser calls loop() on a timer ins
 #else
 void delay(unsigned long ms) { usleep(ms * 1000); }
 #endif
+// Two clocks: the real time in the simulated world (host clock + /sim/time offset), and the clock's own
+// system time, which (in the PC build) starts unknown at power-on like the ESP32's: it reads "uptime since
+// 1970" until NTP, the backup clock or the firmware sets it. /sim/clockerror makes it run wrong by N seconds.
+uint32_t simRealTime() { return (uint32_t)(::time(nullptr) + sim::timeOffset); }
+namespace sim { bool sysValid = false; long sysDelta = 0; }
 extern "C" time_t sim_time(time_t* t) SIM_NOEXCEPT {
-  time_t v = ::time(nullptr) + sim::timeOffset;
+#ifdef SIM_WASM
+  time_t v = ::time(nullptr) + sim::timeOffset;   // the browser demo always knows the time
+#else
+  time_t v = sim::sysValid ? (time_t)simRealTime() + sim::sysDelta : (time_t)(millis() / 1000);
+#endif
   if (t) *t = v;
   return v;
 }
+#ifndef SIM_WASM
+extern "C" int sim_settimeofday(const struct timeval* tv, const struct timezone*) SIM_NOEXCEPT {
+  sim::sysValid = true;
+  sim::sysDelta = (long)(tv->tv_sec - (time_t)simRealTime());
+  return 0;
+}
+#endif
 static sntp_sync_cb g_sntpCb = nullptr;
+static bool g_ntpConfigured = false;
 void sntp_set_sync_interval(uint32_t) {}
 void sntp_set_time_sync_notification_cb(sntp_sync_cb cb) { g_sntpCb = cb; }
+bool sim::wifiLinked() { return hw.wifiConnected && hw.wifiUp; }
+
+// Simulator settings from the environment (PC build): SIM_RTC=1 fits a DS3231; SIM_WIFI=0 starts with the
+// router down; SIM_NET=0 with the internet down; SIM_RESET=warm starts as after a crash or restart (the state
+// kept in RTC memory survives: see persist.h), anything else as after power-on.
+static struct SimEnv {
+  SimEnv() {
+    auto on = [](const char* k, bool def) { const char* v = getenv(k); return v ? strcmp(v, "0") != 0 : def; };
+    sim::hw.rtcPresent = on("SIM_RTC", false);
+    sim::hw.wifiUp = on("SIM_WIFI", true);
+    sim::hw.netOk = on("SIM_NET", true);
+#ifndef SIM_WASM
+    // The simulated world's time keeps going across restarts and power cuts (a test can add time spent off).
+    FILE* f = fopen(worldPath().c_str(), "r");
+    if (f) { long o = 0; if (fscanf(f, "%ld", &o) == 1) sim::timeOffset = o; fclose(f); }
+#endif
+  }
+#ifndef SIM_WASM
+  static std::string worldPath() { const char* e = getenv("SIM_FS_DIR"); return std::string(e ? e : "sim_fs") + "/.worldtime"; }
+#endif
+} g_simEnv;
+#ifndef SIM_WASM
+static void saveWorldTime() {
+  const char* e = getenv("SIM_FS_DIR");
+  FILE* f = fopen((std::string(e ? e : "sim_fs") + "/.worldtime").c_str(), "w");
+  if (f) { fprintf(f, "%ld\n", sim::timeOffset); fclose(f); }
+}
+#endif
+
+// ---------------------------------------------------------------- state kept across resets (persist.h)
+#include "persist.h"
+Persist persist;
+#ifndef SIM_WASM
+static std::string persistPath() { const char* e = getenv("SIM_FS_DIR"); return std::string(e ? e : "sim_fs") + "/.rtcmem"; }
+#endif
+bool persistLoad() {
+  bool ok = false;
+#ifndef SIM_WASM
+  const char* r = getenv("SIM_RESET");
+  if (r && !strcmp(r, "warm")) {
+    FILE* f = fopen(persistPath().c_str(), "rb");
+    if (f) { ok = fread(&persist, sizeof persist, 1, f) == 1; fclose(f); }
+    ok = ok && persist.magic == PERSIST_MAGIC && persist.crc == persistCrc(persist);
+  }
+#endif
+  if (!ok) { memset(&persist, 0, sizeof persist); persist.magic = PERSIST_MAGIC; persist.ringAlarm = -1; persistSave(); }
+  return ok;
+}
+void persistSave() {
+  persist.crc = persistCrc(persist);
+#ifndef SIM_WASM
+  static uint32_t written = 0;
+  if (persist.crc == written) return;   // only when it changed
+  written = persist.crc;
+  FILE* f = fopen(persistPath().c_str(), "wb");
+  if (f) { fwrite(&persist, sizeof persist, 1, f); fclose(f); }
+#endif
+}
+// NTP: answers with the real time, but only when the clock is on Wi-Fi and the internet is up
 static void fakeSync() {
+  if (!g_ntpConfigured || !sim::wifiLinked() || !sim::hw.netOk) return;
+#ifndef SIM_WASM
+  sim::sysValid = true; sim::sysDelta = 0;
+#endif
   if (!g_sntpCb) return;
   struct timeval tv = {sim_time(nullptr), 0};
   g_sntpCb(&tv);
 }
+// SNTP keeps trying in the background until it gets an answer (and the real one resyncs hourly)
+void sim::tick() {
+  static unsigned long last = 0;
+  if (millis() - last < 2000) return;
+  last = millis();
+  // SIM_WIFI_UP_AFTER=N: the router comes up N seconds after the clock starts (a slow router after a power cut)
+  static const char* upAfter = getenv("SIM_WIFI_UP_AFTER");
+  if (upAfter && !hw.wifiUp && millis() >= (unsigned long)atol(upAfter) * 1000) hw.wifiUp = true;
+  if (!sysValid) fakeSync();
+}
 bool sntp_restart() { fakeSync(); return true; }
 void configTzTime(const char* tz, const char*, const char*, const char*) {
+  g_ntpConfigured = true;
   setenv("TZ", tz, 1);
 #ifndef SIM_WASM
   tzset();
@@ -114,6 +205,7 @@ BaseType_t xQueueSend(QueueHandle_t h, const void* item, int) {
   q->q.emplace_back((const uint8_t*)item, (const uint8_t*)item + q->item);
   return pdTRUE;
 }
+int uxQueueMessagesWaiting(QueueHandle_t h) { auto* q = (SimQueue*)h; SIM_LOCK(q); return (int)q->q.size(); }
 BaseType_t xQueueReceive(QueueHandle_t h, void* item, int) {
   auto* q = (SimQueue*)h; SIM_LOCK(q);
   if (q->q.empty()) return pdFALSE;
@@ -271,10 +363,33 @@ File File::openNextFile() {
 #endif
 
 // ---------------------------------------------------------------- Audio (simulated playback)
+// /sim/audiofail?path=X&mode=fail|stall|hang|ok makes a file (or "*" = every file, "stream" = streams) go wrong:
+// fail = won't open (like a damaged file), stall = opens but no sound comes out, hang = the audio task freezes.
+static std::map<std::string, std::string> g_audioFail;
+#ifdef SIM_WASM
+#define FAIL_LOCK
+#else
+static std::mutex g_audioFailM;
+#define FAIL_LOCK std::lock_guard<std::mutex> l(g_audioFailM)
+#endif
+static std::string audioFailMode(const std::string& path) {
+  FAIL_LOCK;
+  auto it = g_audioFail.find(path); if (it != g_audioFail.end()) return it->second;
+  it = g_audioFail.find("*"); return it != g_audioFail.end() ? it->second : "";
+}
+static void audioMaybeHang(const std::string& mode) {
+#ifndef SIM_NO_THREADS
+  while (mode == "hang") usleep(1000000);   // the audio task never comes back
+#endif
+}
 void Audio::setVolume(uint8_t v) { sim::hw.audioVol = v; }
+bool Audio::simProducing() { return playing_ && !stalled_; }
 bool Audio::connecttoFS(fs::FS& f, const char* path) {
+  std::string fm = audioFailMode(path);
+  audioMaybeHang(fm);
   File fp = f.open(path, "r");
-  if (!fp) { playing_ = false; sim::hw.audioPlaying = false; return false; }
+  if (!fp || fm == "fail") { if (fp) fp.close(); playing_ = false; sim::hw.audioPlaying = false; return false; }
+  stalled_ = fm == "stall";
   long size = (long)fp.size();
   durMs_ = 3000;
   if (strstr(path, ".wav") && size > 44) {
@@ -289,7 +404,11 @@ bool Audio::connecttoFS(fs::FS& f, const char* path) {
 }
 bool Audio::connecttohost(const char* url, const char*, const char*) {
   stopSong();
-  if (!sim::hw.netOk || !url || strncmp(url, "http", 4) != 0) return false;
+  if (!sim::hw.netOk || !sim::wifiLinked() || !url || strncmp(url, "http", 4) != 0) return false;
+  std::string fm = audioFailMode("stream");
+  audioMaybeHang(fm);
+  if (fm == "fail") return false;
+  stalled_ = fm == "stall";
   playing_ = streaming_ = true; start_ = millis();
   sim::hw.streamDrop = false;
   sim::hw.audioPlaying = true; sim::hw.audioFile.clear(); sim::hw.audioUrl = url; sim::hw.audioSeq++;
@@ -504,7 +623,13 @@ bool WebServer::simRoute(const std::string& path) {
     send(200, "application/json", String(j));
     return true;
   }
-  if (path == "/sim/time") { sim::timeOffset += atol(arg("add").c_str()); if (hasArg("set")) sim::timeOffset = atol(arg("set").c_str()) - ::time(nullptr); send(200, "text/plain", "ok"); return true; }
+  if (path == "/sim/time") {
+    sim::timeOffset += atol(arg("add").c_str()); if (hasArg("set")) sim::timeOffset = atol(arg("set").c_str()) - ::time(nullptr);
+#ifndef SIM_WASM
+    saveWorldTime();
+#endif
+    send(200, "text/plain", "ok"); return true;
+  }
   if (path == "/sim/button") {
     String b = arg("b");
     int i = b == "B" ? 1 : b == "1" ? 2 : b == "2" ? 3 : 0;
@@ -513,7 +638,22 @@ bool WebServer::simRoute(const std::string& path) {
     send(200, "text/plain", "ok"); return true;
   }
   if (path == "/sim/ldr") { hw.ldr = atoi(arg("v").c_str()); send(200, "text/plain", "ok"); return true; }
-  if (path == "/sim/net") { hw.netOk = arg("ok") != "0"; send(200, "text/plain", "ok"); return true; }
+  if (path == "/sim/net") { hw.netOk = arg("ok") != "0"; if (hw.netOk) fakeSync(); send(200, "text/plain", "ok"); return true; }
+  if (path == "/sim/wifi") { hw.wifiUp = arg("up") != "0"; send(200, "text/plain", "ok"); return true; }
+  if (path == "/sim/ntp") { fakeSync(); send(200, "text/plain", "ok"); return true; }
+#ifndef SIM_WASM
+  if (path == "/sim/clockerror") { sim::sysDelta = atol(arg("sec").c_str()); send(200, "text/plain", "ok"); return true; }
+#endif
+  if (path == "/sim/audiofail") {
+    { FAIL_LOCK; if (arg("mode") == "ok") g_audioFail.erase(arg("path").c_str()); else g_audioFail[arg("path").c_str()] = arg("mode").c_str(); }
+    send(200, "text/plain", "ok"); return true;
+  }
+  if (path == "/sim/crash") { send(200, "text/plain", "restarting"); fflush(stdout); ESP.restart(); }
+  if (path == "/sim/clock") {   // the clock's own idea of the time, and what it is really
+    send(200, "application/json", "{\"system\":" + std::to_string(sim_time(nullptr)) + ",\"real\":" + std::to_string(simRealTime()) +
+         ",\"wifi\":" + (sim::wifiLinked() ? "true" : "false") + ",\"portal\":" + (hw.portalActive ? "true" : "false") + "}");
+    return true;
+  }
   if (path == "/sim/streamfail") { hw.streamDrop = true; send(200, "text/plain", "ok"); return true; }
   if (path == "/sim/file") {   // a sound file's bytes, so the demo page can play it
     std::string p = arg("path").c_str();

@@ -7,10 +7,13 @@
 #define WL_CONNECTED 3
 #define WIFI_STA 1
 #define WIFI_AP 2
+#define WL_DISCONNECTED 6
 struct IPAddressSim { String toString() const { return "127.0.0.1"; } };
 struct WiFiClass {
-  int status() { return WL_CONNECTED; }
-  int getMode() { return WIFI_STA; }
+  int status() { return sim::wifiLinked() ? WL_CONNECTED : WL_DISCONNECTED; }
+  int getMode() { return sim::hw.portalActive ? (WIFI_STA | WIFI_AP) : WIFI_STA; }
+  void mode(int) {}
+  void begin() { if (sim::hw.wifiUp) sim::hw.wifiConnected = true; }   // the saved network
   IPAddressSim localIP() { return {}; }
   int RSSI() { return -52; }
   void setHostname(const char*) {}
@@ -19,8 +22,16 @@ extern WiFiClass WiFi;
 struct WiFiManager {
   void setConfigPortalBlocking(bool) {}
   void setHostname(const char*) {}
-  bool autoConnect(const char*) { return true; }
-  void process() {}
+  bool getWiFiIsSaved() { return true; }
+  void setConfigPortalTimeout(unsigned long s) { sim::hw.portalTimeoutMs = getenv("SIM_FAST_PORTAL") ? 3000 : s * 1000; }  // tests: 3 s
+  bool getConfigPortalActive() { return sim::hw.portalActive; }
+  bool autoConnect(const char*) {   // like the real one: join the saved network, or open the setup portal
+    if (sim::hw.wifiUp) { sim::hw.wifiConnected = true; return true; }
+    sim::hw.portalActive = true; sim::hw.portalStart = millis(); return false;
+  }
+  void process() {   // the real portal never rejoins the saved network by itself; it only times out
+    if (sim::hw.portalActive && sim::hw.portalTimeoutMs && millis() - sim::hw.portalStart > sim::hw.portalTimeoutMs) sim::hw.portalActive = false;
+  }
   void resetSettings() {}
 };
 struct MDNSClass { bool begin(const char*) { return true; } void addService(const char*, const char*, int) {} };
@@ -44,10 +55,11 @@ struct DateTime {
   DateTime(uint32_t x = 0) : t(x) {}
   uint32_t unixtime() const { return t; }
 };
-struct RTC_DS3231 {
-  bool begin(TwoWire*) { return false; }
-  bool lostPower() { return true; }
-  DateTime now() { return DateTime((uint32_t)sim_time(nullptr)); }
+uint32_t simRealTime();   // the real time in the simulated world (host clock + /sim/time offset)
+struct RTC_DS3231 {   // fitted only with SIM_RTC=1; it then keeps perfect time
+  bool begin(TwoWire*) { return sim::hw.rtcPresent; }
+  bool lostPower() { return !sim::hw.rtcPresent; }
+  DateTime now() { return DateTime(simRealTime()); }
   void adjust(const DateTime&) {}
 };
 

@@ -44,6 +44,37 @@ inline bool alarmDueBetween(const AlarmTime& a, time_t from, time_t to) {
   return t != 0 && t <= to;
 }
 
+// The occurrence of the alarm that falls in (from, to], or 0 if none does. Skip is ignored here (the caller
+// consumes a skip instead of ringing). Used with a window that covers everything since the last check, so
+// an alarm still rings after the clock jumps forward over it or the loop was busy for a while.
+inline time_t alarmDueIn(const AlarmTime& a, time_t from, time_t to) {
+  if (to <= from) return 0;
+  time_t t = alarmNext(a, from, false);
+  return (t != 0 && t <= to) ? t : 0;
+}
+
+// True if two occurrence times are the same alarm occurrence: equal, or the same local date and time of day
+// within two hours (the repeated hour when daylight saving ends). Used so an occurrence rings only once,
+// while an alarm moved to a later time the same day still rings.
+inline bool sameOccurrence(time_t x, time_t y) {
+  if (x == y) return true;
+  if (!x || !y || (x > y ? x - y : y - x) > 2 * 3600) return false;
+  struct tm a, b;
+  localtime_r(&x, &a);
+  localtime_r(&y, &b);
+  return a.tm_year == b.tm_year && a.tm_yday == b.tm_yday && a.tm_hour == b.tm_hour && a.tm_min == b.tm_min;
+}
+
+// The occurrence of alarm a that should ring now, or 0. Looks at everything since the last check, but no
+// further back than catchUp seconds, and leaves out the occurrence it last rang for.
+inline time_t alarmToRing(const AlarmTime& a, time_t lastCheck, time_t now, time_t lastFiredAt, time_t catchUp) {
+  if (now <= lastCheck) return 0;
+  time_t from = lastCheck > now - catchUp ? lastCheck : now - catchUp;
+  time_t t = alarmDueIn(a, from, now);
+  if (!t || sameOccurrence(t, lastFiredAt)) return 0;
+  return t;
+}
+
 // Minutes-of-day window that may wrap past midnight (e.g. 22:00-07:00).
 inline bool inWindow(uint16_t nowMin, uint16_t startMin, uint16_t endMin) {
   if (startMin == endMin) return false;

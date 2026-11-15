@@ -36,6 +36,14 @@ Differences in the browser: files are kept in memory (lost on reload), local tim
 | `POST /sim/button?b=A&ms=150` | Press button A (snooze), B (side), 1 or 2 (alarm buttons) for that many milliseconds; `ms=2500` is a long press. `/sim/hw` shows the alarm buttons' lights in `alarmLeds` |
 | `POST /sim/ldr?v=300` | Set the light-sensor reading (0–4095) |
 | `POST /sim/net?ok=0` | Turn the simulated internet off (`ok=1` on): streams stop and feeds can't be read, so the backup sound rings |
+| `POST /sim/wifi?up=0` | Take the router down (`up=1` back up). The clock rejoins by itself |
+| `POST /sim/ntp` | Answer a time sync now (if on Wi-Fi with internet) |
+| `POST /sim/clockerror?sec=-1200` | Make the clock's own time wrong by that many seconds; the next sync corrects it |
+| `POST /sim/audiofail?path=/sounds/x.mp3&mode=fail` | Make a sound go wrong: `fail` (won't open), `stall` (no sound comes out), `hang` (the audio task freezes), `ok`. `path=*` for all files, `path=stream` for streams |
+| `POST /sim/crash` | Simulate a crash: the process exits; start it again with `SIM_RESET=warm` |
+| `GET /sim/clock` | The clock's own time, the real time, Wi-Fi and setup-portal state |
+
+Environment: `SIM_RTC=1` fits a DS3231; `SIM_WIFI=0` starts with the router down (`SIM_WIFI_UP_AFTER=N` brings it up after N s); `SIM_NET=0` without internet; `SIM_RESET=warm` starts as after a reset (the state kept in RTC memory survives), otherwise as after power-on, when the clock's time is unknown until a sync or the DS3231; `SIM_FAST_PORTAL=1` closes the setup portal after 3 s. The simulated world's time is kept in `.worldtime` in the storage folder, so it carries on across restarts.
 | `POST /sim/streamfail` | Report that the stream couldn't be played (the browser demo sends this when its player fails) |
 | `GET /sim/file?path=/sounds/beep.wav` | A sound file's bytes, so the browser demo can play it |
 

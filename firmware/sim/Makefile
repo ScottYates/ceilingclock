@@ -11,7 +11,7 @@ OUT := build
 all: $(OUT)/ceilingclock-sim
 
 $(OUT)/main.o: $(FW)/main.cpp $(FW)/*.h shim/*.h | $(OUT)
-	$(CXX) $(CXXFLAGS) -Dtime=sim_time -c $< -o $@
+	$(CXX) $(CXXFLAGS) -Dtime=sim_time -Dsettimeofday=sim_settimeofday -c $< -o $@
 $(OUT)/settings.o: $(FW)/settings.cpp $(FW)/settings.h shim/*.h | $(OUT)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 $(OUT)/sim_hw.o: sim_hw.cpp shim/*.h | $(OUT)

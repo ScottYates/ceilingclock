@@ -126,6 +126,10 @@ void analogReadResolution(int bits);
 bool ledcAttach(int pin, int freq, int res);
 void ledcWrite(int pin, uint32_t duty);
 extern "C" time_t sim_time(time_t* t) SIM_NOEXCEPT;
+#ifndef SIM_WASM
+// The firmware's settimeofday() sets the simulated system clock (see sim_hw.cpp).
+extern "C" int sim_settimeofday(const struct timeval* tv, const struct timezone* tz) SIM_NOEXCEPT;
+#endif
 #ifdef SIM_WASM
 // wasi-libc has no time zones, so the browser build asks the browser (see sim_wasm.cpp).
 extern "C" struct tm* sim_localtime_r(const time_t* t, struct tm* out);
@@ -146,6 +150,8 @@ typedef void* TaskHandle_t;
 typedef int BaseType_t;
 #define pdTRUE 1
 #define pdFALSE 0
+#define pdMS_TO_TICKS(ms) ((int)(ms))
+int uxQueueMessagesWaiting(QueueHandle_t q);
 QueueHandle_t xQueueCreate(int len, size_t itemSize);
 BaseType_t xQueueSend(QueueHandle_t q, const void* item, int ticks);
 BaseType_t xQueueReceive(QueueHandle_t q, void* item, int ticks);
@@ -165,7 +171,13 @@ struct Hw {
   int ldr = 2000;
   bool btnDown[4] = {false, false, false, false};   // A, B, alarm 1, alarm 2
   uint32_t alarmLed[2] = {0, 0};      // the alarm buttons' lights (10-bit PWM)
+  bool wifiUp = true;                 // the router is reachable
+  bool wifiConnected = false;         // the clock has joined it (needs autoConnect() or WiFi.begin())
+  bool portalActive = false; unsigned long portalStart = 0, portalTimeoutMs = 0;
+  bool rtcPresent = false;            // a DS3231 is fitted (SIM_RTC=1)
 };
 extern Hw hw;
+bool wifiLinked();                    // joined and the router is up
+void tick();                          // called by the simulator's main loop: background NTP sync
 extern long timeOffset;
 }

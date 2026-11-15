@@ -12,6 +12,9 @@ class Audio {
   inline static std::function<void(msg_t i)> audio_info_callback;
   bool setPinout(int, int, int) { return true; }
   void setVolume(uint8_t v);
+  using VolumeCurveFn = std::function<float(float t)>;
+  void setVolumeCurve(VolumeCurveFn) {}
+  bool simProducing();   // sound is reaching the amplifier (false while a simulated failure stalls it)
   uint8_t getVolume() { return 0; }
   bool connecttoFS(fs::FS& fs, const char* path);
   bool connecttohost(const char* url, const char* user = nullptr, const char* pwd = nullptr);
@@ -20,5 +23,5 @@ class Audio {
   bool isRunning();
  private:
   unsigned long start_ = 0, durMs_ = 0;
-  bool playing_ = false, streaming_ = false;
+  bool playing_ = false, streaming_ = false, stalled_ = false;
 };

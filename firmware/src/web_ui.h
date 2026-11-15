@@ -122,7 +122,7 @@ details[open]>summary{border-bottom:1px solid var(--line)}
   <input type="file" id="eUp" accept=".mp3,.wav,.m4a,.aac,.flac,.ogg,.opus" hidden>
   <div class="row" id="eStreamRow" hidden><input type="url" id="eStream" placeholder="Paste a radio, MP3 or podcast link"></div>
   <div class="row" id="eBackRow" hidden><div class="grow">Backup sound<small>Rings if the link hasn't started after 25 seconds, or drops out. A podcast plays its newest episode.</small></div><select id="eBack"></select></div>
-  <div class="row"><span>Volume</span><input type="range" id="eVol" min="0" max="21"><span class="val" id="eVolV"></span></div>
+  <div class="row"><span>Volume</span><input type="range" id="eVol" min="6" max="21"><span class="val" id="eVolV"></span></div>
   <div class="row"><button class="pbtn" id="ePlay">Play</button><button class="pbtn" onclick="act('stop')">Stop</button><span class="grow"></span><button class="pbtn" id="eRing">Ring now</button></div>
  </div>
  <h2>More</h2>

@@ -8,5 +8,5 @@ int main() {
   signal(SIGPIPE, SIG_IGN);   // a browser closing a connection must not kill the simulator
   printf("[sim] Ceiling Clock firmware simulator (hardware is simulated; see /sim/hw)\n");
   setup();
-  for (;;) loop();
+  for (;;) { loop(); sim::tick(); }
 }
