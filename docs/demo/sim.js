@@ -161,7 +161,9 @@
   function controls() {
     const css = document.createElement('style');
     css.textContent = `#simintro{background:#1f2a1f;border-bottom:1px solid #345234;color:#d9f2d9;font:13px/1.45 system-ui,sans-serif}
-#simintro div{max-width:640px;margin:auto;padding:8px 12px}#simintro b{color:#fff}
+#simintro .in{max-width:640px;margin:auto;padding:8px 12px;display:flex;gap:10px;align-items:flex-start}#simintro b{color:#fff}
+#simintro .txt{flex:1}#simintro.hidden .txt .more{display:none}
+#simintro button{flex:none;background:#2f4a2f;color:#e8ffe8;border:1px solid #446a44;border-radius:7px;padding:3px 9px;font:600 13px system-ui,sans-serif;cursor:pointer}
 #simbar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:#182418;border-top:1px solid #345234;color:#d9f2d9;font:13px/1.4 system-ui,sans-serif;box-shadow:0 -6px 20px rgba(0,0,0,.45)}
 #simbar .in{max-width:640px;margin:auto;padding:6px 12px 8px}
 #simbar .hd{display:flex;align-items:center;gap:10px;color:#cfeccf;font-weight:600;padding:2px 0}
@@ -176,7 +178,18 @@
 #simclock{margin-left:auto;font-variant-numeric:tabular-nums;color:#a8d8a8;font-weight:400}`;
     document.head.appendChild(css);
     const intro = document.createElement('div'); intro.id = 'simintro';
-    intro.innerHTML = `<div><b>Live demo:</b> the real clock firmware, running in your browser (WebAssembly). Nothing touches a real clock, and everything resets when you reload. Use the controls at the bottom to fast-forward time and press the clock's buttons. Try: press <b>Alarm 1</b> below and watch its switch flip on the page, or set an alarm a few minutes ahead and press +1 min. Sounds really play. "Use sample podcast" makes the first alarm play a podcast; switch the internet off to hear the backup sound take over.</div>`;
+    intro.innerHTML = `<div class="in"><div class="txt"><b>Live demo</b><span class="more">: the real clock firmware, running in your browser (WebAssembly). Nothing touches a real clock, and everything resets when you reload. Use the controls at the bottom to fast-forward time and press the clock's buttons. Try: press <b>Alarm 1</b> below and watch its switch flip on the page, or set an alarm a few minutes ahead and press +1 min. Sounds really play. "Use sample podcast" makes the first alarm play a podcast; switch the internet off to hear the backup sound take over.</span></div><button id="simintrotoggle" aria-expanded="true">Hide</button></div>`;
+    {
+      const setIntro = (h) => {
+        intro.classList.toggle('hidden', h);
+        const t = intro.querySelector('#simintrotoggle');
+        t.textContent = h ? 'Show' : 'Hide'; t.setAttribute('aria-expanded', String(!h));
+        try { localStorage.setItem('ceilingclock-demo-intro', h ? 'hidden' : 'shown'); } catch (e) {}
+      };
+      intro.querySelector('#simintrotoggle').onclick = () => setIntro(!intro.classList.contains('hidden'));
+      let h = false; try { h = localStorage.getItem('ceilingclock-demo-intro') === 'hidden'; } catch (e) {}
+      setIntro(h);
+    }
     document.body.prepend(intro);
     const bar = document.createElement('div'); bar.id = 'simbar';
     bar.innerHTML = `<div class="in"><div class="hd">Simulator controls <span id="simclock"></span><button id="simtoggle" aria-expanded="true">Hide</button></div><div class="body">
