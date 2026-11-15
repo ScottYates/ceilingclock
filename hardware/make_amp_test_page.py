@@ -175,7 +175,7 @@ def fig_meter():
     s = Svg(960, 500)
     s.text(20, 30, 'Check 1: power, with the multimeter', 16, '#222', 'start', 800)
     s.text(20, 52, 'Multimeter mode, DC volts. Black on GND for every reading; move only the red one.', 12, '#555')
-    for k, (pin, read, ok) in enumerate((('VIN', '5.2 V', 'about 5 V: powered'), ('SD', '0.6 V', 'about 0.5–0.8 V: switched on'))):
+    for k, (pin, read, ok) in enumerate((('VIN', '5.2 V', 'about 5 V: powered'), ('SD', '0.5 V', 'about 0.36–0.77 V: switched on'))):
         x0 = 40 + k * 470
         pts = amp_board(s, x0 + 60, 182, 1.0, hilite=('GND', pin))
         left_is_gnd = pts['GND'][0] < pts[pin][0]
@@ -301,6 +301,103 @@ def fig_scope_panel():
     callout(s, X0 + BW - 16, row + 133, 760, row + 133, ['MENU', 'oscilloscope ↔ multimeter'], 'start')
     return s.done()
 
+
+# ------------------------------------------------------------------ step-by-step pictures for check 2
+def step_head(s, n, title, sub=''):
+    s.circle(34, 34, 18, ORANGE)
+    s.text(34, 40, n, 17, '#fff', 'middle', 800)
+    s.text(62, 32, title, 16, '#222', 'start', 800)
+    if sub: s.text(62, 52, sub, 12, '#555')
+
+def fig_step_bnc():
+    s = Svg(960, 330)
+    step_head(s, '1', 'Plug the probe into CH1', 'On the top edge of the 2C53T. Push the plug on, then turn its collar a quarter turn to lock.')
+    # the scope's top edge, seen from above
+    s.rect(300, 200, 420, 60, '#1c1f24', '#3a9ad9', 18, 3)
+    s.text(510, 240, 'top edge of the 2C53T (screen facing you, below)', 11.5, '#cfd3da', 'middle')
+    for i, x in enumerate((400, 510, 620)):
+        s.circle(x, 200, 26, '#b9bec6', '#7d838c', 1.5)
+        s.circle(x, 200, 13, '#d9dde2', '#7d838c', 1)
+        s.circle(x, 200, 3.5, '#444')
+        s.rect(x - 30, 196, 6, 8, '#8a9099', rx=1); s.rect(x + 24, 196, 6, 8, '#8a9099', rx=1)   # bayonet lugs
+    s.text(400, 160, 'CH1?', 12, '#555', 'middle', 800)
+    s.text(510, 160, 'CH2?', 12, '#555', 'middle', 800)
+    s.text(620, 160, 'output?', 12, '#555', 'middle', 800)
+    s.text(510, 300, 'Read the label printed next to each socket and use the one marked CH1.', 12.5, RED, 'middle', 800)
+    # the probe's BNC plug coming down onto CH1 (drawn over the left socket as an example)
+    s.rect(160, 92, 70, 40, '#c9ccd1', '#8a9099', 8, 1.5)
+    s.rect(230, 102, 22, 20, '#9aa0a6', rx=3)
+    s.path('M160,112 C110,112 90,80 60,80', '#444', 5)
+    s.text(60, 72, 'probe cable', 11.5, '#444', 'start', 700)
+    s.add('<defs><marker id="st-ah" markerWidth="9" markerHeight="9" refX="4.5" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#e8743b"/></marker></defs>')
+    s.path('M258,118 C320,130 360,150 380,172', ORANGE, 3, extra='marker-end="url(#st-ah)"')
+    s.text(300, 112, 'push on', 12, ORANGE, 'start', 800)
+    s.path('M820,150 A40,40 0 1,1 760,128', ORANGE, 3, extra='marker-end="url(#st-ah)"')
+    s.text(830, 196, 'then turn ¼', 12, ORANGE, 'start', 800)
+    s.text(830, 212, 'to lock', 12, ORANGE, 'start', 800)
+    return s.done()
+
+def fig_step_switch():
+    s = Svg(960, 280)
+    step_head(s, '2', 'Set the switch on the probe to 10X', 'The small slide switch on the probe handle.')
+    s.rect(120, 130, 520, 60, '#2d2f33', rx=28)                 # handle
+    s.rect(640, 146, 80, 28, '#cfd3d8', rx=8)                   # hook sleeve
+    s.line(720, 160, 770, 160, '#9aa0a6', 4)
+    s.path('M120,160 C70,160 50,140 20,140', '#444', 6)
+    s.rect(260, 112, 120, 30, '#e8e1cf', '#9a8f74', 6, 1.5)     # switch housing
+    s.rect(330, 116, 44, 22, '#3a3d42', rx=4)                   # slider pushed to 10X
+    s.text(285, 132, '1X', 12, '#6b6b6b', 'middle', 800)
+    s.text(352, 132, '10X', 11, '#ffffff', 'middle', 800)
+    callout(s, 352, 112, 430, 82, ['slide it to 10X'])
+    callout(s, 680, 146, 760, 110, ['hook sleeve', 'pull back to use the sharp tip'])
+    s.text(120, 236, 'Voltages on screen then read right only if CH1 is also set to 10X in the scope. If the trace shows', 12, '#555')
+    s.text(120, 254, 'about 0.33 V instead of 3.3 V, CH1 is on 1X. That doesn’t matter here: the shape of the trace is what counts.', 12, '#555')
+    return s.done()
+
+def fig_step_ground():
+    s = Svg(960, 430)
+    step_head(s, '3', 'Clip the ground lead to the − rail', 'The same − row the amp’s GND wire goes into (by the blue line). Use a spare jumper as a post to clip onto.')
+    # rail strip, seen from above
+    s.rect(60, 220, 620, 70, '#f3f1ea', '#cfcabc', 6, 1.2)
+    s.line(72, 236, 668, 236, RED, 1.5); s.line(72, 276, 668, 276, BLUE, 1.5)
+    s.text(50, 248, '+', 16, RED, 'end', 800); s.text(50, 272, '−', 18, BLUE, 'end', 800)
+    for i in range(30):
+        x = 80 + i * 20
+        if i % 6 == 5: continue
+        s.rect(x - 3, 244, 6, 6, '#8a8577', rx=1); s.rect(x - 3, 262, 6, 6, '#8a8577', rx=1)
+    # amp's GND wire already in the - row
+    s.path('M200,265 C200,200 170,150 120,130', '#8d5a2b', 5)
+    s.circle(200, 265, 5, '#8d5a2b')
+    s.text(112, 122, 'amp GND wire (already there)', 12, '#8d5a2b', 'start', 800)
+    # spare jumper standing up in the - row, with the clip on it
+    sx = 460
+    s.rect(sx - 6, 210, 12, 56, '#222', rx=3)        # jumper housing
+    s.line(sx, 210, sx, 186, '#b9bec6', 4)           # bare metal end
+    s.rect(sx - 13, 164, 26, 30, '#111', rx=5)        # crocodile clip
+    s.path(f'M{sx - 13},{192} l4,8 l4,-8 l5,8 l4,-8 l4,8 l4,-8', '#9aa0a6', 1.6)
+    s.path(f'M{sx},164 C{sx},120 {sx + 80},110 {sx + 160},120', '#111', 3)
+    s.text(sx + 168, 124, 'ground lead from the probe', 12, '#111', 'start', 800)
+    callout(s, sx + 12, 178, 580, 190, ['crocodile clip on the', 'jumper’s metal tip'])
+    callout(s, sx - 6, 264, 380, 350, ['spare jumper pushed into the − row'], 'end')
+    s.text(60, 400, 'Never clip it anywhere on the amp’s speaker screws, and never to a + rail.', 12.5, RED, 'start', 800)
+    return s.done()
+
+def fig_step_touch():
+    s = Svg(960, 420)
+    step_head(s, '4', 'Touch the tip to LRC, press AUTO, then BCLK and DIN', 'Hold the sharp tip on the silver joint beside each label. Press AUTO once for each.')
+    pts = amp_board(s, 200, 120, 1.15, hilite=('LRC', 'BCLK', 'DIN'))
+    order = [('LRC', '1st'), ('BCLK', '2nd'), ('DIN', '3rd')]
+    for nm, lab in order:
+        x, y = pts[nm]
+        s.text(x, y + 36, lab, 12, ORANGE, 'middle', 800)
+    body = scope_probe(s, pts['LRC'], ang=150, length=105, label='probe tip on LRC', anchor='end')
+    # what the screen shows
+    screen(s, 590, 120, 160, 100, 'LRC: square wave', 'square', note='steady 0–3.3 V, ≈44 kHz')
+    screen(s, 775, 120, 160, 100, 'BCLK: much faster', 'fast', note='≈1.4–2.8 MHz')
+    screen(s, 682, 280, 160, 100, 'DIN: busy pulses', 'data', note='changes all the time')
+    return s.done()
+
+
 def page():
     style = open(os.path.join(HERE, '..', 'docs', 'breadboard.html')).read()
     ver = style[style.index('style.css?v='):].split('"')[0]
@@ -358,17 +455,18 @@ ol li{{margin:5px 0}}
 {fig_meter()}
 <table><tr><th>Red on</th><th>Expect</th><th>If not</th></tr>
 <tr><td>VIN</td><td>about 5 V</td><td>0 V: check the 5 V adapter, the bottom rails and the amp's VIN and GND jumpers.</td></tr>
-<tr><td>SD</td><td>about 0.5–0.8 V</td><td>0 V: the amp is held off. Look for solder joining SD to its neighbour GND.</td></tr></table>
+<tr><td>SD</td><td>about 0.36–0.77 V (plays left + right mixed)</td><td>Below 0.16 V the amp is shut down: look for solder joining SD to its neighbour GND. 0.77–1.4 V plays only the right channel, above 1.4 V only the left.</td></tr></table>
 </div>
 
 <div class="card">
 <h2>Check 2: the signals from the ESP32</h2>
-<ol>
-<li>Push the probe's BNC plug into <b>CH1</b> and twist it to lock. Set the switch on the probe's handle to <b>×10</b>, and set CH1's probe setting on the scope to <b>×10</b> too: the manual says both must be on the same setting, or the voltages read 10 times wrong.</li>
-<li>Push a spare jumper into the <b>bottom − rail</b> and fix the <b>ground clip</b> on its metal end. Leave it there.</li>
-<li>Switch the 2C53T to the oscilloscope. Pull the hook sleeve back and touch the <b>sharp tip</b> to the <b>LRC</b> joint, then press <b>AUTO</b> once. Repeat for <b>BCLK</b> and <b>DIN</b>.</li>
-<li>Using both channels? Put both probes' ground clips on the same GND point. The manual forbids connecting the two ground clips to different points.</li>
-</ol>
+<p>Four steps. Press <b>MENU</b> and choose the oscilloscope first. Start the sound playing before step 4.</p>
+{fig_step_bnc()}
+{fig_step_switch()}
+{fig_step_ground()}
+{fig_step_touch()}
+<p class="mut">Using both channels? Put both probes' ground clips on the same GND point: the manual forbids clipping them to different points.</p>
+<h3>The whole set-up at a glance</h3>
 {fig_scope()}
 <table><tr><th>Pin</th><th>Healthy, with sound playing</th><th>If it's flat</th></tr>
 <tr><td>LRC</td><td>Square wave 0–3.3 V, about 44 kHz (16 kHz for the built-in beep)</td><td>The LRC jumper or hole a9 is not connected to ESP32 pin 16.</td></tr>
