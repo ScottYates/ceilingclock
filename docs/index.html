@@ -12,7 +12,7 @@
 </div></header>
 <main>
 <h1>A ceiling projection alarm clock that sets itself</h1>
-<p class="lead">An ESP32-S3 keeps time from internet time servers and projects it onto the ceiling. A battery-backed clock chip keeps it running through outages. Alarms, sounds, sunrise light and the displays are all set from your phone.</p>
+<p class="lead">An ESP32-S3 keeps time from internet time servers and projects it onto the ceiling. A battery-backed clock chip keeps it running through outages. Alarms, sounds and both displays are all set from your phone.</p>
 
 <div class="viewer-wrap">
   <div class="viewer" id="viewer"><div class="loading" id="loading">Loading 3D model…</div><div class="hint">Drag to rotate · scroll to zoom · click a part</div></div>
@@ -40,7 +40,7 @@
 
 <div class="grid3">
   <div class="card"><h3>Always on time</h3>Syncs with NTP every hour and handles daylight saving automatically. A DS3231 keeps time when Wi-Fi or power drops, so alarms still fire.</div>
-  <div class="card"><h3>Alarms your way</h3>Up to 8 alarms with their own days, sound, fade-in, snooze, sunrise lead and auto-stop. "Skip next" handles days off.</div>
+  <div class="card"><h3>Alarms your way</h3>Up to 8 alarms with their own days, sound or internet stream, fade-in, snooze and auto-stop. "Skip next" handles days off.</div>
   <div class="card"><h3>Dark when you want</h3>The front display and the projector can each be always on, fully off, night-only or day-only, with separate day and night brightness.</div>
 </div>
 
@@ -49,7 +49,7 @@
 <h2>Build it</h2>
 <div class="grid3">
   <a class="card" href="parts.html" style="text-decoration:none;color:inherit"><h3>1. Order the parts →</h3>One button opens every part on Amazon, ready to add to your cart. Most items come in multi-packs, so expect roughly $150–250 including spares (prices weren't checked).</a>
-  <a class="card" href="assembly.html" style="text-decoration:none;color:inherit"><h3>2. Print and assemble →</h3>Eight 3D-printed parts and ten illustrated steps.</a>
+  <a class="card" href="assembly.html" style="text-decoration:none;color:inherit"><h3>2. Print and assemble →</h3>Nine 3D-printed parts and nine illustrated steps.</a>
   <a class="card" href="firmware.html" style="text-decoration:none;color:inherit"><h3>3. Flash and set up →</h3>PlatformIO firmware, Wi-Fi setup from your phone, then everything is set at <code>ceilingclock.local</code>.</a>
 </div>
 
@@ -59,10 +59,10 @@
 <footer>Ceiling Clock · open hardware and firmware · <a href="https://github.com/ScottYates/ceilingclock">source on GitHub</a></footer>
 
 <script type="module">
-import { createViewer } from './js/viewer.js?v=20261030v';
-import { PARTS } from './js/parts.js?v=20261030v';
-import { STEPS } from './js/steps.js?v=20261030v';
-import { optics } from './js/optics.js?v=20261030v';
+import { createViewer } from './js/viewer.js?v=20261114';
+import { PARTS } from './js/parts.js?v=20261114';
+import { STEPS } from './js/steps.js?v=20261114';
+import { optics } from './js/optics.js?v=20261114';
 
 const v = createViewer(document.getElementById('viewer'));
 const ex = document.getElementById('explode');
@@ -93,7 +93,7 @@ const tl = document.getElementById('tilt'), tv = document.getElementById('tiltv'
 const fo = document.getElementById('focus'), fv = document.getElementById('focusv');
 function showOptics() {
   const o = optics(v.focus, v.tilt);
-  document.getElementById('optics').textContent = `Lens ${o.v.toFixed(1)} mm from the LCD: sharp at ${(o.sharpAt / 1000).toFixed(2)} m. ` +
+  document.getElementById('optics').textContent = `Lens ${o.v.toFixed(1)} mm from the projector display: sharp at ${(o.sharpAt / 1000).toFixed(2)} m. ` +
     `The ceiling is ${(o.D / 1000).toFixed(2)} m away, so the time is ${o.verdict}` + (v.tilt ? ` and lands ${Math.round(o.forward / 10)} cm forward.` : '.');
   document.getElementById('bBeam').textContent = v.beam ? 'Hide the light' : 'Show light on the ceiling';
 }

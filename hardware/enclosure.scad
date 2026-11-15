@@ -4,16 +4,17 @@
 // z = 0 at the bottom of the feet, front of the clock faces -Y.
 //
 // Render one part:   openscad -D 'part="base"' -D 'print=true' -o base.stl enclosure.scad
-// Parts: base lid barrel lcd_holder led_cap lens_mount sleeve lens_cap ring_holder dome pins
-// No screws: printed quarter-turn lock pins hold the lid, LED cap, lens mount and ring holder; the circuit board snaps under hooks.
+// Parts: base lid barrel disp_holder end_cap lens_mount sleeve lens_cap pins
+// No screws: printed quarter-turn lock pins hold the lid, end cap and lens mount; the circuit board snaps under hooks.
 // Bought components (not printed, for the 3D viewer): see components.scad. Add -D 'mat="..."' to
 //   render one material of a component, e.g. -D 'part="ref_tm1637"' -D 'mat="led_red"'.
 //
-// Tilting folded projector: the LCD, a 45 degree front-surface mirror and the lens ride in one barrel that
-// lies along the back of the clock, half sunk into the base. Light runs along the barrel's axis (+X) from a
-// fixed LED cap at the left end, through the LCD, onto the mirror, and up through the lens. Turning the
-// barrel about that axis tilts the beam forward (-Y) without rotating the picture, because the LCD turns
-// with it. Detents every 5 degrees from -5 to +30. Set tilt below to see it tilted.
+// Tilting folded projector: a second TM1637 4-digit LED display, a 45 degree front-surface mirror and the
+// lens ride in one barrel that lies along the back of the clock, half sunk into the base. The display faces
+// along the barrel's axis (+X); its light hits the mirror and goes up through the lens, which images the
+// glowing digits onto the ceiling. Turning the barrel about that axis tilts the beam forward (-Y) without
+// rotating the picture, because the display turns with it. A fixed end cap closes the left end and carries
+// the display's wires out. Detents every 5 degrees from -5 to +30. Set tilt below to see it tilted.
 
 part = "assembly";
 print = false;     // true = move/rotate the part into its printing orientation
@@ -42,29 +43,31 @@ LUG_R = 3.2;  LUG_W = 1.8;  LUG_T = 1.2;  LUG_GAP = 0.15;
 RAMP_H = 0.4;  NOTCH_H = 0.15;  STOP_H = 1.2;           // off the wall's inside face; lower RAMP_H if too stiff
 KEYWAY_W = 2.3;  KEYWAY_R = 3.6;  POCKET_R = 3.8;  POCKET_L = 2.2;
 GRIP_SHORT = lid_t;      // lid corners: through the lid, locking under it in a pocket in the post
-GRIP_LONG = 7;           // LED cap and ring holder (through them and the lid), lens collar (through it and the barrel wall)
+GRIP_LONG = 7;           // end cap tabs (through them and the lid), lens collar (through it and the barrel wall)
 tab_t = 4;               // pinned tabs: tab + 3 mm below = GRIP_LONG
 
 // ---------------------------------------------------------------- tilting barrel optics
 // Barrel axis = optical axis: parallel to X through (ax_y, z_ax). r = distance from the axis.
-br_R = 34;  br_ri = 32;                                    // the 45 mm LCD board's corners reach r = 31.8
+br_R = 34;  br_ri = 32;
 z_ax = floor_top + 2 + br_R;                               // 44.5: the axis sits at lid level
 ax_y = box_d/2 - wall - 0.5 - br_R;                        // 30.5
-lens_v = 106;                    // lens-to-LCD distance for a 100 mm lens and ~1.8 m throw
+lens_v = 106;                    // lens-to-display distance for a 100 mm lens and ~1.8 m throw
 mirror_L = 50;  mirror_W = 50;  mirror_t = 1.1;            // 50 x 50 x 1.1 mm front-surface mirror
 mx = 34;                                                   // mirror centre x = lens x
 rL = 54;                                                   // lens centre, radial distance above the axis (focus +/-5)
-lcd_x = mx - (lens_v - rL);                                // -21: LCD pixel plane
+disp_x = mx - (lens_v - rL);                               // -18: the display's glowing face
 mh = mirror_L / 2 / sqrt(2);
-br_x0 = lcd_x - 12;                                        // -33: open left end (the LCD holder plugs in here)
+br_x0 = disp_x - 12;                                       // -33: open left end (the display holder plugs in here)
 br_x1 = 76.5;                                              // closed right end, with the axle stub
 axle_d = 8;  axle_l = 7;
-lh_x1 = lcd_x + 4;                                         // LCD holder: br_x0 .. lh_x1
-// LED cap (fixed): LED star, diffuser, and a collar the barrel turns on
-led_x = lcd_x - 31;                                        // back of the LED star
-cap_x0 = led_x - 4;  cap_x1 = br_x0 - 0.5;  cap_R = 30;
-collar_od = 44;  collar_id = 40;
-diff_x = led_x + 9;
+lh_x1 = disp_x + 4;                                        // display holder: br_x0 .. lh_x1
+// projector display: TM1637 0.36" module. Board 42 x 24 standing up, long side vertical so the digits run
+// left to right on the ceiling; display face toward the mirror; 4-pin header at the top, pointing back.
+pj_disp = [30.2, 14.2, 7.2];  pj_board = [42, 24];          // face w, h, depth from the board; PCB w, h
+pj_pcb_x = disp_x - pj_disp[2];                            // front face of the module's PCB
+// end cap (fixed): closes the barrel's left end, holds the display's wires, and has the collar the barrel turns on
+cap_x0 = disp_x - 35;  cap_x1 = br_x0 - 0.5;  cap_R = 30;
+collar_od = 52;  collar_id = 46;                           // inside r = 23 clears the header and its plugs
 cap_tab_x = cap_x0 - 6;  cap_tab_dy = 18;                  // two pinned tabs resting on the lid's left arm
 // focusing: the lens sits in a sleeve with a coarse thread, screwed into a threaded collar (the lens mount)
 // that is pinned to the barrel. A knurled grip on top of the sleeve stands clear of the collar, so you turn
@@ -79,14 +82,13 @@ lm_top = rL - 5 + 1.75 - grip_h - 0.5;                     // r of the collar's 
 br_hole = 2 * thr_R + 1.5;                                 // the sleeve's thread passes through the barrel top
 // detents: notches on the barrel's right end, a springy tongue on the bearing block below the axis
 det_r = 22;  det_angles = [-5, 0, 5, 10, 15, 20, 25, 30];
-// lid: covers the front and the left end; the barrel and LED cap sit in the cut-out
+// lid: covers the front and the left end; the barrel and end cap sit in the cut-out
 lid_cut = [cap_x0 - 0.5, br_x1 + 0.5, ax_y - br_R - 0.5];   // x from, x to, y from (open to the back)
 blk_x = br_x1 + 0.5;                                       // right bearing block, x from here to the wall
 
 // other lid features
-ring_xy = [-50, -35];  ring_pin_r = 8;   ring_od = 44.5; ring_id = 31.5;  dome_d = 58;  dome_h = 20;
 button_xy = [0, -35]; button_hole = 16.2;
-ldr_xy = [60, -50];                      // clear of the corner pins, the dome and the barrel
+ldr_xy = [60, -50];                      // clear of the corner pins and the barrel
 // front display: TM1637 4-digit module. Set to "0.36" (42 x 24 mm board, default) or "0.56" (~50 mm display).
 tm_size = "0.36";
 tm_disp = tm_size == "0.56" ? [50.4, 19, 8] : [30.2, 14.2, 7.2];   // display face w, h, depth from the board
@@ -146,7 +148,7 @@ module base() {
         }
       // cradle for the USB-C breakout against the left wall
       translate([-box_w/2 + wall - eps, usb_y - 7, feet_h]) cube([12.3, 14, usb_z - 3.2 - feet_h]);
-      // saddle under the LED cap
+      // saddle under the end cap
       difference() {
         translate([cap_x0 + 3, ax_y - 12, feet_h]) cube([cap_x1 - cap_x0 - 12, 24, z_ax - cap_R - feet_h + 6]);
         ax_cyl(cap_R + 0.3, cap_x0, cap_x1);
@@ -160,10 +162,9 @@ module base() {
     translate([blk_x - 1, ax_y, z_ax]) rotate([0, 90, 0]) cylinder(d = axle_d + 0.4, h = axle_l + 1.5, $fn = 40);
     // front display window
     translate([-tm_w/2, -box_d/2 - 1, tm_z - tm_h/2]) cube([tm_w, wall + 2, tm_h]);
-    // left side: USB-C, button B, vents by the LED cap
+    // left side: USB-C, button B
     translate([-box_w/2 - 1, usb_y - 5, usb_z - 2.25]) cube([wall + 2, 10, 4.5]);
     translate([-box_w/2 - 1, btnb_y, btnb_z]) rotate([0, 90, 0]) cylinder(d = button_hole, h = wall + 2);
-    for (i = [0:4]) translate([-box_w/2 - 1, 14 + i * 8, 14]) cube([wall + 2, 3, 24]);
     // speaker grille
     translate([spk_xy[0], spk_xy[1], -1])
       for (r = [0, 7, 14], a = [0 : (r == 0 ? 360 : 360 / (r * 0.9)) : 359])
@@ -208,7 +209,6 @@ module lid() {
     translate([mx - lm_od/2 - 2, lid_cut[2], base_top]) rotate([0, 90, 0]) linear_extrude(lm_od + 4)
       polygon([[0.01, 0.01], [0.01, -2.5], [-lid_t - 0.01, -6], [-lid_t - 0.01, 0.01]]);
     lid_pins() lp_bore($grip);
-    translate([ring_xy[0], ring_xy[1], base_top - 1]) cylinder(d = 10, h = 10);   // sunrise ring wires
     translate([button_xy[0], button_xy[1], base_top - 1]) cylinder(d = button_hole, h = 10);
     translate([ldr_xy[0], ldr_xy[1], base_top - 1]) cylinder(d = 5.2, h = 10);
   }
@@ -218,12 +218,10 @@ module lid() {
 module lid_pins() {
   for (p = posts) translate([p[0] * post_xy[0], p[1] * post_xy[1], lid_top]) { $grip = GRIP_SHORT; children(); }
   for (s = [-1, 1]) translate([cap_tab_x, ax_y + s * cap_tab_dy, lid_top + tab_t]) { $grip = GRIP_LONG; children(); }
-  for (a = ring_pin_a) translate([ring_xy[0], ring_xy[1], lid_top + tab_t]) rotate(a) translate([ring_pin_r, 0, 0]) { $grip = GRIP_LONG; children(); }
 }
-ring_pin_a = [90, 210, 330];
 module barrel_pin_frames() for (s = [-1, 1]) translate([mx + s * lm_tab, ax_y, z_ax + br_R + tab_t]) children();
 
-// ---------------------------------------------------------------- barrel (turns; carries the LCD holder, mirror and lens mount)
+// ---------------------------------------------------------------- barrel (turns; carries the display holder, mirror and lens mount)
 module barrel() {
   difference() {
     union() {
@@ -249,10 +247,8 @@ module barrel() {
     translate([mx, ax_y, z_ax]) cylinder(d = br_hole, h = br_R + 5);
     // lens mount pins (the one at the right end turns in a pocket in the solid ramp)
     barrel_pin_frames() lp_bore(GRIP_LONG);
-    // key slot for the LCD holder (bottom of the left end)
+    // key slot for the display holder (bottom of the left end)
     translate([br_x0 - 1, ax_y - 2.2, z_ax - br_R - 1]) cube([7, 4.4, 4]);
-    // slot for the LCD leads, low on the front side (stays in the base at every tilt)
-    hull() for (dx = [0, 10]) translate(polar(lcd_x + 6 + dx, br_R - 3, 120)) rotate([-120, 0, 0]) cylinder(d = 7, h = 8, $fn = 24);
     // detent notches on the right end face
     for (a = det_angles) translate(polar(br_x1 + axle_l * 0 + 0.0, det_r, 180 - a) + [0, 0, 0])
       rotate([0, 90, 0]) translate([0, 0, -1]) cylinder(r = 1.35, h = 2, $fn = 16);
@@ -261,23 +257,35 @@ module barrel() {
   }
 }
 
-// LCD holder: a disc that plugs into the barrel's left end. The board drops into its slot from the top
-// (before the holder goes in), glass toward the mirror; the barrel wall then closes the slot.
-module lcd_holder() {
+// Display holder: a disc that plugs into the barrel's left end. The TM1637 module drops into its slot from
+// the top (before the holder goes in), digits toward the mirror and the 4-pin header at the top; the barrel
+// wall then closes the slot. The display body sits in a window that flares toward the lens and blocks
+// stray light from the board.
+module disp_holder() {
+  bt = 1.6;                                                                         // module PCB thickness
   difference() {
     union() {
       ax_cyl(br_ri - 0.2, br_x0, lh_x1);
       translate([br_x0, ax_y - 2, z_ax - br_R + 0.6]) cube([6, 4, 3]);                 // key
     }
-    ax_cyl(collar_od / 2 + 0.3, br_x0 - 1, br_x0 + 2);                                // recess for the LED cap's collar
-    translate([br_x0 - 1, ax_y - 12, z_ax - 16]) cube([20, 24, 32]);                  // window: 32 tall x 24 wide
-    translate([lcd_x - 3.15, ax_y - 22.8, z_ax - 22.8]) cube([1.8, 45.6, 60]);        // board slot, open at the top
-    translate([lcd_x - 1.4, ax_y - 22, z_ax - 22]) cube([20, 44, 60]);                // frame, glass and header
+    ax_cyl(collar_od / 2 + 0.3, br_x0 - 1, br_x0 + 2);                                // recess for the end cap's collar
+    // board slot, open at the top
+    translate([pj_pcb_x - bt - 0.1, ax_y - pj_board[1]/2 - 0.2, z_ax - pj_board[0]/2 - 0.2]) cube([bt + 0.2, pj_board[1] + 0.4, 60]);
+    // display window: the body passes through, then it flares toward the mirror
+    hull() {
+      translate([pj_pcb_x - 0.2, ax_y - (pj_disp[1] + 0.8)/2, z_ax - (pj_disp[0] + 0.8)/2]) cube([pj_disp[2] + 0.3, pj_disp[1] + 0.8, pj_disp[0] + 0.8]);
+      translate([lh_x1 + 0.01, ax_y - (pj_disp[1] + 3)/2, z_ax - (pj_disp[0] + 3)/2]) cube([0.01, pj_disp[1] + 3, pj_disp[0] + 3]);
+    }
+    translate([lh_x1 - 0.5, ax_y - (pj_disp[1] + 3)/2, z_ax - (pj_disp[0] + 3)/2]) cube([1, pj_disp[1] + 3, pj_disp[0] + 3]);
+    // behind the board: room for the chip and the header, open at the top, a 2 mm lip down each long edge
+    translate([br_x0 - 1, ax_y - 10, z_ax - pj_board[0]/2 + 2]) cube([pj_pcb_x - bt - br_x0 + 1.01, 20, 60]);
   }
 }
 
-// LED cap: fixed. Holds the LED star and the diffuser disc; its collar sits in the barrel's left end.
-module led_cap() {
+// End cap: fixed. Closes the barrel's left end, keeping room light out of the optics; its collar sits in the
+// barrel's left end and the barrel turns on it. The display's four wires leave through the slot in the back
+// plate, with enough slack in the cap to follow the tilt.
+module end_cap() {
   difference() {
     union() {
       ax_cyl(cap_R, cap_x0, cap_x1 - 8);
@@ -285,15 +293,9 @@ module led_cap() {
       ax_cyl(collar_od / 2, cap_x1 - eps, br_x0 + 1.8);
       for (s = [-1, 1]) translate([cap_tab_x - 6, ax_y + s * cap_tab_dy - 6, lid_top]) cube([cap_x0 - cap_tab_x + 7, 12, tab_t]);
     }
-    ax_cyl(23, led_x, cap_x1 - 8);                                                   // light chamber
-    translate([cap_x1 - 9, ax_y, z_ax]) rotate([0, 90, 0]) cylinder(r1 = 23, r2 = collar_id / 2, h = 9.01, $fn = 96);
-    ax_cyl(collar_id / 2, cap_x1 - 1, br_x0 + 3);
-    ax_cyl(10.2, led_x - 1, led_x + 1);                                              // LED star pocket
-    // diffuser slot: a 48 mm disc dropped in from the top
-    translate([diff_x - 0.6, ax_y - 24.3, z_ax - 24.3]) cube([1.2, 48.6, 60]);
-    // air holes in the back plate (above and below the star) and the LED lead hole
-    for (sy = [-1, 1], sz = [-1, 1]) translate([cap_x0 - 1, ax_y + sy * 15, z_ax + sz * 15]) rotate([0, 90, 0]) cylinder(d = 7, h = 10);
-    translate([cap_x0 - 1, ax_y, z_ax - 14]) rotate([0, 90, 0]) cylinder(d = 4, h = 10);
+    ax_cyl(collar_id / 2, cap_x0 + 3, br_x0 + 3);                                   // wire chamber, 3 mm back plate
+    // wire slot in the back plate, low down, rounded
+    hull() for (sy = [-4, 4]) translate([cap_x0 - 1, ax_y + sy, z_ax - 15]) rotate([0, 90, 0]) cylinder(d = 6, h = 5, $fn = 24);
     for (s = [-1, 1]) translate([cap_tab_x, ax_y + s * cap_tab_dy, lid_top + tab_t]) lp_bore(GRIP_LONG);
   }
 }
@@ -350,28 +352,6 @@ module lens_cap() {
   }
 }
 
-// ---------------------------------------------------------------- sunrise ring holder + diffuser dome
-module ring_holder() {
-  translate([ring_xy[0], ring_xy[1], lid_top]) difference() {
-    cylinder(d = dome_d, h = 5);
-    translate([0, 0, 1.5]) difference() { cylinder(d = ring_od + 0.6, h = 10); cylinder(d = ring_id - 0.6, h = 10); }
-    translate([0, 0, -1]) cylinder(d = 10, h = 10);
-    for (a = ring_pin_a) rotate(a) translate([ring_pin_r, 0, tab_t]) lp_bore(GRIP_LONG);
-    translate([0, 0, tab_t]) cylinder(r = ring_id/2 - 0.5, h = 10);   // inner floor 4 mm: tab + lid = the long pins' grip
-    // dome locating groove
-    translate([0, 0, 3.5]) difference() { cylinder(d = dome_d - 8 + 0.6, h = 5); cylinder(d = dome_d - 8 - 3, h = 5); }
-  }
-}
-
-module dome() {
-  // print in white or clear PLA, 2 perimeters
-  translate([ring_xy[0], ring_xy[1], lid_top + 3.5]) difference() {
-    scale([1, 1, dome_h / ((dome_d - 8)/2)]) sphere(d = dome_d - 8);
-    scale([1, 1, (dome_h - 1.4) / ((dome_d - 8)/2 - 1.4)]) sphere(d = dome_d - 8 - 2.8);
-    translate([0, 0, -100]) cube(200, center = true);
-  }
-}
-
 // ---------------------------------------------------------------- quarter-turn lock pins
 function lp_len(grip) = grip + LUG_GAP + LUG_T + 1.2;      // shaft length under the head
 
@@ -408,10 +388,10 @@ module lp_ramps(grip) {
 // A pin in its hole: head on the surface at z = 0, locked = turned crosswise to the slot.
 module lp_place(grip, locked = true) translate([0, 0, PIN_HEAD_T]) rotate([180, 0, 0]) rotate(locked ? 90 : 0) lock_pin(grip);
 
-// Print plate: 4 short pins (3 needed) and 8 long ones (7 needed), heads down.
+// Print plate: 4 short pins (3 needed) and 5 long ones (4 needed), heads down.
 module pin_plate() {
   for (i = [0:3]) translate([i * 14, 0, 0]) lock_pin(GRIP_SHORT);
-  for (i = [0:7]) translate([(i % 4) * 14, 12 + floor(i / 4) * 12, 0]) lock_pin(GRIP_LONG);
+  for (i = [0:4]) translate([(i % 4) * 14, 12 + floor(i / 4) * 12, 0]) lock_pin(GRIP_LONG);
 }
 
 // ---------------------------------------------------------------- bought components (viewer only, not printed)
@@ -423,33 +403,27 @@ module show(p) {
   if (p == "base") base();
   else if (p == "lid") lid();
   else if (p == "barrel") tilted() barrel();
-  else if (p == "lcd_holder") tilted() lcd_holder();
-  else if (p == "led_cap") led_cap();
+  else if (p == "disp_holder") tilted() disp_holder();
+  else if (p == "end_cap") end_cap();
   else if (p == "lens_mount") tilted() lens_mount();
   else if (p == "sleeve") tilted() sleeve();
   else if (p == "lens_cap") tilted() lens_cap();
-  else if (p == "ring_holder") ring_holder();
-  else if (p == "dome") dome();
   else if (p == "pins") pin_plate();
   else if (p == "pin") lock_pin(GRIP_LONG);
   else if (p == "ref_esp32") ref_esp32();
   else if (p == "ref_perfboard") ref_perfboard();
-  else if (p == "ref_lcd") tilted() ref_lcd();
-  else if (p == "ref_led") ref_led();
+  else if (p == "ref_projdisp") tilted() ref_projdisp();
   else if (p == "ref_lens") tilted() ref_lens();
   else if (p == "ref_mirror") tilted() ref_mirror();
-  else if (p == "ref_ring") ref_ring();
   else if (p == "ref_speaker") ref_speaker();
   else if (p == "ref_tm1637") ref_tm1637();
   else if (p == "ref_amp") ref_amp();
   else if (p == "ref_rtc") ref_rtc();
-  else if (p == "ref_mosfet") ref_mosfet();
   else if (p == "ref_button") ref_button();
   else if (p == "ref_usbc") ref_usbc();
   else if (p == "ref_buttonB") ref_buttonB();
   else if (p == "ref_window") ref_window();
   else if (p == "ref_ldr") ref_ldr();
-  else if (p == "ref_diffuser") ref_diffuser();
   else if (p == "ref_wires") ref_wires();
   else if (p == "pins_asm") assembled_pins();
   else if (p == "pins_barrel") tilted() barrel_pins();
@@ -460,35 +434,32 @@ module print_pose(p) {
   if (p == "lid")              translate([0, 0, lid_top]) mirror([0, 0, 1]) children();   // upside down: the pin ramps are on its underside
   // barrel stands on its open left end; the mirror ramp is then a 45 degree slope, no supports
   else if (p == "barrel")      rotate([0, -90, 0]) translate([-br_x0, -ax_y, -z_ax]) children();
-  else if (p == "lcd_holder")  rotate([0, -90, 0]) translate([-br_x0, -ax_y, -z_ax]) children();
-  // LED cap stands on its collar; the tabs then rise as upright walls
-  else if (p == "led_cap")     rotate([0, 90, 0]) translate([-(br_x0 + 1.8), -ax_y, -z_ax]) children();
+  else if (p == "disp_holder") rotate([0, -90, 0]) translate([-br_x0, -ax_y, -z_ax]) children();
+  // end cap stands on its collar; the tabs then rise as upright walls
+  else if (p == "end_cap")     rotate([0, 90, 0]) translate([-(br_x0 + 1.8), -ax_y, -z_ax]) children();
   // lens mount prints upside down, top ring on the bed
   else if (p == "lens_mount")  translate([0, 0, z_ax + lm_top]) mirror([0, 0, 1]) translate([-mx, -ax_y, 0]) children();
   else if (p == "sleeve")      translate([-mx, -ax_y, lens_z]) mirror([0, 0, 1]) children();  // seat face down
   else if (p == "lens_cap")    translate([-mx, -ax_y, -lens_z]) children();
-  else if (p == "ring_holder") translate([-ring_xy[0], -ring_xy[1], -lid_top]) children();
-  else if (p == "dome")        translate([-ring_xy[0], -ring_xy[1], -lid_top - 3.5]) children();
   else children();
 }
 module show_print(p) {   // as show(), but untilted
-  if (p == "barrel") barrel(); else if (p == "lcd_holder") lcd_holder(); else if (p == "lens_mount") lens_mount();
+  if (p == "barrel") barrel(); else if (p == "disp_holder") disp_holder(); else if (p == "lens_mount") lens_mount();
   else if (p == "sleeve") sleeve(); else if (p == "lens_cap") lens_cap(); else show(p);
 }
 
 // ---------------------------------------------------------------- pins in their assembled positions (viewer / checks)
 module barrel_pins() barrel_pin_frames() lp_place(GRIP_LONG);   // lens mount -> barrel (these turn with the barrel)
-module assembled_pins() lid_pins() lp_place($grip);   // lid corners, LED cap tabs, ring holder
+module assembled_pins() lid_pins() lp_place($grip);   // lid corners, end cap tabs
 
 if (part == "assembly") {
   color("#3a3f47") base();
   color("#4a505a") lid();
   color("#2b2f36") tilted() barrel();
-  color("#e8743b") tilted() lcd_holder();
-  color("#2b2f36") led_cap();
+  color("#e8743b") tilted() disp_holder();
+  color("#2b2f36") end_cap();
   color("#2b2f36") tilted() lens_mount();
   color("#9aa3b0") tilted() sleeve();
-  color("#f0f0f0", 0.6) dome();
   color("#2a6") ref_perfboard();
   color("#246") ref_esp32();
   color("#9cf", 0.5) tilted() ref_lens();

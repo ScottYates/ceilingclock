@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { PARTS, ALL, MATERIALS, AXIS } from './parts.js?v=20261030v';
-import { optics, LENS, CEILING } from './optics.js?v=20261030v';
+import { PARTS, ALL, MATERIALS, AXIS } from './parts.js?v=20261114';
+import { optics, LENS, CEILING } from './optics.js?v=20261114';
 
 // createViewer(container) -> { ready: Promise, setState({visible, highlight, explode, tilt, focus, beam, camera, target}), onPick }
-export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'models/clock.glb' } = {}) {
+export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'models/clock.glb?v=20261114' } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -100,7 +100,7 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
   // ---- light beam and ceiling: where the time lands, and how sharp it is for the lens position
   const beam = new THREE.Group();          // in the pivot's frame, so it tilts with the barrel
   pivot.add(beam);
-  const beamMat = new THREE.MeshBasicMaterial({ color: 0xffd28a, transparent: true, opacity: 0.10, side: THREE.DoubleSide, depthWrite: false });
+  const beamMat = new THREE.MeshBasicMaterial({ color: 0xff6a50, transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false });
   const beamMesh = new THREE.Mesh(new THREE.BufferGeometry(), beamMat);
   beam.add(beamMesh);
   const ceil = new THREE.Group();          // fixed in the room
@@ -110,7 +110,7 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
   plane.position.set(0, -350, ceilZ + 1);   // a patch of dark ceiling over the clock and in front of it
   ceil.add(plane);
   const texCanvas = document.createElement('canvas');
-  texCanvas.width = 512; texCanvas.height = 290;
+  texCanvas.width = 512; texCanvas.height = 240;
   const tex = new THREE.CanvasTexture(texCanvas);
   tex.colorSpace = THREE.SRGBColorSpace;
   const imgMesh = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide, depthWrite: false, depthTest: false }));
@@ -118,16 +118,24 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
   ceil.add(imgMesh);
   let beamText = '12:30';
 
+  // the projector display's red 7-segment digits, as they land on the ceiling
+  const SEGS = { '0': 0x3f, '1': 0x06, '2': 0x5b, '3': 0x4f, '4': 0x66, '5': 0x6d, '6': 0x7d, '7': 0x07, '8': 0x7f, '9': 0x6f, '-': 0x40, ' ': 0 };
+  function drawDigit(c, x, y, w, h, t, m) {   // a b c d e f g
+    const r = [[x + t, y, w - 2 * t, t], [x + w - t, y + t, t, h / 2 - 1.5 * t], [x + w - t, y + h / 2 + t / 2, t, h / 2 - 1.5 * t],
+               [x + t, y + h - t, w - 2 * t, t], [x, y + h / 2 + t / 2, t, h / 2 - 1.5 * t], [x, y + t, t, h / 2 - 1.5 * t], [x + t, y + h / 2 - t / 2, w - 2 * t, t]];
+    r.forEach((q, i) => { if (m >> i & 1) c.fillRect(...q); });
+  }
   function drawCeilingImage(o) {
     const c = texCanvas.getContext('2d');
-    c.clearRect(0, 0, 512, 290);
-    c.fillStyle = 'rgba(255,214,150,0.10)';
-    c.fillRect(0, 0, 512, 290);
+    c.clearRect(0, 0, 512, 240);
+    c.fillStyle = 'rgba(255,60,40,0.05)';
+    c.fillRect(0, 0, 512, 240);
     c.filter = o.blurPx > 0.25 ? `blur(${Math.min(30, o.blurPx * 3.2).toFixed(1)}px)` : 'none';
-    c.fillStyle = '#ffd696';
-    c.font = 'bold 150px ui-monospace, Menlo, Consolas, monospace';
-    c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillText(beamText, 256, 150);
+    c.fillStyle = '#ff4a35';
+    const txt = beamText.replace(':', '').padStart(4, ' ').slice(-4);
+    const dw = 88, dh = 160, t = 17, gap = 22, x0 = (512 - 4 * dw - 3 * gap - 20) / 2, y0 = 40;
+    for (let i = 0; i < 4; i++) drawDigit(c, x0 + i * (dw + gap) + (i >= 2 ? 20 : 0), y0, dw, dh, t, SEGS[txt[i]] || 0);
+    c.fillRect(256 - 7, y0 + dh * 0.3 - 7, 14, 14); c.fillRect(256 - 7, y0 + dh * 0.7 - 7, 14, 14);
     c.filter = 'none';
     tex.needsUpdate = true;
   }

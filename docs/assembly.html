@@ -10,11 +10,11 @@
 </div></header>
 <main>
 <h1>Assembly</h1>
-<p class="lead">Ten steps, from printed parts to a focused image on the ceiling. Allow an evening for the electronics and an hour for final assembly. Highlighted parts in each picture are the ones that step adds; "Open in 3D" shows the same view so you can rotate it.</p>
+<p class="lead">Nine steps, from printed parts to a focused image on the ceiling. Allow an evening for the electronics and an hour for final assembly. Highlighted parts in each picture are the ones that step adds; "Open in 3D" shows the same view so you can rotate it.</p>
 
-<div class="note"><b>Test on the bench first.</b> The <a href="breadboard.html">breadboard test</a> page walks through wiring and checking every module before you solder anything. <b>Test the optics too.</b> Before printing, hold the LED, a piece of baking paper, the LCD and the lens in a stack in a dark room and aim it at the ceiling. That's the quickest way to confirm the lens and LED brightness suit your room.</div>
+<div class="note"><b>Test on the bench first.</b> The <a href="breadboard.html">breadboard test</a> page walks through wiring and checking every module before you solder anything. <b>Test the optics too.</b> Before printing, lay the projector display on the table, digits up, and hold the lens about 106 mm above it in a dark room (the bonus step on the breadboard page). That's the quickest way to see whether the projected digits are bright enough for your room.</div>
 
-<p><b>Tools:</b> soldering iron, rotary tool or hobby knife (for the LCD window), hot glue, wire strippers, black electrical tape, small pliers (only for removing pins).<br>
+<p><b>Tools:</b> soldering iron, hot glue, wire strippers, black electrical tape, small pliers (only for removing pins).<br>
 <b>Hardware:</b> none. The case goes together with printed quarter-turn lock pins and clips, no screws.</p>
 <p><b>The lock pins</b> work like a camera lens: push the pin in with its wing head <b>along</b> the slot beside the hole, then turn the head a quarter turn either way until it lies <b>crosswise</b> and clicks. Behind the wall a lug on the pin rides up a small ramp, which pulls the head tight, drops into a notch, and a stop keeps it from turning further. The head shows at a glance which pins are locked. To remove one, turn it back along the slot (it takes a firm twist) and pull it out. They're the same as the pins on the VoiceLabels case. If a pin is too stiff to turn, lower <code>RAMP_H</code> (0.4 mm) in <code>enclosure.scad</code>; if it doesn't click firmly, raise it a little, or print the pins in PETG.</p>
 
@@ -22,7 +22,7 @@
 </main>
 <footer>Ceiling Clock · <a href="https://github.com/ScottYates/ceilingclock/blob/main/hardware/enclosure.scad">edit the model in OpenSCAD</a></footer>
 <script type="module">
-import { STEPS } from './js/steps.js?v=20261030v';
+import { STEPS } from './js/steps.js?v=20261114';
 document.getElementById('steps').innerHTML = STEPS.map((s, i) => `
 <section class="step" id="step-${i + 1}">
   <div><img src="img/step-${i + 1}.png" alt="3D view of step ${i + 1}: ${s.title}" loading="lazy">
