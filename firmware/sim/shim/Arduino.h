@@ -155,11 +155,8 @@ BaseType_t xTaskCreatePinnedToCore(void (*fn)(void*), const char*, int, void*, i
 // ---------------------------------------------------------------- simulated hardware state
 namespace sim {
 struct Hw {
-  uint8_t lcdShown[6 * 84] = {0};     // what the LCD shows (1 = dark pixel), PCD8544 page layout
-  int lcdContrast = 0;
-  uint32_t projDuty = 0;              // projector LED PWM (10-bit)
-  bool tmOn = false; int tmBright = 0; uint8_t tmSegs[4] = {0};
-  uint8_t ring[16][3] = {{0}};
+  struct Tm { bool on = false; int bright = 0; uint8_t segs[4] = {0}; };
+  Tm tm[2];                           // [0] front display, [1] ceiling projector (in the order main.cpp makes them)
   bool audioPlaying = false; int audioVol = 0; std::string audioFile;
   std::string audioUrl;               // stream being played (empty = a file)
   int audioSeq = 0;                   // counts every start, so the demo page can restart its player

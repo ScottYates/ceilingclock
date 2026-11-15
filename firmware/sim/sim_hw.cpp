@@ -24,7 +24,6 @@
 #define MSG_NOSIGNAL 0   // macOS: SIGPIPE is ignored in main() instead
 #endif
 
-#include "shim/glcdfont.c"   // Adafruit GFX "classic" 5x7 font (BSD licence)
 
 SerialClass Serial;
 EspClass ESP;
@@ -94,7 +93,7 @@ int digitalRead(int pin) {
 int analogRead(int) { return sim::hw.ldr; }
 void analogReadResolution(int) {}
 bool ledcAttach(int, int, int) { return true; }
-void ledcWrite(int, uint32_t duty) { sim::hw.projDuty = duty; }
+void ledcWrite(int, uint32_t) {}
 
 // ---------------------------------------------------------------- FreeRTOS
 #ifdef SIM_WASM
@@ -133,9 +132,10 @@ BaseType_t xTaskCreatePinnedToCore(void (*fn)(void*), const char*, int, void* ar
 // ---------------------------------------------------------------- TM1637
 static const uint8_t DIGIT_SEG[10] = {0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f, 0x6f};
 void TM1637Display::setSegments(const uint8_t* segs, uint8_t len, uint8_t pos) {
-  for (int i = 0; i < len && pos + i < 4; i++) sim::hw.tmSegs[pos + i] = segs[i];
-  sim::hw.tmOn = on_;
-  sim::hw.tmBright = bright_;
+  sim::Hw::Tm& t = sim::hw.tm[idx_];
+  for (int i = 0; i < len && pos + i < 4; i++) t.segs[pos + i] = segs[i];
+  t.on = on_;
+  t.bright = bright_;
 }
 void TM1637Display::showNumberDecEx(int num, uint8_t dots, bool leading_zero, uint8_t length, uint8_t pos) {
   uint8_t d[4] = {0, 0, 0, 0};
@@ -150,26 +150,6 @@ void TM1637Display::showNumberDecEx(int num, uint8_t dots, bool leading_zero, ui
   }
   for (int i = 0; i < 4; i++) { d[i] |= (dots & 0x80); dots <<= 1; }
   setSegments(d, length, pos);
-}
-
-// ---------------------------------------------------------------- GFX canvas
-void GFXcanvas1::drawPixel(int x, int y, int c) {
-  if (x < 0 || y < 0 || x >= w_ || y >= h_) return;
-  uint8_t& b = buf_[(x / 8) + y * ((w_ + 7) / 8)];
-  if (c) b |= 0x80 >> (x & 7); else b &= ~(0x80 >> (x & 7));
-}
-bool GFXcanvas1::getPixel(int x, int y) const {
-  if (x < 0 || y < 0 || x >= w_ || y >= h_) return false;
-  return buf_[(x / 8) + y * ((w_ + 7) / 8)] & (0x80 >> (x & 7));
-}
-void GFXcanvas1::drawChar(char c) {
-  if (c == '\n') { cx_ = 0; cy_ += 8 * size_; return; }
-  for (int i = 0; i < 5; i++) {
-    uint8_t line = font[(uint8_t)c * 5 + i];
-    for (int j = 0; j < 8; j++, line >>= 1)
-      if (line & 1) fillRect(cx_ + i * size_, cy_ + j * size_, size_, size_, color_);
-  }
-  cx_ += 6 * size_;
 }
 
 #ifndef SIM_WASM
@@ -507,16 +487,14 @@ static std::string jesc(const std::string& s) {
 bool WebServer::simRoute(const std::string& path) {
   using sim::hw;
   if (path == "/sim/hw") {
-    static const char* hx = "0123456789abcdef";
-    std::string lcd, j;
-    for (uint8_t b : hw.lcdShown) { lcd += hx[b >> 4]; lcd += hx[b & 15]; }
-    j = "{\"time\":" + std::to_string(sim_time(nullptr)) + ",\"timeOffset\":" + std::to_string(sim::timeOffset) +
-        ",\"projDuty\":" + std::to_string(hw.projDuty) + ",\"lcdContrast\":" + std::to_string(hw.lcdContrast) +
-        ",\"lcd\":\"" + lcd + "\",\"tm\":{\"on\":" + (hw.tmOn ? "true" : "false") + ",\"bright\":" + std::to_string(hw.tmBright) + ",\"segs\":[";
-    for (int i = 0; i < 4; i++) j += std::to_string(hw.tmSegs[i]) + (i < 3 ? "," : "");
-    j += "]},\"ring\":[";
-    for (int i = 0; i < 16; i++) j += "[" + std::to_string(hw.ring[i][0]) + "," + std::to_string(hw.ring[i][1]) + "," + std::to_string(hw.ring[i][2]) + "]" + (i < 15 ? "," : "");
-    j += "],\"audio\":{\"playing\":" + std::string(hw.audioPlaying ? "true" : "false") + ",\"vol\":" + std::to_string(hw.audioVol) +
+    std::string j = "{\"time\":" + std::to_string(sim_time(nullptr)) + ",\"timeOffset\":" + std::to_string(sim::timeOffset);
+    for (int k = 0; k < 2; k++) {
+      const sim::Hw::Tm& t = hw.tm[k];
+      j += std::string(k ? ",\"proj\"" : ",\"front\"") + ":{\"on\":" + (t.on ? "true" : "false") + ",\"bright\":" + std::to_string(t.bright) + ",\"segs\":[";
+      for (int i = 0; i < 4; i++) j += std::to_string(t.segs[i]) + (i < 3 ? "," : "");
+      j += "]}";
+    }
+    j += ",\"audio\":{\"playing\":" + std::string(hw.audioPlaying ? "true" : "false") + ",\"vol\":" + std::to_string(hw.audioVol) +
          ",\"file\":\"" + jesc(hw.audioFile) + "\",\"url\":\"" + jesc(hw.audioUrl) + "\",\"seq\":" + std::to_string(hw.audioSeq) +
          "},\"net\":" + (hw.netOk ? "true" : "false") + ",\"ldr\":" + std::to_string(hw.ldr) + "}";
     send(200, "application/json", String(j));

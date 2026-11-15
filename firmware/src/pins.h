@@ -2,15 +2,9 @@
 // Pin map for ESP32-S3-DevKitC-1. Change here if you wire differently.
 // Avoided: 0/3/45/46 (strapping), 19/20 (USB), 26-37 (flash/PSRAM), 38/48 (onboard RGB LED).
 
-// Projector LCD: Nokia 5110 (PCD8544), software SPI
-#define PIN_LCD_CLK   12
-#define PIN_LCD_DIN   11
-#define PIN_LCD_DC     9
-#define PIN_LCD_CE    10
-#define PIN_LCD_RST    8
-
-// Projector LED: PWM into the gate of a logic-level MOSFET module
-#define PIN_PROJ_LED  13
+// Projector: a second TM1637 4-digit 7-segment module, imaged onto the ceiling
+#define PIN_PROJ_CLK  12
+#define PIN_PROJ_DIO  11
 
 // Front display: TM1637 4-digit 7-segment
 #define PIN_TM_CLK     4
@@ -20,10 +14,6 @@
 #define PIN_I2S_BCLK  15
 #define PIN_I2S_LRC   16
 #define PIN_I2S_DOUT  17
-
-// Sunrise light: WS2812B ring
-#define PIN_RING      18
-#define RING_COUNT    16
 
 // DS3231 real-time clock (I2C)
 #define PIN_SDA        1

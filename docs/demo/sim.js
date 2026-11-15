@@ -124,11 +124,11 @@
 
   // ---- projector optics: how sharp and where the time lands for a given focus and tilt (100 mm lens)
   function optics(focusMm, tiltDeg) {
-    const v = 106 + focusMm;                          // lens to LCD
+    const v = 106 + focusMm;                          // lens to the projector's LED display
     const sharpAt = 1 / (1 / 100 - 1 / v);            // where the image is sharp, mm
     const D = 1800 / Math.cos(tiltDeg * Math.PI / 180);   // lens to ceiling along the beam (8 ft ceiling)
     const blur = 46 * Math.abs(D - sharpAt) / sharpAt;    // blur spot on the ceiling, mm
-    const pixel = 0.36 * D / v;                           // one LCD pixel on the ceiling, mm
+    const pixel = 1.0 * D / v;                            // one segment's stroke (about 1 mm) on the ceiling, mm
     return { sharpAt, D, blurPx: blur / pixel, forward: 1800 * Math.tan(tiltDeg * Math.PI / 180), width: 30 * D / v };
   }
   let focus = 0, tilt = 0;
@@ -146,7 +146,7 @@
     await ready;
     const c = JSON.parse(td.decode(request('GET', '/api/config').body));
     const url = new URL('sample-feed.xml', location.href).href;
-    if (!c.alarms.length) c.alarms.push({ enabled: true, hour: 7, minute: 0, days: 62, skipNext: false, label: 'Podcast', sound: '/sounds/beep.wav', volume: 12, rampSec: 10, sunriseMin: 15, snoozeMin: 9, maxRingMin: 30 });
+    if (!c.alarms.length) c.alarms.push({ enabled: true, hour: 7, minute: 0, days: 62, skipNext: false, label: 'Podcast', sound: '/sounds/beep.wav', volume: 12, rampSec: 10, snoozeMin: 9, maxRingMin: 30 });
     c.alarms[0].stream = url;
     request('POST', '/api/config', 'application/json', te.encode(JSON.stringify(c)));
     if (typeof load === 'function') await load();

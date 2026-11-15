@@ -7,7 +7,7 @@ static const char* CFG_PATH = "/config.json";
 void configDefaults(Config& c) {
   c = Config();
   c.front.dayBright = 4; c.front.nightBright = 1;
-  c.proj.dayBright = 60; c.proj.nightBright = 30;
+  c.proj.dayBright = 7; c.proj.nightBright = 5;  // projected LED digits are dim: run them bright
   c.alarmCount = 2;
   c.alarms[0].label = "Weekdays"; c.alarms[0].t.hour = 6; c.alarms[0].t.minute = 30; c.alarms[0].t.days = 0b0111110;
   c.alarms[1].label = "Weekend";  c.alarms[1].t.hour = 8; c.alarms[1].t.minute = 30; c.alarms[1].t.days = 0b1000001;
@@ -29,9 +29,8 @@ void configToJson(const Config& c, JsonDocument& doc) {
   doc["useLdr"] = c.useLdr; doc["ldrThreshold"] = c.ldrThreshold;
   dispToJson(c.front, doc["front"].to<JsonObject>());
   dispToJson(c.proj, doc["proj"].to<JsonObject>());
-  doc["projMirrorX"] = c.projMirrorX; doc["projMirrorY"] = c.projMirrorY; doc["projInvert"] = c.projInvert;
+  doc["projMirrorX"] = c.projMirrorX; doc["projMirrorY"] = c.projMirrorY;
   doc["projUpsideDown"] = c.projUpsideDown;
-  doc["lcdContrast"] = c.lcdContrast; doc["sunriseMaxBright"] = c.sunriseMaxBright;
   doc["showOnAlarm"] = c.showOnAlarm;
   doc["webPassword"] = c.webPassword;
   JsonArray arr = doc["alarms"].to<JsonArray>();
@@ -41,7 +40,7 @@ void configToJson(const Config& c, JsonDocument& doc) {
     o["enabled"] = a.t.enabled; o["hour"] = a.t.hour; o["minute"] = a.t.minute;
     o["days"] = a.t.days; o["skipNext"] = a.t.skipNext; o["label"] = a.label; o["sound"] = a.sound;
     o["stream"] = a.stream;
-    o["volume"] = a.volume; o["rampSec"] = a.rampSec; o["sunriseMin"] = a.sunriseMin;
+    o["volume"] = a.volume; o["rampSec"] = a.rampSec;
     o["snoozeMin"] = a.snoozeMin; o["maxRingMin"] = a.maxRingMin;
   }
 }
@@ -54,12 +53,19 @@ bool configFromJson(Config& c, JsonVariantConst v) {
   c.useLdr = v["useLdr"] | c.useLdr;
   c.ldrThreshold = constrain((int)(v["ldrThreshold"] | c.ldrThreshold), 0, 4095);
   dispFromJson(c.front, v["front"], 7);
-  dispFromJson(c.proj, v["proj"], 100);
+  // Settings saved by firmware 1.x had projector brightness in % (for the LCD's LED); now it is 0-7.
+  if (!v["lcdContrast"].isNull()) {
+    JsonVariantConst p = v["proj"];
+    if (!p.isNull()) {
+      c.proj.mode = constrain((int)(p["mode"] | c.proj.mode), 0, 3);
+      c.proj.dayBright = constrain(((int)(p["dayBright"] | 100) * 7 + 50) / 100, 0, 7);
+      c.proj.nightBright = constrain(((int)(p["nightBright"] | 70) * 7 + 50) / 100, 0, 7);
+    }
+  } else {
+    dispFromJson(c.proj, v["proj"], 7);
+  }
   c.projMirrorX = v["projMirrorX"] | c.projMirrorX; c.projMirrorY = v["projMirrorY"] | c.projMirrorY;
   c.projUpsideDown = v["projUpsideDown"] | c.projUpsideDown;
-  c.projInvert = v["projInvert"] | c.projInvert;
-  c.lcdContrast = constrain((int)(v["lcdContrast"] | c.lcdContrast), 0, 127);
-  c.sunriseMaxBright = constrain((int)(v["sunriseMaxBright"] | c.sunriseMaxBright), 0, 255);
   c.showOnAlarm = v["showOnAlarm"] | c.showOnAlarm;
   c.webPassword = v["webPassword"] | c.webPassword;
   JsonArrayConst arr = v["alarms"];
@@ -80,7 +86,6 @@ bool configFromJson(Config& c, JsonVariantConst v) {
       if (a.stream.length() > 280 || !(a.stream.startsWith("http://") || a.stream.startsWith("https://"))) a.stream = "";
       a.volume = constrain((int)(o["volume"] | 12), 0, 21);
       a.rampSec = constrain((int)(o["rampSec"] | 60), 0, 1800);
-      a.sunriseMin = constrain((int)(o["sunriseMin"] | 15), 0, 60);
       a.snoozeMin = constrain((int)(o["snoozeMin"] | 9), 1, 60);
       a.maxRingMin = constrain((int)(o["maxRingMin"] | 30), 1, 120);
       c.alarms[c.alarmCount++] = a;

@@ -23,9 +23,9 @@ button.p{background:var(--acc);color:#111;font-weight:600}button.d{background:tr
 .pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;background:#2a2f37}.pill.ok{background:#173a2b;color:var(--ok)}.pill.bad{background:#3d1d1f;color:var(--bad)}
 #live{display:grid;grid-template-columns:1.5fr 1fr;gap:12px}
 #live .lbl{font-size:12px;color:var(--mut);margin:0 0 4px}
-#ceil{width:100%;height:auto;border-radius:8px;background:#07080b;display:block;image-rendering:pixelated}
+#ceil{width:100%;height:auto;border-radius:8px;background:#07080b;display:block}
 .panel2{background:#0f1114;border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:10px}
-#front svg,#ring svg{display:block;width:100%;height:auto}
+#front svg,#modSvg{display:block;width:100%;height:auto}
 .vbar{height:6px;background:#2b3038;border-radius:3px;overflow:hidden;margin-top:6px}.vbar i{display:block;height:100%;background:var(--acc);width:0}
 @media(max-width:560px){#live{grid-template-columns:1fr}}
 #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#000;padding:8px 14px;border-radius:8px;display:none}
@@ -49,10 +49,10 @@ button.p{background:var(--acc);color:#111;font-weight:600}button.d{background:tr
 
 <div class="card"><h2>Right now</h2>
 <div id="live">
- <div><p class="lbl" id="ceilLbl">On the ceiling</p><canvas id="ceil" width="336" height="192"></canvas></div>
+ <div><p class="lbl" id="ceilLbl">On the ceiling</p><svg id="ceil" viewBox="0 0 336 192"></svg></div>
  <div>
   <div class="panel2" id="front"><p class="lbl" id="frontLbl">Front display</p><svg viewBox="0 0 200 60" id="frontSvg"></svg></div>
-  <div class="panel2" id="ring"><p class="lbl" id="ringLbl">Sunrise light</p><svg viewBox="0 0 120 120" id="ringSvg" style="max-width:120px;margin:auto"></svg></div>
+  <div class="panel2"><p class="lbl">Projector module (as wired, before the mirror)</p><svg viewBox="0 0 200 60" id="modSvg"></svg></div>
   <div class="panel2"><p class="lbl">Sound</p><div id="spk">Silent</div><div class="vbar"><i id="vbar"></i></div></div>
  </div>
 </div></div>
@@ -67,20 +67,18 @@ button.p{background:var(--acc);color:#111;font-weight:600}button.d{background:tr
 <label>Night brightness (0-7)<input type="number" min="0" max="7" id="f_night"></label></div>
 <div class="row"><b style="width:100%">Ceiling projector</b>
 <label>Mode<select id="p_mode"></select></label>
-<label>Day %<input type="number" min="0" max="100" id="p_day"></label>
-<label>Night %<input type="number" min="0" max="100" id="p_night"></label>
-<label>LCD contrast<input type="number" min="0" max="127" id="contrast"></label></div>
+<label>Day brightness (0-7)<input type="number" min="0" max="7" id="p_day"></label>
+<label>Night brightness (0-7)<input type="number" min="0" max="7" id="p_night"></label></div>
 <div class="row">
 <label class="sw"><input type="checkbox" id="mx">Mirror left/right</label>
 <label class="sw"><input type="checkbox" id="my">Mirror top/bottom</label>
-<label class="sw"><input type="checkbox" id="ud">Upside down (turn 180°)</label>
-<label class="sw"><input type="checkbox" id="inv">Bright digits on dark</label></div>
+<label class="sw"><input type="checkbox" id="ud">Upside down (turn 180°)</label></div>
+<div class="mut" style="margin:-4px 0 8px">The lens and mirror flip the picture. Set these until the time reads correctly on the ceiling.</div>
 <div class="row"><label class="sw"><input type="checkbox" id="showAlarm">Turn displays on while an alarm rings</label></div>
 <div class="row"><b style="width:100%">Night</b>
 <label>Starts<input type="time" id="nStart"></label><label>Ends<input type="time" id="nEnd"></label>
 <label class="sw"><input type="checkbox" id="useLdr">Also when room is dark</label>
 <label>Dark below<input type="number" min="0" max="4095" id="ldrT"></label><span class="mut">sensor now: <span id="ldr">-</span></span></div>
-<div class="row"><label>Sunrise max brightness (0-255)<input type="number" min="0" max="255" id="sunMax"></label></div>
 <div class="row"><button class="p" onclick="save()">Save</button></div></div>
 
 <div class="card"><h2>Sounds</h2><div id="sounds"></div>
@@ -106,26 +104,24 @@ async function act(d,extra=''){await fetch('/api/action?do='+d+extra,{method:'PO
 function fmtT(ep){const d=new Date(ep*1000);return d.toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit',hour12:!C.hour24})}
 // ---- live view
 const SEG=[0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F];
-function segDigit(x,d,on,col){const P=[[4,0,26,5],[27,3,5,22],[27,30,5,22],[4,51,26,5],[0,30,5,22],[0,3,5,22],[4,25.5,26,5]];
- const m=d<0?0:(d==10?0x40:SEG[d]);return P.map((p,i)=>`<rect x="${x+p[0]}" y="${4+p[1]}" width="${p[2]}" height="${p[3]}" rx="2" fill="${(m>>i)&1&&on?col:'#2a0d0d'}"/>`).join('')}
+function segDigit(x,m,col,off){const P=[[4,0,26,5],[27,3,5,22],[27,30,5,22],[4,51,26,5],[0,30,5,22],[0,3,5,22],[4,25.5,26,5]];
+ return P.map((p,i)=>`<rect x="${x+p[0]}" y="${4+p[1]}" width="${p[2]}" height="${p[3]}" rx="2" fill="${(m>>i)&1?col:off}"/>`).join('')}
+// four segment bytes (TM1637 bit order) drawn as a 200 x 60 display; bit 0x80 of digit 1 is the colon
+function segs4(g,col,off,bg){return `<rect width="200" height="60" rx="6" fill="${bg}"/>`+segDigit(14,g[0],col,off)+segDigit(52,g[1],col,off)+
+ `<circle cx="99" cy="22" r="3" fill="${g[1]&0x80?col:off}"/><circle cx="99" cy="40" r="3" fill="${g[1]&0x80?col:off}"/>`+segDigit(114,g[2],col,off)+segDigit(152,g[3],col,off)}
 function drawFront(s,lv){const d=new Date(s.now*1000);let h=d.getHours(),m=d.getMinutes();const h24=C&&C.hour24;
  if(!h24){h%=12;if(!h)h=12}const on=lv.frontOn,col=`rgba(255,40,30,${0.35+0.65*lv.frontBright/7})`;
- const dg=s.timeValid?[(h24||h>=10)?Math.floor(h/10):-1,h%10,Math.floor(m/10),m%10]:[10,10,10,10];
- $('frontSvg').innerHTML=`<rect width="200" height="60" rx="6" fill="#0a0505"/>`+segDigit(14,dg[0],on,col)+segDigit(52,dg[1],on,col)+
-  `<circle cx="99" cy="22" r="3" fill="${on?col:'#2a0d0d'}"/><circle cx="99" cy="40" r="3" fill="${on?col:'#2a0d0d'}"/>`+segDigit(114,dg[2],on,col)+segDigit(152,dg[3],on,col);
+ const g=s.timeValid?[(h24||h>=10)?SEG[Math.floor(h/10)]:0,SEG[h%10]|0x80,SEG[Math.floor(m/10)],SEG[m%10]]:[0x40,0x40|0x80,0x40,0x40];
+ $('frontSvg').innerHTML=segs4(on?g:[0,0,0,0],col,'#2a0d0d','#0a0505');
  $('frontLbl').textContent='Front display · '+(on?'on, brightness '+lv.frontBright+'/7':'off (dark)')}
-function drawRing(lv){const [r,g,b]=lv.ring,mx=Math.max(r,g,b);let dots='';
- const col=mx?`rgb(${Math.round(r*255/mx)},${Math.round(g*255/mx)},${Math.round(b*255/mx)})`:'#1c1f24',op=mx?Math.max(.3,mx/255):1;
- for(let i=0;i<16;i++){const a=i/16*2*Math.PI;dots+=`<circle cx="${60+42*Math.cos(a)}" cy="${60+42*Math.sin(a)}" r="7" fill="${col}" opacity="${op}"/>`}
- $('ringSvg').innerHTML=(mx?`<circle cx="60" cy="60" r="50" fill="${col}" opacity="${op*0.25}"/>`:'')+dots;
- $('ringLbl').textContent='Sunrise light · '+(mx?Math.round(lv.sunrise*100)+'% of sunrise':'off')}
-function drawCeil(lv){const c=$('ceil'),x=c.getContext('2d');x.fillStyle='#07080b';x.fillRect(0,0,336,192);
- if(!lv.projOn||!lv.projPct){x.fillStyle='#4a4f57';x.font='15px system-ui';x.textAlign='center';x.fillText('Projector off',168,100);$('ceilLbl').textContent='On the ceiling · projector off';return}
- const a=0.3+0.7*lv.projPct/100,h=lv.lcd||'';
- const ud=lv.upsideDown;
- for(let y=0;y<48;y++)for(let i=0;i<84;i++){const b=parseInt(h.substr((y*11+(i>>3))*2,2),16),bit=(b>>(7-(i&7)))&1,lit=lv.invert?bit:!bit,X=ud?83-i:i,Y=ud?47-y:y;
-  if(lit){x.fillStyle=`rgba(255,214,150,${a})`;x.fillRect(X*4,Y*4,4,4)}else if(lv.invert){x.fillStyle=`rgba(255,214,150,${a*0.05})`;x.fillRect(X*4,Y*4,4,4)}}
- $('ceilLbl').textContent='On the ceiling · '+lv.projPct+'% brightness'+(ud?' · upside down':'')}
+function drawCeil(s,lv){const on=lv.projOn,a=0.3+0.7*(lv.projBright||0)/7,col=`rgba(255,60,40,${a})`;
+ const t=(lv.timeSegs||[0,0,0,0]).slice();if(s.timeValid)t[1]|=0x80;
+ $('ceil').innerHTML='<rect width="336" height="192" rx="8" fill="#07080b"/>'+(on?`<g transform="translate(18,46) scale(1.5)" style="filter:blur(1.2px)">${segs4(t,col,'rgba(0,0,0,0)','rgba(0,0,0,0)')}</g>`:
+  '<text x="168" y="100" fill="#4a4f57" font-size="15" text-anchor="middle" font-family="system-ui">Projector off</text>');
+ $('modSvg').innerHTML=segs4(on?(lv.projSegs||[0,0,0,0]):[0,0,0,0],`rgba(255,40,30,${a})`,'#2a0d0d','#0a0505');
+ const fl=[lv.mirrorX&&'mirrored left/right',lv.mirrorY&&'mirrored top/bottom',lv.upsideDown&&'turned 180°'].filter(Boolean).join(', ');
+ $('ceilLbl').textContent='On the ceiling · '+(on?'brightness '+lv.projBright+'/7':'projector off');
+ $('modSvg').previousElementSibling.textContent='Projector module, as it lights up'+(fl?' ('+fl+')':' (not flipped)')}
 function drawSpk(s,lv){const v=lv.vol||0,st=s.stream||{};let t;
  if(st.state=='connecting')t='Connecting to stream…';
  else if(s.playing)t=(s.ring=='ringing'?(s.source=='backup'?'Backup sound playing':s.source=='stream'?'Alarm stream playing':'Alarm sound playing'):'Preview playing')+(s.source=='stream'&&st.title?' · '+st.title:'')+' · volume '+v+'/21';
@@ -133,7 +129,7 @@ function drawSpk(s,lv){const v=lv.vol||0,st=s.stream||{};let t;
  if(s.source=='backup'&&st.note)t+=' (stream: '+st.note+')';
  $('spk').textContent=t;
  $('vbar').style.width=(s.playing?v/21*100:0)+'%'}
-function drawLive(s){if(!s.live)return;drawCeil(s.live);drawFront(s,s.live);drawRing(s.live);drawSpk(s,s.live)}
+function drawLive(s){if(!s.live)return;drawCeil(s,s.live);drawFront(s,s.live);drawSpk(s,s.live)}
 async function poll(){try{const s=await(await fetch('/api/state')).json();drawLive(s);
  const d=new Date(s.now*1000);
  $('clock').textContent=s.timeValid?d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit',hour12:C?!C.hour24:true}):'--:--';
@@ -162,27 +158,26 @@ ${a.stream?'<div class="mut" style="margin:-4px 0 6px">Plays this instead of the
 <div class="row"><label>${a.stream?'Backup sound':'Sound'}<select onchange="C.alarms[${i}].sound=this.value">${soundOpts(a.sound)}</select></label>
 <label>Volume (0-21)<input type="number" min="0" max="21" value="${a.volume}" onchange="C.alarms[${i}].volume=+this.value"></label>
 <label>Fade-in (s)<input type="number" min="0" max="1800" value="${a.rampSec}" onchange="C.alarms[${i}].rampSec=+this.value"></label></div>
-<div class="row"><label>Sunrise (min before)<input type="number" min="0" max="60" value="${a.sunriseMin}" onchange="C.alarms[${i}].sunriseMin=+this.value"></label>
-<label>Snooze (min)<input type="number" min="1" max="60" value="${a.snoozeMin}" onchange="C.alarms[${i}].snoozeMin=+this.value"></label>
+<div class="row"><label>Snooze (min)<input type="number" min="1" max="60" value="${a.snoozeMin}" onchange="C.alarms[${i}].snoozeMin=+this.value"></label>
 <label>Auto-stop (min)<input type="number" min="1" max="120" value="${a.maxRingMin}" onchange="C.alarms[${i}].maxRingMin=+this.value"></label></div>
 <div class="row"><button onclick="testSound(${i})">${a.stream?'Preview stream':'Preview sound'}</button><button onclick="act('stop')">Stop</button>
 <button onclick="save().then(()=>act('ring','&id=${i}'))">Ring now</button>
 <button onclick="save().then(()=>act('skip','&id=${i}')).then(load)">${a.skipNext?'Un-skip next':'Skip next'}</button>
 <button class="d" onclick="C.alarms.splice(${i},1);renderAlarms()">Delete</button></div></div>`).join('')||'<div class="mut">No alarms yet.</div>'}
-function addAlarm(){if(C.alarms.length>=8)return toast('Max 8 alarms');C.alarms.push({enabled:true,hour:7,minute:0,days:62,skipNext:false,label:'Alarm',sound:'/sounds/beep.wav',stream:'',volume:12,rampSec:60,sunriseMin:15,snoozeMin:9,maxRingMin:30});renderAlarms()}
+function addAlarm(){if(C.alarms.length>=8)return toast('Max 8 alarms');C.alarms.push({enabled:true,hour:7,minute:0,days:62,skipNext:false,label:'Alarm',sound:'/sounds/beep.wav',stream:'',volume:12,rampSec:60,snoozeMin:9,maxRingMin:30});renderAlarms()}
 function testSound(i){const a=C.alarms[i];act('test',(a.stream?'&stream='+encodeURIComponent(a.stream):'&sound='+encodeURIComponent(a.sound))+'&vol='+a.volume)}
 function fill(){const opt=MODES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');$('f_mode').innerHTML=opt;$('p_mode').innerHTML=opt;
  $('f_mode').value=C.front.mode;$('f_day').value=C.front.dayBright;$('f_night').value=C.front.nightBright;
  $('p_mode').value=C.proj.mode;$('p_day').value=C.proj.dayBright;$('p_night').value=C.proj.nightBright;
- $('contrast').value=C.lcdContrast;$('mx').checked=C.projMirrorX;$('my').checked=C.projMirrorY;$('inv').checked=C.projInvert;$('ud').checked=C.projUpsideDown;
+ $('mx').checked=C.projMirrorX;$('my').checked=C.projMirrorY;$('ud').checked=C.projUpsideDown;
  $('showAlarm').checked=C.showOnAlarm;$('nStart').value=hm(C.nightStart);$('nEnd').value=hm(C.nightEnd);
- $('useLdr').checked=C.useLdr;$('ldrT').value=C.ldrThreshold;$('sunMax').value=C.sunriseMaxBright;
+ $('useLdr').checked=C.useLdr;$('ldrT').value=C.ldrThreshold;
  $('tz').value=C.tz;$('ntp').value=C.ntp;$('h24').checked=C.hour24;$('pw').value=C.webPassword;renderAlarms()}
 function collect(){C.front={mode:+$('f_mode').value,dayBright:+$('f_day').value,nightBright:+$('f_night').value};
  C.proj={mode:+$('p_mode').value,dayBright:+$('p_day').value,nightBright:+$('p_night').value};
- C.lcdContrast=+$('contrast').value;C.projMirrorX=$('mx').checked;C.projMirrorY=$('my').checked;C.projInvert=$('inv').checked;C.projUpsideDown=$('ud').checked;
+ C.projMirrorX=$('mx').checked;C.projMirrorY=$('my').checked;C.projUpsideDown=$('ud').checked;
  C.showOnAlarm=$('showAlarm').checked;C.nightStart=mh($('nStart').value);C.nightEnd=mh($('nEnd').value);
- C.useLdr=$('useLdr').checked;C.ldrThreshold=+$('ldrT').value;C.sunriseMaxBright=+$('sunMax').value;
+ C.useLdr=$('useLdr').checked;C.ldrThreshold=+$('ldrT').value;
  C.tz=$('tz').value.trim();C.ntp=$('ntp').value.trim();C.hour24=$('h24').checked;C.webPassword=$('pw').value}
 async function save(){collect();const r=await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(C)});
  if(r.ok){C=await r.json();fill();toast('Saved')}else toast('Save failed')}

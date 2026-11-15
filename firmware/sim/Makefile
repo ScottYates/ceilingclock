@@ -14,7 +14,7 @@ $(OUT)/main.o: $(FW)/main.cpp $(FW)/*.h shim/*.h | $(OUT)
 	$(CXX) $(CXXFLAGS) -Dtime=sim_time -c $< -o $@
 $(OUT)/settings.o: $(FW)/settings.cpp $(FW)/settings.h shim/*.h | $(OUT)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-$(OUT)/sim_hw.o: sim_hw.cpp shim/*.h shim/glcdfont.c | $(OUT)
+$(OUT)/sim_hw.o: sim_hw.cpp shim/*.h | $(OUT)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 $(OUT)/sim_main.o: sim_main.cpp | $(OUT)
 	$(CXX) $(CXXFLAGS) -c $< -o $@

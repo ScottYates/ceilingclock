@@ -1,6 +1,6 @@
 // Ceiling projection alarm clock
-// ESP32-S3 + Nokia 5110 LCD projector + TM1637 front display + MAX98357A audio
-// + WS2812B sunrise ring + DS3231 RTC. Time from NTP, kept by the RTC when offline.
+// ESP32-S3 + two TM1637 4-digit displays (one on the front, one imaged onto the ceiling through a
+// lens and mirror) + MAX98357A audio + DS3231 RTC. Time from NTP, kept by the RTC when offline.
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiManager.h>
@@ -11,22 +11,20 @@
 #include <Wire.h>
 #include <RTClib.h>
 #include <TM1637Display.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_PCD8544.h>
-#include <Adafruit_NeoPixel.h>
 #include <ArduinoJson.h>
 #include <esp_sntp.h>
 #include <sys/time.h>
 #include "Audio.h"
 
 #include "pins.h"
+#include "segments.h"
 #include "settings.h"
 #include "alarm_logic.h"
 #include "web_ui.h"
 #include "feed_scan.h"
 #include "net_fetch.h"
 
-#define FW_VERSION "1.1.1"   // bump on every release
+#define FW_VERSION "2.0.0"   // bump on every release
 #ifndef FW_BUILD
 #define FW_BUILD __DATE__ " " __TIME__   // set by build_stamp.py in PlatformIO builds
 #endif
@@ -34,17 +32,16 @@
 
 // What every output is doing right now, reported to the web page's live view.
 struct LiveState {
-  bool projOn = false;  uint8_t projPct = 0;
+  bool projOn = false;  uint8_t projBright = 0;
+  uint8_t timeSegs[4] = {0, 0, 0, 0};   // the time as it should read on the ceiling
+  uint8_t projSegs[4] = {0, 0, 0, 0};   // what the projector's own display shows (mirrored)
   bool frontOn = false; uint8_t frontBright = 0;
-  uint8_t ring[3] = {0, 0, 0}; float sunrise = 0;
   uint8_t vol = 0;
 } live;
 
 // ---------------------------------------------------------------- hardware
-Adafruit_PCD8544 lcd(PIN_LCD_CLK, PIN_LCD_DIN, PIN_LCD_DC, PIN_LCD_CE, PIN_LCD_RST);
-GFXcanvas1 canvas(84, 48);
 TM1637Display front(PIN_TM_CLK, PIN_TM_DIO);
-Adafruit_NeoPixel ring(RING_COUNT, PIN_RING, NEO_GRB + NEO_KHZ800);
+TM1637Display proj(PIN_PROJ_CLK, PIN_PROJ_DIO);   // imaged onto the ceiling
 RTC_DS3231 rtc;
 bool rtcPresent = false;
 
@@ -375,89 +372,24 @@ bool displayVisible(const DisplayCfg& d) {
   }
 }
 
-// ---------------------------------------------------------------- projector rendering
-static const uint8_t SEG[10] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F};
+// ---------------------------------------------------------------- projector
+// The projector is a second TM1637 module. The lens and mirror flip its picture, so the digits are
+// sent pre-flipped (segments.h): left/right, top/bottom, or turned 180 degrees, as set on the web page.
+bool projRedraw = true;  // set when the flip settings change
 
-void drawDigit(int x, int y, int d, int w = 16, int h = 32, int t = 4) {
-  if (d < 0) return;
-  uint8_t s = (d == 10) ? 0x40 : SEG[d];  // 10 = dash
-  int hh = h / 2;
-  if (s & 0x01) canvas.fillRect(x + 1, y, w - 2, t, 1);                 // a
-  if (s & 0x02) canvas.fillRect(x + w - t, y + 1, t, hh - 1, 1);        // b
-  if (s & 0x04) canvas.fillRect(x + w - t, y + hh, t, hh - 1, 1);       // c
-  if (s & 0x08) canvas.fillRect(x + 1, y + h - t, w - 2, t, 1);         // d
-  if (s & 0x10) canvas.fillRect(x, y + hh, t, hh - 1, 1);               // e
-  if (s & 0x20) canvas.fillRect(x, y + 1, t, hh - 1, 1);                // f
-  if (s & 0x40) canvas.fillRect(x + 1, y + hh - t / 2, w - 2, t, 1);    // g
-}
-
-String fmtTime(int h, int m) {
-  char b[12];
-  if (cfg.hour24) snprintf(b, sizeof b, "%02d:%02d", h, m);
-  else snprintf(b, sizeof b, "%d:%02d%s", (h % 12) ? h % 12 : 12, m, h < 12 ? "a" : "p");
-  return b;
-}
-
-String statusLine(const struct tm& lt, time_t now) {
-  if (WiFi.getMode() & WIFI_AP) return "WIFI SETUP";
-  if (!timeValid()) return "NO TIME YET";
-  if (ringState == RS_RINGING) return "GOOD MORNING";
-  if (ringState == RS_SNOOZED) {
-    struct tm s; localtime_r(&snoozeUntil, &s);
-    return "SNOOZE " + fmtTime(s.tm_hour, s.tm_min);
-  }
-  String out;
-  time_t when; int i = nextAlarm(now, when);
-  if (i >= 0 && when - now < 24 * 3600) {
-    struct tm a; localtime_r(&when, &a);
-    out = "AL " + fmtTime(a.tm_hour, a.tm_min);
-  }
-  if (!cfg.hour24) {
-    while (out.length() < 12) out += ' ';
-    out += lt.tm_hour < 12 ? "AM" : "PM";
-  }
-  return out;
-}
-
-// Draws the clock face into the 84 x 48 canvas (also used by the web page's live view).
-void composeCanvas(const struct tm& lt, time_t now) {
-  canvas.fillScreen(0);
-  if (timeValid()) {
-    int h = lt.tm_hour;
-    if (!cfg.hour24) { h %= 12; if (h == 0) h = 12; }
-    drawDigit(0, 2, (cfg.hour24 || h >= 10) ? h / 10 : -1);
-    drawDigit(19, 2, h % 10);
-    canvas.fillRect(39, 10, 4, 4, 1);
-    canvas.fillRect(39, 22, 4, 4, 1);
-    drawDigit(46, 2, lt.tm_min / 10);
-    drawDigit(65, 2, lt.tm_min % 10);
-  } else {
-    for (int i = 0; i < 4; i++) drawDigit(i < 2 ? i * 19 : 46 + (i - 2) * 19, 2, 10);
-  }
-  canvas.setTextSize(1);
-  canvas.setTextColor(1);
-  canvas.setCursor(0, 40);
-  canvas.print(statusLine(lt, now));
-}
-
-// Copies the canvas to the LCD with mirroring.
-void pushLcd() {
-  // Copy to the LCD with mirroring. On the LCD a "set" pixel is dark and blocks light.
-  lcd.clearDisplay();
-  for (int y = 0; y < 48; y++)
-    for (int x = 0; x < 84; x++) {
-      bool lit = canvas.getPixel(x, y);
-      bool dark = cfg.projInvert ? !lit : lit;
-      bool mx = cfg.projMirrorX != cfg.projUpsideDown, my = cfg.projMirrorY != cfg.projUpsideDown;   // 180 degrees = both flips
-      if (dark) lcd.drawPixel(mx ? 83 - x : x, my ? 47 - y : y, BLACK);
-    }
-  lcd.display();
-}
-
-void setProjectorLed(uint8_t pct) {
-  live.projPct = pct;
-  uint32_t duty = (uint32_t)pct * pct * 1023 / 10000;  // rough perceptual curve
-  ledcWrite(PIN_PROJ_LED, duty);
+void renderProj(const struct tm& lt, bool visible, uint8_t bright) {
+  seg::timeDigits(lt.tm_hour, lt.tm_min, cfg.hour24, timeValid(), live.timeSegs);
+  seg::forProjector(live.timeSegs, timeValid(), cfg.projMirrorX, cfg.projMirrorY, cfg.projUpsideDown, live.projSegs);
+  live.projOn = visible;
+  live.projBright = visible ? bright : 0;
+  static int lastKey = -2;
+  int key = visible ? ((lt.tm_hour * 60 + lt.tm_min) * 8 + bright) * 2 + timeValid() : -1;
+  if (key == lastKey && !projRedraw) return;
+  lastKey = key;
+  projRedraw = false;
+  if (!visible) { proj.setBrightness(0, false); proj.clear(); return; }
+  proj.setBrightness(bright, true);
+  proj.setSegments(live.projSegs);
 }
 
 // ---------------------------------------------------------------- front display
@@ -506,37 +438,6 @@ void renderFront(const struct tm& lt, bool visible, uint8_t bright) {
   int h = lt.tm_hour;
   if (!cfg.hour24) { h %= 12; if (h == 0) h = 12; }
   front.showNumberDecEx(h * 100 + lt.tm_min, 0b01000000, cfg.hour24, 4, 0);
-}
-
-// ---------------------------------------------------------------- sunrise ring
-void renderRing(time_t now) {
-  float p = 0;
-  if (ringState != RS_IDLE && ringAlarm >= 0 && cfg.alarms[ringAlarm].sunriseMin > 0) {
-    p = 1;
-  } else if (ringState == RS_IDLE && timeValid()) {
-    for (int i = 0; i < cfg.alarmCount; i++) {
-      const AlarmCfg& a = cfg.alarms[i];
-      if (!a.sunriseMin) continue;
-      time_t t = alarmNext(a.t, now, true);
-      if (!t) continue;
-      long lead = (long)a.sunriseMin * 60;
-      long left = (long)(t - now);
-      if (left <= lead) p = max(p, 1.0f - (float)left / lead);
-    }
-  }
-  static int lastLevel = -1;
-  int level = (int)(p * 255);
-  live.sunrise = p;
-  if (level == lastLevel) return;
-  lastLevel = level;
-  // deep red -> orange -> warm white, with a squared curve so it starts very dim
-  float b = p * p * cfg.sunriseMaxBright / 255.0f;
-  uint8_t r = 255 * b;
-  uint8_t g = (p < 0.3f ? p / 0.3f * 40 : 40 + (p - 0.3f) / 0.7f * 140) * b;
-  uint8_t bl = (p < 0.6f ? 0 : (p - 0.6f) / 0.4f * 70) * b;
-  live.ring[0] = r; live.ring[1] = g; live.ring[2] = bl;
-  for (int i = 0; i < RING_COUNT; i++) ring.setPixelColor(i, r, g, bl);
-  ring.show();
 }
 
 // ---------------------------------------------------------------- buttons
@@ -642,22 +543,16 @@ void apiState() {
   d["fsTotal"] = LittleFS.totalBytes();
   JsonObject lv = d["live"].to<JsonObject>();
   lv["projOn"] = live.projOn;
-  lv["projPct"] = live.projPct;
+  lv["projBright"] = live.projBright;
+  JsonArray ts = lv["timeSegs"].to<JsonArray>();
+  JsonArray ps = lv["projSegs"].to<JsonArray>();
+  for (int i = 0; i < 4; i++) { ts.add(live.timeSegs[i]); ps.add(live.projSegs[i]); }
   lv["frontOn"] = live.frontOn;
   lv["frontBright"] = live.frontBright;
-  JsonArray rgb = lv["ring"].to<JsonArray>();
-  for (int i = 0; i < 3; i++) rgb.add(live.ring[i]);
-  lv["sunrise"] = live.sunrise;
   lv["vol"] = soundPlaying() ? live.vol : 0;
-  lv["invert"] = cfg.projInvert;
+  lv["mirrorX"] = cfg.projMirrorX;
+  lv["mirrorY"] = cfg.projMirrorY;
   lv["upsideDown"] = cfg.projUpsideDown;
-  // the 84 x 48 projector image, 1 bit per pixel, 11 bytes per row, as hex
-  static const char* hx = "0123456789abcdef";
-  const uint8_t* buf = canvas.getBuffer();
-  String lcd;
-  lcd.reserve(84 / 8 * 48 * 2 + 100);
-  for (int i = 0; i < 11 * 48; i++) { lcd += hx[buf[i] >> 4]; lcd += hx[buf[i] & 15]; }
-  lv["lcd"] = lcd;
   sendJson(d);
 }
 
@@ -678,7 +573,7 @@ void apiPostConfig() {
   for (auto& t : lastFired) t = 0;
   saveConfig();
   if (cfg.tz != oldTz || cfg.ntp != oldNtp) applyTimeConfig();
-  lcd.setContrast(cfg.lcdContrast);
+  projRedraw = true;
   apiGetConfig();
 }
 
@@ -750,7 +645,7 @@ void apiAction() {
   else if (what == "peek") peekUntilMs = millis() + 15000;
   else if (what == "front") toggleFront();
   else if (what == "proj") toggleProjector();
-  else if (what == "flip") { cfg.projUpsideDown = !cfg.projUpsideDown; saveConfig(); pushLcd(); }
+  else if (what == "flip") { cfg.projUpsideDown = !cfg.projUpsideDown; saveConfig(); projRedraw = true; }
   else if (what == "ring" && id >= 0 && id < cfg.alarmCount) startRing(id, cfg.alarms[id].rampSec);
   else if (what == "skip" && id >= 0 && id < cfg.alarmCount) { cfg.alarms[id].t.skipNext = !cfg.alarms[id].t.skipNext; saveConfig(); }
   else if (what == "test") {
@@ -821,24 +716,15 @@ void setup() {
   pinMode(PIN_BTN_B, INPUT_PULLUP);
   analogReadResolution(12);
 
-  ledcAttach(PIN_PROJ_LED, 10000, 10);  // 10 kHz: no visible flicker, well inside the MOSFET module's 0-20 kHz rating
-  ledcWrite(PIN_PROJ_LED, 0);
-
-  ring.begin();
-  ring.clear();
-  ring.show();
-
   front.setBrightness(2, true);
   front.clear();
+  proj.setBrightness(2, true);
+  proj.clear();
 
   // The partition is labelled "littlefs" in partitions.csv; LittleFS.begin() looks for "spiffs" unless told.
   if (!LittleFS.begin(true, "/littlefs", 10, "littlefs")) Serial.println("LittleFS mount failed");
   loadConfig();
   ensureDefaultSound();
-
-  lcd.begin(cfg.lcdContrast);
-  lcd.clearDisplay();
-  lcd.display();
 
   // Seed the clock from the DS3231 so alarms work even without Wi-Fi.
   Wire.begin(PIN_SDA, PIN_SCL);
@@ -896,20 +782,10 @@ void loop() {
     localtime_r(&now, &lt);
     nightNow = computeNight(lt);
 
-    bool projOn = displayVisible(cfg.proj);
     uint8_t projB = nightNow ? cfg.proj.nightBright : cfg.proj.dayBright;
-    if (projOn && projB < 15 && (millis() < peekUntilMs || ringState != RS_IDLE)) projB = 15;
-    setProjectorLed(projOn ? projB : 0);
-    live.projOn = projOn;
-    static time_t lastRender = 0;
-    if (now != lastRender) {
-      composeCanvas(lt, now);
-      if (projOn) pushLcd();
-      lastRender = now;
-    }
-
+    if (projB < 4 && (millis() < peekUntilMs || ringState != RS_IDLE)) projB = 4;  // easy to see while peeking or ringing
+    renderProj(lt, displayVisible(cfg.proj), projB);
     renderFront(lt, displayVisible(cfg.front), nightNow ? cfg.front.nightBright : cfg.front.dayBright);
-    renderRing(now);
   }
   delay(2);
 }
