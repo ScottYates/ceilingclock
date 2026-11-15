@@ -26,6 +26,9 @@
 <h3>The two displays</h3>
 <p>The front display and the ceiling projector are the same kind of TM1637 four-digit module. Each has its own CLK and DIO pins; power both from 3.3 V. (At 5 V they're a little brighter, but most of these modules pull CLK and DIO up to their own VCC, which would put 5 V on the ESP32's pins.) The projector's digits are sent mirrored, so set the flips on the clock's web page until the ceiling reads right.</p>
 
+<h3>Alarm buttons</h3>
+<p>Two 16 mm momentary buttons with a light inside switch alarms 1 and 2. Each has two switch contacts and two LED contacts (+ and −). Switch: one contact to its GPIO (8 or 9), the other to GND; the internal pull-up does the rest. Light: GPIO 10 or 13 → 220 Ω resistor → LED + ; LED − → GND. That gives about 5 mA from the 3.3 V pin, plenty for a glow by a bed. Use red or green LEDs: blue and white ones need more than 3.3 V. Buttons sold with a built-in resistor for 3–6 V also work without the 220 Ω, a little dimmer.</p>
+
 <div class="note"><b>Flashing while powered:</b> don't plug a computer into the ESP32's USB port while the 5 V supply is connected, unless your board has a protection diode on its 5V pin. Unplug the supply first, or after the first flash use the web page's firmware update instead.</div>
 
 <h3>Board notes</h3>

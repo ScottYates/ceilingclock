@@ -87,7 +87,8 @@ lid_cut = [cap_x0 - 0.5, br_x1 + 0.5, ax_y - br_R - 0.5];   // x from, x to, y f
 blk_x = br_x1 + 0.5;                                       // right bearing block, x from here to the wall
 
 // other lid features
-button_xy = [0, -35]; button_hole = 16.2;
+button_xy = [-50, -35]; button_hole = 16.2;
+alarm_xy = [[-25, -35], [0, -35]];        // lit alarm buttons 1 and 2, right of snooze (the ESP32 is under the right half)
 ldr_xy = [60, -50];                      // clear of the corner pins and the barrel
 // front display: TM1637 4-digit module. Set to "0.36" (42 x 24 mm board, default) or "0.56" (~50 mm display).
 tm_size = "0.36";
@@ -210,6 +211,7 @@ module lid() {
       polygon([[0.01, 0.01], [0.01, -2.5], [-lid_t - 0.01, -6], [-lid_t - 0.01, 0.01]]);
     lid_pins() lp_bore($grip);
     translate([button_xy[0], button_xy[1], base_top - 1]) cylinder(d = button_hole, h = 10);
+    for (p = alarm_xy) translate([p[0], p[1], base_top - 1]) cylinder(d = button_hole, h = 10);
     translate([ldr_xy[0], ldr_xy[1], base_top - 1]) cylinder(d = 5.2, h = 10);
   }
   lid_pins() lp_ramps($grip);   // on the lid's underside: the lid prints upside down
@@ -420,6 +422,7 @@ module show(p) {
   else if (p == "ref_amp") ref_amp();
   else if (p == "ref_rtc") ref_rtc();
   else if (p == "ref_button") ref_button();
+  else if (p == "ref_alarmbtns") ref_alarmbtns();
   else if (p == "ref_usbc") ref_usbc();
   else if (p == "ref_buttonB") ref_buttonB();
   else if (p == "ref_window") ref_window();

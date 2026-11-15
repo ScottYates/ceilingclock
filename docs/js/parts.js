@@ -28,6 +28,7 @@ export const PARTS = {
   ref_mirror:    { label: '45° mirror',             kind: 'part',  color: 0xdfe8f0, explode: [0, 0, 95], tilts: true },
   ref_wires:     { label: 'Wiring',                 kind: 'part',  color: 0xd03030, explode: [0, 0, 0], hideExploded: true },
   ref_button:    { label: 'Snooze button',          kind: 'part',  color: 0xb8bec6, explode: [0, 0, 60] },
+  ref_alarmbtns: { label: 'Alarm buttons (lit)',    kind: 'part',  color: 0x2b2f36, explode: [0, 0, 60] },
   ref_lens:      { label: '50 mm lens (f = 100)',   kind: 'part',  color: 0x9fd3ff, explode: [0, 0, 155], opacity: 0.55, tilts: true, focuses: true },
 };
 
@@ -49,6 +50,7 @@ export const MATERIALS = {
   white:       { color: 0xf3f3f1, roughness: 0.6 },
   mirror:      { color: 0xd6e2ee, metalness: 0.35, roughness: 0.12, emissive: 0x2a3440 },
   led_red:     { color: 0xff3020, emissive: 0xc01000 },
+  led_green:   { color: 0x5dff6a, emissive: 0x1f9e2a },
   seg_off:     { color: 0x3a1010, roughness: 0.6 },
   glass:       { color: 0xa9d8ff, opacity: 0.45, roughness: 0.05 },
   acrylic_red: { color: 0x9a1010, opacity: 0.45, roughness: 0.1 },

@@ -93,6 +93,15 @@ module ref_window() M("acrylic_red") translate([-tm_w/2 + 0.2, -box_d/2, tm_z - 
 
 // ---------------------------------------------------------------- buttons
 module ref_button()  translate([button_xy[0], button_xy[1], lid_top]) button16(panel = lid_t);
+// lit alarm buttons: a 16 mm momentary button with an LED ring, shown lit green
+module button16lit(len = 18, panel = wall) {
+  M("black") { cylinder(d = 19, h = 2, $fn = 48); translate([0, 0, -len]) cylinder(d = 15.8, h = len, $fn = 40); }
+  M("led_green") translate([0, 0, 2]) difference() { cylinder(d = 14, h = 0.4, $fn = 40); translate([0, 0, -1]) cylinder(d = 10, h = 3, $fn = 40); }
+  M("alu") translate([0, 0, 2]) cylinder(d = 9.6, h = 0.3, $fn = 40);
+  M("metal_dark") translate([0, 0, -panel - 0.2 - 3]) cylinder(d = 22 / cos(30), h = 3, $fn = 6);
+  M("gold") for (s = [-1, 1], t = [-1, 1]) translate([s * 3.5 - 1, t * 3 - 0.3, -len - 6]) cube([2, 0.6, 6]);
+}
+module ref_alarmbtns() for (p = alarm_xy) translate([p[0], p[1], lid_top]) button16lit(panel = lid_t);
 module ref_buttonB() translate([-box_w/2, btnb_y, btnb_z]) rotate([0, -90, 0]) button16();   // left side wall
 
 // ---------------------------------------------------------------- light sensor (GL5528) in the lid
@@ -198,7 +207,11 @@ module ref_wires() {
     wire([-box_w/2 + wall + 11.5, usb_y + s * 3, usb_z - 1.4], [-30, -8, 36], [bx + 1, pb_xy[1] + 12 + s * 1.3, hz]);
   // top button -> board
   for (s = [-1, 1]) M(s < 0 ? "wire_green" : "wire_black")
-    wire([button_xy[0] + s * 3.5, button_xy[1], lid_top - 24], [6, -30, 30], [bx + 3 + s, pb_xy[1] - 4, hz]);
+    wire([button_xy[0] + s * 3.5, button_xy[1], lid_top - 24], [-30, -12, 24], [bx + 3 + s, pb_xy[1] - 4, hz]);
+  // alarm buttons -> board: two switch wires and two light wires each
+  for (i = [0:1], k = [0:3]) M(["wire_white", "wire_black", "wire_red", "wire_black"][k])
+    wire([alarm_xy[i][0] + (k % 2 ? 1 : -1) * 3.5, alarm_xy[i][1] + (k < 2 ? -3 : 3), lid_top - 24], [alarm_xy[i][0], -14, 22],
+         [bx + 6 + i * 6 + k * 1.3, pb_xy[1] + 10, hz]);
   // speaker -> amplifier -> board
   M("wire_red") wire([spk_xy[0] + 15, spk_xy[1], floor_top + 4], [-18, -44, 14], [-6.2, -49.5, floor_top + 7]);
   M("wire_black") wire([spk_xy[0] + 8, spk_xy[1] - 12, floor_top + 4], [-20, -54, 16], [-1.1, -49.5, floor_top + 7]);

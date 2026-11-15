@@ -4,6 +4,7 @@ import re
 pins = dict(re.findall(r'#define (PIN_\w+)\s+(\d+)', open(__import__('os').path.join(__import__('os').path.dirname(__file__), '..', 'firmware', 'src', 'pins.h')).read()))
 g = lambda k: int(pins[k])
 left = [
+  ("Alarm buttons (lit, 16 mm)", "#7d3cb5", [("Button 1", g("PIN_BTN_AL1")), ("Button 2", g("PIN_BTN_AL2")), ("Light 1 (via 220 Ω)", g("PIN_LED_AL1")), ("Light 2 (via 220 Ω)", g("PIN_LED_AL2"))], "Other button contact → GND · LED − → GND"),
   ("TM1637 projector display", "#c0392b", [("CLK", g("PIN_PROJ_CLK")), ("DIO", g("PIN_PROJ_DIO"))], "VCC → 3V3 · GND"),
   ("TM1637 front display", "#c0392b", [("CLK", g("PIN_TM_CLK")), ("DIO", g("PIN_TM_DIO"))], "VCC → 3V3 · GND"),
   ("Buttons (other leg to GND)", "#555", [("A · top snooze", g("PIN_BTN_A")), ("B · left side", g("PIN_BTN_B"))], "internal pull-ups, no resistors"),

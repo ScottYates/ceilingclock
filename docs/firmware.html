@@ -44,25 +44,24 @@
 <p><b><a href="demo/">Live demo</a>:</b> the actual firmware compiled to WebAssembly, running in your browser with simulated hardware. The page is the same one the clock serves. A control bar lets you fast-forward time, press the buttons and change the room light. Two differences from the real clock: it uses your browser's time zone, and it forgets everything when you reload.</p>
 <p><b>On your computer:</b> the <a href="https://github.com/ScottYates/ceilingclock/tree/main/firmware/sim">simulator</a> also builds as a normal Linux or Mac program, keeping its files in a folder. Run <code>pio pkg install</code> in <code>firmware/</code>, then <code>make run</code> in <code>firmware/sim/</code>, and open <a href="http://localhost:8080/">localhost:8080</a>.</p>
 
-<h2>Settings page</h2>
-<table><thead><tr><th>Setting</th><th>What it does</th></tr></thead><tbody>
-<tr><td>Right now</td><td>A live picture of the clock: the time as it reads on the ceiling, the projector module's own (mirrored) digits, the front display and the sound. It updates every second.</td></tr>
-<tr><td>Alarms (up to 8)</td><td>Time, days (none = one-time), sound, volume 0–21, fade-in seconds, snooze minutes, auto-stop minutes. Each alarm also has <b>Skip next</b> and <b>Ring now</b>.</td></tr>
-<tr><td>Stream or podcast alarm</td><td>Give an alarm a URL and it plays that instead of its sound file: an internet radio stream, a link to an MP3, or a <b>podcast feed</b>, in which case it plays the newest episode. The sound file becomes the <b>backup</b>: if the stream hasn't started within 25 seconds, the feed can't be read, or the stream drops out, the backup rings so you still wake up. The speaker panel shows the episode or station, and why a stream failed. <b>Preview stream</b> tries it out.</td></tr>
-<tr><td>Front display / projector mode</td><td><b>Always on</b>, <b>Always off</b> (fully dark), <b>Only at night</b>, <b>Only in daytime</b>, with separate day and night brightness (0–7 for both).</td></tr>
-<tr><td>Turn displays on while an alarm rings</td><td>Overrides "off" while an alarm is going off. Untick it to keep them dark.</td></tr>
-<tr><td>Night hours / light sensor</td><td>Choose the night window. You can also treat a dark room as night; the page shows the live sensor reading to help you set the threshold.</td></tr>
-<tr><td>Flip projection</td><td>A button on the main card that turns the ceiling picture upside down (180°), and back. Use it when the time reads upside down from where you lie. The same setting is <b>Upside down</b> under Projector, and the "Right now" picture turns with it.</td></tr>
-<tr><td>Mirror left/right, mirror top/bottom</td><td>Make the ceiling image read correctly. The lens and the projector's mirror flip the picture; the clock sends the projector display's digits pre-flipped to undo it.</td></tr>
-<tr><td>Sounds</td><td>Upload MP3, WAV, M4A/AAC, FLAC or OGG (about 9.9 MB of space). The built-in beep can't be deleted, so there's always a fallback.</td></tr>
-<tr><td>Time zone / NTP server</td><td>Defaults to US Central (<code>CST6CDT,M3.2.0,M11.1.0</code>) and pool.ntp.org. Other zones: <a href="https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv">POSIX TZ list</a>.</td></tr>
-<tr><td>Web password</td><td>Blank means no login. If set, the user name is <code>admin</code>.</td></tr>
+<h2>The clock's web page</h2>
+<p>Open <code>http://ceilingclock.local/</code> (or the clock's IP address) on your phone. Every change saves itself; there are no Save buttons.</p>
+<table><thead><tr><th>Screen</th><th>What's on it</th></tr></thead><tbody>
+<tr><td>Home</td><td>The time, as the front display shows it, and the next alarm. Your alarms, each with an on/off switch; alarms 1 and 2 are marked with the clock button that controls them. Switches for the front display and the ceiling projection. While an alarm rings, big <b>Snooze</b> and <b>Stop</b> buttons appear at the top.</td></tr>
+<tr><td>An alarm (tap it)</td><td>Time, repeat days (or Weekdays, Weekends, Every day, Once), name, sound, volume, and <b>Play</b> / <b>Ring now</b> to try it. Under <b>More</b>: an internet radio, MP3 or <b>podcast</b> link (a podcast plays its newest episode, and the sound becomes the backup if the link hasn't started within 25 seconds or drops out), fade-in, snooze length, how long it rings, and skipping the next one.</td></tr>
+<tr><td>Settings › Displays</td><td>For each display: <b>Always</b>, <b>Only at night</b>, <b>Only in daytime</b> or <b>Off</b>, with day and night brightness (0–7). <b>Light up while an alarm rings</b> overrides Off while an alarm goes off.</td></tr>
+<tr><td>Settings › Ceiling picture</td><td>A preview of the ceiling and of the projector display's own (mirrored) digits, and the three flips: mirror left to right, mirror top to bottom, turn upside down. Set them until the time reads right from your pillow.</td></tr>
+<tr><td>Settings › Night</td><td>The night hours, and optionally "the room is dark" from the light sensor, with its live reading.</td></tr>
+<tr><td>Settings › Sounds</td><td>Upload MP3, WAV, M4A/AAC, FLAC or OGG (about 9.9 MB of space). The built-in beep can't be deleted, so there's always a fallback.</td></tr>
+<tr><td>Settings › Time</td><td>24-hour clock, time zone by name (or any POSIX zone under Other), time server, and Sync the time now.</td></tr>
+<tr><td>Settings › Security and updates</td><td>An optional password (user name <code>admin</code>), firmware update from a .bin file, and the firmware version, IP address and Wi-Fi signal.</td></tr>
 </tbody></table>
 
 <h2>Buttons</h2>
 <table><thead><tr><th>Button</th><th>Press</th><th>While ringing</th><th>Hold</th></tr></thead><tbody>
-<tr><td>A (top)</td><td>Show the time for 15 s</td><td>Snooze</td><td>2 s: dismiss</td></tr>
-<tr><td>B (left side)</td><td>Front display off / on</td><td>—</td><td>3 s: projector off / on · 10 s: forget Wi-Fi</td></tr>
+<tr><td>Alarm 1, Alarm 2 (top, lit)</td><td>Switch that alarm on or off. On: the front display shows its time and the button lights for 3 s. Off: the display shows OFF and the button blinks twice. Otherwise the lights stay dark.</td><td>Stop (the alarm stays on for next time); the ringing alarm's button blinks</td><td>—</td></tr>
+<tr><td>A (top, snooze)</td><td>Show the time on the ceiling for 15 s, and light the buttons of the alarms that are on</td><td>Snooze</td><td>2 s: stop</td></tr>
+<tr><td>B (left side)</td><td>Front display off / on</td><td>—</td><td>3 s: ceiling projection off / on · 10 s: forget Wi-Fi</td></tr>
 </tbody></table>
 
 <h2>Troubleshooting</h2>

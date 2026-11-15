@@ -213,6 +213,7 @@ def power_debug():
     ]
 
 BANDS = {'10 kΩ': 'bands brown-black-orange, or brown-black-black-red on 5-band resistors; the BOJACK bag says 10KΩ',
+         '220 Ω': 'bands red-red-brown, or red-red-black-black on 5-band resistors',
 }
 def place_lines(parts):
     """One plain instruction per part on the breadboard, with this layout's hole names."""
@@ -226,6 +227,11 @@ def place_lines(parts):
             out.append(f'<b>Light sensor</b> (the round disc with a squiggly line on it): legs in <b>{c}{p[1]}</b> and <b>{c}{p[2]}</b>{where(p[3])}. Either way round.')
         elif p[0] == 'res_rail':
             out.append(f'<b>{p[3]} resistor</b> ({BANDS.get(p[3], "")}): one leg in <b>{MIRROR["a"]}{p[1]}</b>, the same row as the sensor\'s second leg; the other leg in the <b>{RAILNAME[p[2]]}</b> (the row by the blue line), at row {rrow(p[1] + 1)}{where(p[4])}. Either way round.')
+        elif p[0] == 'led':
+            c = MIRROR[p[3]]
+            out.append(f'<b>LED {p[5]}</b>: the <b>long leg (+)</b> in <b>{c}{p[1]}</b>, the short leg in <b>{c}{p[2]}</b>{where(p[4])}. This one has a right way round.')
+        elif p[0] == 'res_led':
+            out.append(f'<b>{p[3]} resistor</b> ({BANDS.get(p[3], "")}): one leg in <b>{MIRROR[p[5]]}{p[1]}</b>, the same row as the LED\'s short leg; the other in the <b>{RAILNAME[p[2]]}</b> at row {rrow(p[1] + 1)}{where(p[4])}. Either way round.')
         elif p[0] == 'res':
             c = MIRROR[p[3]]
             out.append(f'<b>{p[4]} resistor</b> ({BANDS.get(p[4], "")}): legs in <b>{c}{p[1]}</b> and <b>{c}{p[2]}</b>{where(p[5])}. Either way round.')
@@ -325,9 +331,34 @@ def build_steps():
          intro='For testing, use two small 4-legged push buttons; the 16 mm panel buttons go in later. Each one sits <b>across the gap</b> in the middle of the breadboard. Wire to <b>diagonally opposite legs</b>: that way it works whichever way round the button sits.'
                + X('', ' On the lower board the rows beside the ESP32 are taken, so the buttons go at the two ends.', ' They go in the free rows to the right of the ESP32.'),
          parts=[('button', bA[0], 'A', bA[1]), ('button', bB[0], 'B', bB[1])], wires=bw,
-         test='On the clock\'s page, press button <b>B</b>: the <b>Front display</b> button on the page flips between on and off. Now press B and keep holding it: 3 seconds after you pressed, <b>Projector</b> flips on the page (the page can take another second to show it). Let go after it flips; letting go sooner counts as a short press. (Button A snoozes an alarm; you\'ll try it later.)',
+         test='On the clock\'s page, press button <b>B</b>: the <b>Front display</b> switch flips between on and off. Now press B and keep holding it: 3 seconds after you pressed, the <b>Ceiling projection</b> switch flips (the page can take another second to show it). Let go after it flips; letting go sooner counts as a short press. (Button A snoozes an alarm; you\'ll try it later.)',
          fix=[('Nothing happens', f'Check the wires go to diagonally opposite legs ({legs}) and that the button straddles the gap.'),
               ('It acts as if always pressed', 'The button is turned so both wires land on legs that are always connected. Turn it 90°.')])
+
+    # alarm buttons: per alarm a push button across the gap (rows r, r+2), then its LED in rows r+3/r+4 of the
+    # bottom half with a 220 ohm resistor from the LED's short leg to the bottom - rail
+    if plug:
+        step(id='alarmbtn', title='Alarm buttons: test them later', time='0 min', mods=[], parts=[], wires=[],
+             need=['Nothing for now'],
+             intro='With the ESP32 across two boards, the free rows are taken by the first two buttons, so there\'s no room here for the two alarm buttons and their lights. Test them on the perfboard, or switch to the one-board layout at the top of this page.',
+             test='', fix=[], todo=['Test the alarm buttons on the perfboard (<a href="assembly.html#step-4">assembly step 4</a>), or use the one-board layout.'])
+    else:
+        r1, r2 = (49, 55) if one else (19, 25)
+        aw, ap = [], []
+        for k, (r, pin, led, col) in enumerate(((r1, 'PIN_BTN_AL1', 'PIN_LED_AL1', 'purple'), (r2, 'PIN_BTN_AL2', 'PIN_LED_AL2', 'cyan'))):
+            n = k + 1
+            ap += [('button', r, str(n), None), ('led', r + 3, r + 4, 'h', None, str(n)), ('res_led', r + 4, 'b-', '220 Ω', None, 'j')]
+            aw += [W_(col, esp(str(G(pin))), hl(r, 'a', note=f'alarm button {n}, top-left leg')),
+                   W_('gnd', hl(r + 2, 'j', note=f'alarm button {n}, bottom-right leg'), rl('b-', r + 2)),
+                   W_('brown' if k == 0 else 'grey', esp(str(G(led))), hl(r + 3, 'g', note=f'LED {n}\'s long leg'))]
+        step(id='alarmbtn', title='Alarm buttons and their lights', time='15 min', mods=[],
+             need=['2 more small push buttons', '2 LEDs, any colour', '2 × 220 Ω resistors'],
+             intro='In the finished clock these are two 16 mm buttons with a light inside: one switches alarm 1 on and off, the other alarm 2. On the breadboard a small push button and an ordinary LED stand in for each. The LED\'s <b>long leg is +</b>. The 220 Ω resistor limits its current; without it the LED and the ESP32 pin are overloaded.',
+             parts=ap, wires=aw,
+             test='Press alarm button <b>1</b>: the front display shows alarm 1\'s time, LED 1 lights for 3 seconds, and on the clock\'s page alarm 1\'s switch turns on. Press it again: the display shows <b>OFF</b> and LED 1 blinks twice. Do the same with button 2. Then press button <b>A</b> (snooze): the LEDs of the alarms that are on light up for 3 seconds.',
+             fix=[('Button does nothing', f'Check the wires go to diagonally opposite legs (rows {r1} and {r1 + 2}, {r2} and {r2 + 2}) and that the button straddles the gap.'),
+                  ('The page changes but the LED never lights', 'The LED is the wrong way round (long leg goes in the row with the wire from the ESP32), or the resistor isn\'t reaching the − rail.'),
+                  ('The LED is very bright, or the ESP32 resets', 'The resistor is missing or isn\'t 220 Ω. Check the bands.')])
 
     step(id='tm1637', title='Front display (TM1637)', time='5 min', mods=['tm1637'], parts=[],
          need=['TM1637 display'],
@@ -336,7 +367,7 @@ def build_steps():
                 W_('white', esp(str(G('PIN_TM_DIO'))), md('tm1637', 'DIO', 'display DIO')),
                 W_('3v3', md('tm1637', 'VCC', 'display VCC'), rl('t+', 4)),
                 W_('gnd', md('tm1637', 'GND', 'display GND'), rl('t-', 5))],
-         test='The display shows the time within a second. On the settings page, change the front display\'s brightness: it follows.',
+         test='The display shows the time within a second. Under <b>Settings › Displays</b> on the clock\'s page, move the front display\'s Day slider: it follows.',
          fix=[('Display stays blank', 'CLK and DIO swapped? VCC must go to the + rail (3.3 V).'),
               ('Shows 88:88 or garbage', 'A loose jumper: push each one firmly onto its pin.')])
 
@@ -347,8 +378,8 @@ def build_steps():
                 W_('white', esp(str(G('PIN_PROJ_DIO'))), md('proj', 'DIO', 'projector DIO')),
                 W_('3v3', md('proj', 'VCC', 'projector VCC'), rl('t+', 28)),
                 W_('gnd', md('proj', 'GND', 'projector GND'), rl('t-', 29))],
-         test='The display shows the time, <b>flipped</b>: the clock pre-flips the digits so they read correctly after the lens and mirror. Untick <b>Mirror left/right</b> and <b>Mirror top/bottom</b> in the projector settings to read it on the bench, then set them again once it projects. The <b>Right now</b> card on the page shows both what the module lights up and what the ceiling should read.',
-         fix=[('Display stays blank', 'Is the projector on? Its mode may be <b>Night only</b> or <b>Always off</b>: press <b>Show 15 s</b> on the page. Otherwise CLK and DIO are swapped, or VCC isn\'t on the + rail.'),
+         test='The display shows the time, <b>flipped</b>: the clock pre-flips the digits so they read correctly after the lens and mirror. Turn off <b>Mirror left to right</b> and <b>Mirror top to bottom</b> under <b>Settings › Ceiling picture</b> to read it on the bench, then set them again once it projects. That section shows both what the module lights up and what the ceiling should read.',
+         fix=[('Display stays blank', 'Is the projector on? Its setting may be <b>Only at night</b> or <b>Off</b>: press <b>Show the ceiling time for 15 seconds</b> under Settings › Ceiling picture. Otherwise CLK and DIO are swapped, or VCC isn\'t on the + rail.'),
               ('The front display changes instead', 'The two displays\' wires are crossed: the front one uses GPIO ' + str(G('PIN_TM_CLK')) + '/' + str(G('PIN_TM_DIO')) + ', the projector GPIO ' + str(G('PIN_PROJ_CLK')) + '/' + str(G('PIN_PROJ_DIO')) + '.')])
     L1, L2 = (45, 48) if one else (13, 16)
 
@@ -361,7 +392,7 @@ def build_steps():
          parts=[('ldr', L1, L2, sb), ('res_rail', L2, 't-', '10 kΩ', sb)],
          wires=[W_('3v3', rl('t+', L1), hl(L1, 'a', sb, 'one leg of the sensor')),
                 W_('pink', esp(str(G('PIN_LDR'))), hl(L2, 'd', sb, 'where sensor and resistor meet'))],
-         test='In the night settings, watch <b>sensor now</b> next to "Dark below". It goes up with a torch on the sensor and down when you cover it with a finger.',
+         test='Under <b>Settings › Night</b> on the clock\'s page, watch the light sensor reading under "Also when the room is dark". It goes up with a torch on the sensor and down when you cover it with a finger.',
          fix=[('Always about 0', f'The sensor leg isn\'t in row {L1} or the orange wire isn\'t on the + rail.'),
               ('Always about 4000 or more, even in a dim room', f'The ESP32 is seeing the full 3.3 V. Either the 10 kΩ resistor is missing or isn\'t reaching the − rail (one leg in the same row as the sensor\'s second leg, row {L2}; the other in the − rail by the blue line), or the pink wire is in the sensor\'s first row ({L1}, the 3.3 V side) instead of row {L2}.')])
 
@@ -521,6 +552,21 @@ def draw_step(S, k):
                 for i, bc in enumerate(('#8d5a2b', '#111', '#e67e22')):
                     p_.rect(mx - 5, my - 6 + i * 4.5, 10, 2.2, bc, rx=0)
                 p_.text(mx + 10, my + 4, f'{p[3]} resistor', 9.5, '#1f4e6e', 'start', 800, extra='stroke="#f3f1ea" stroke-width="3" paint-order="stroke"')
+            elif p[0] == 'led':
+                a, b = hole(p[1], p[3], p[4]), hole(p[2], p[3], p[4])
+                cx, cy = (a[0] + b[0]) / 2, a[1] - 13
+                p_.line(*a, cx - 2.5, cy + 5, '#888', 1.6); p_.line(*b, cx + 2.5, cy + 5, '#888', 1.4)
+                p_.rect(cx - 6, cy - 4, 12, 10, '#7dd87a', '#2e7d32', 2, 1.2)
+                p_.circle(cx, cy - 4, 6, '#7dd87a', '#2e7d32', 1.2)
+                p_.rect(cx - 5, cy - 3, 10, 7, '#7dd87a', rx=1)
+                p_.text(a[0] - 2, cy - 2, '+', 10, '#2e7d32', 'end', 800)
+            elif p[0] == 'res_led':
+                a, b = hole(p[1], p[5], p[4]), rail(p[2], p[1] + 1)
+                p_.line(*a, *b, '#888', 1.6)
+                mx, my = (a[0] + b[0]) / 2, (a[1] + b[1]) / 2
+                p_.rect(mx - 4, my - 8, 8, 16, '#d9c49a', '#9a8455', 3, 1.2)
+                for i, bc in enumerate(('#c0392b', '#c0392b', '#8d5a2b')):
+                    p_.rect(mx - 4, my - 5 + i * 3.6, 8, 1.8, bc, rx=0)
             elif p[0] == 'res':
                 a, b = hole(p[1], p[3], p[5]), hole(p[2], p[3], p[5])
                 p_.line(*a, *b, '#888', 1.6)
