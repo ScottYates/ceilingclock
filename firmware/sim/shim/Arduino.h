@@ -163,7 +163,8 @@ struct Hw {
   bool netOk = true;                  // simulated internet connection
   bool streamDrop = false;            // the demo page couldn't play the stream
   int ldr = 2000;
-  bool btnDown[2] = {false, false};   // A, B
+  bool btnDown[4] = {false, false, false, false};   // A, B, alarm 1, alarm 2
+  uint32_t alarmLed[2] = {0, 0};      // the alarm buttons' lights (10-bit PWM)
 };
 extern Hw hw;
 extern long timeOffset;

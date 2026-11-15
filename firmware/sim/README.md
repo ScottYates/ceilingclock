@@ -33,7 +33,7 @@ Differences in the browser: files are kept in memory (lost on reload), local tim
 | --- | --- |
 | `GET /sim/hw` | What the firmware is sending to each piece of hardware (each display's on/off, brightness and segments, audio) |
 | `POST /sim/time?add=600` | Fast-forward the clock by 600 seconds. Keep steps under 300 s when you want alarms to fire: the firmware treats bigger jumps as a clock correction |
-| `POST /sim/button?b=A&ms=150` | Press button A (top) or B (side) for that many milliseconds; `ms=2500` is a long press |
+| `POST /sim/button?b=A&ms=150` | Press button A (snooze), B (side), 1 or 2 (alarm buttons) for that many milliseconds; `ms=2500` is a long press. `/sim/hw` shows the alarm buttons' lights in `alarmLeds` |
 | `POST /sim/ldr?v=300` | Set the light-sensor reading (0–4095) |
 | `POST /sim/net?ok=0` | Turn the simulated internet off (`ok=1` on): streams stop and feeds can't be read, so the backup sound rings |
 | `POST /sim/streamfail` | Report that the stream couldn't be played (the browser demo sends this when its player fails) |

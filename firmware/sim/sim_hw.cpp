@@ -36,7 +36,7 @@ fs::FS LittleFS;
 namespace sim {
 Hw hw;
 long timeOffset = 0;
-static unsigned long btnUntil[2] = {0, 0};
+static unsigned long btnUntil[4] = {0, 0, 0, 0};
 }
 
 int Print::printf(const char* f, ...) {
@@ -84,7 +84,7 @@ void EspClass::restart() { printf("ESP.restart()\n"); exit(0); }
 // ---------------------------------------------------------------- GPIO
 void pinMode(int, int) {}
 int digitalRead(int pin) {
-  int i = pin == PIN_BTN_A ? 0 : pin == PIN_BTN_B ? 1 : -1;
+  int i = pin == PIN_BTN_A ? 0 : pin == PIN_BTN_B ? 1 : pin == PIN_BTN_AL1 ? 2 : pin == PIN_BTN_AL2 ? 3 : -1;
   if (i < 0) return HIGH;
   bool down = millis() < sim::btnUntil[i];
   sim::hw.btnDown[i] = down;
@@ -93,7 +93,10 @@ int digitalRead(int pin) {
 int analogRead(int) { return sim::hw.ldr; }
 void analogReadResolution(int) {}
 bool ledcAttach(int, int, int) { return true; }
-void ledcWrite(int, uint32_t) {}
+void ledcWrite(int pin, uint32_t duty) {
+  if (pin == PIN_LED_AL1) sim::hw.alarmLed[0] = duty;
+  if (pin == PIN_LED_AL2) sim::hw.alarmLed[1] = duty;
+}
 
 // ---------------------------------------------------------------- FreeRTOS
 #ifdef SIM_WASM
@@ -496,13 +499,15 @@ bool WebServer::simRoute(const std::string& path) {
     }
     j += ",\"audio\":{\"playing\":" + std::string(hw.audioPlaying ? "true" : "false") + ",\"vol\":" + std::to_string(hw.audioVol) +
          ",\"file\":\"" + jesc(hw.audioFile) + "\",\"url\":\"" + jesc(hw.audioUrl) + "\",\"seq\":" + std::to_string(hw.audioSeq) +
-         "},\"net\":" + (hw.netOk ? "true" : "false") + ",\"ldr\":" + std::to_string(hw.ldr) + "}";
+         "},\"alarmLeds\":[" + std::to_string(hw.alarmLed[0]) + "," + std::to_string(hw.alarmLed[1]) + "]" +
+         ",\"net\":" + (hw.netOk ? "true" : "false") + ",\"ldr\":" + std::to_string(hw.ldr) + "}";
     send(200, "application/json", String(j));
     return true;
   }
   if (path == "/sim/time") { sim::timeOffset += atol(arg("add").c_str()); if (hasArg("set")) sim::timeOffset = atol(arg("set").c_str()) - ::time(nullptr); send(200, "text/plain", "ok"); return true; }
   if (path == "/sim/button") {
-    int i = arg("b") == "B" ? 1 : 0;
+    String b = arg("b");
+    int i = b == "B" ? 1 : b == "1" ? 2 : b == "2" ? 3 : 0;
     long ms = hasArg("ms") ? atol(arg("ms").c_str()) : 150;
     sim::btnUntil[i] = millis() + ms;
     send(200, "text/plain", "ok"); return true;

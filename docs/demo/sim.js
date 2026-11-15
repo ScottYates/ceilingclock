@@ -150,7 +150,7 @@
     c.alarms[0].stream = url;
     request('POST', '/api/config', 'application/json', te.encode(JSON.stringify(c)));
     if (typeof load === 'function') await load();
-    note('Alarm 1 now plays the sample podcast. Press "Ring now" on it, or fast-forward to its time.');
+    note('Alarm 1 now plays the sample podcast. Open it and press "Ring now", or fast-forward to its time.');
   }
   async function forward(seconds) {
     await ready;
@@ -169,16 +169,18 @@
 #simbar .row>span:first-child{min-width:74px;color:#a8d8a8}
 #simbar button{background:#2f4a2f;color:#e8ffe8;border:1px solid #446a44;border-radius:7px;padding:5px 8px;font:inherit;cursor:pointer}
 #simbar button:active{background:#467046}#simbar input{accent-color:#7cc47c;width:120px}
+#simbar .simled{display:inline-block;width:9px;height:9px;border-radius:50%;background:#203020;margin-right:6px;vertical-align:0}#simbar .simled.on{background:#7dff6a;box-shadow:0 0 8px #7dff6a}
 #simclock{margin-left:auto;font-variant-numeric:tabular-nums;color:#a8d8a8;font-weight:400}
 body{padding-bottom:330px}`;
     document.head.appendChild(css);
     const intro = document.createElement('div'); intro.id = 'simintro';
-    intro.innerHTML = `<div><b>Live demo:</b> the real clock firmware, running in your browser (WebAssembly). Nothing touches a real clock, and everything resets when you reload. Use the controls at the bottom to fast-forward time and press the clock's buttons. Try: turn on an alarm a few minutes ahead, Save, then press +1 min and watch "Right now". Sounds really play. "Use sample podcast" makes the first alarm play a podcast; switch the internet off to hear the backup sound take over.</div>`;
+    intro.innerHTML = `<div><b>Live demo:</b> the real clock firmware, running in your browser (WebAssembly). Nothing touches a real clock, and everything resets when you reload. Use the controls at the bottom to fast-forward time and press the clock's buttons. Try: press <b>Alarm 1</b> below and watch its switch flip on the page, or set an alarm a few minutes ahead and press +1 min. Sounds really play. "Use sample podcast" makes the first alarm play a podcast; switch the internet off to hear the backup sound take over.</div>`;
     document.body.prepend(intro);
     const bar = document.createElement('div'); bar.id = 'simbar';
     bar.innerHTML = `<div class="in"><details open><summary>Simulator controls <span id="simclock"></span></summary>
 <div class="row"><span>Time</span><button data-f="60">+1 min</button><button data-f="600">+10 min</button><button data-f="3600">+1 hour</button></div>
-<div class="row"><span>Top button</span><button data-b="A&ms=150">Press</button><button data-b="A&ms=2300">Hold 2 s</button></div>
+<div class="row"><span>Alarm buttons</span><button data-b="1&ms=150"><i class="simled" id="simled0"></i>Alarm 1</button><button data-b="2&ms=150"><i class="simled" id="simled1"></i>Alarm 2</button></div>
+<div class="row"><span>Snooze</span><button data-b="A&ms=150">Press</button><button data-b="A&ms=2300">Hold 2 s</button></div>
 <div class="row"><span>Side button</span><button data-b="B&ms=150">Press</button><button data-b="B&ms=3300">Hold 3 s</button></div>
 <div class="row"><span>Room light</span>dark <input type="range" min="0" max="4095" value="2000" id="simldr"> bright</div>
 <div class="row"><span>Internet</span><button id="simnet">On</button><label style="display:inline-flex;gap:4px;align-items:center"><input type="checkbox" id="simsound" checked style="width:auto;margin:0"> Play sounds</label><button id="simsample">Use sample podcast</button></div>
@@ -204,10 +206,11 @@ body{padding-bottom:330px}`;
       await ready;
       const h = JSON.parse(td.decode(request('GET', '/sim/hw').body));
       syncSound(h.audio);
+      (h.alarmLeds || []).forEach((v, i) => { const e = document.getElementById('simled' + i); if (e) e.classList.toggle('on', v > 0); });
       const d = new Date(h.time * 1000), ahead = h.timeOffset;
       document.getElementById('simclock').textContent = '· clock ' + d.toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }) +
         (ahead ? ' (+' + Math.round(ahead / 60) + ' min)' : '');
-    }, 500);
+    }, 200);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', controls); else controls();
 })();

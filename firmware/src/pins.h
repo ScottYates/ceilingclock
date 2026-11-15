@@ -20,8 +20,16 @@
 #define PIN_SCL        2
 
 // Buttons (to GND, internal pull-ups)
-#define PIN_BTN_A      6   // top: snooze / hold = dismiss / peek
+#define PIN_BTN_A      6   // top: snooze / hold = stop; when quiet: show the time and which alarms are on
 #define PIN_BTN_B     14   // back: front display on/off, hold 3 s = projector on/off, hold 10 s = Wi-Fi reset
+
+// Alarm buttons: 16 mm momentary buttons with a built-in LED (red or green, the 3-6 V kind).
+// Button to GND (internal pull-up); LED + to the LED pin, LED - to GND. The lights only come on
+// briefly: after a press, when you press snooze to check, and while that alarm rings.
+#define PIN_BTN_AL1    8   // alarm 1 on/off
+#define PIN_BTN_AL2    9   // alarm 2 on/off
+#define PIN_LED_AL1   10
+#define PIN_LED_AL2   13
 
 // Light sensor: LDR from 3.3V to this pin, 10k from this pin to GND
 #define PIN_LDR        7

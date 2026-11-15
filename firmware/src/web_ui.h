@@ -2,197 +2,343 @@
 #include <Arduino.h>
 
 // Single-page settings UI served at http://ceilingclock.local/
+// Three screens: home (time, alarms, displays), one alarm's editor, and settings. Every change saves itself.
 static const char INDEX_HTML[] PROGMEM = R"rawliteral(<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10141c">
 <title>Ceiling Clock</title>
 <style>
-:root{--bg:#111316;--card:#1b1e23;--line:#2b3038;--fg:#e7e9ec;--mut:#8b939e;--acc:#ff8a3d;--ok:#4cc38a;--bad:#e5484d}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.4 system-ui,-apple-system,sans-serif}
-main{max-width:640px;margin:auto;padding:12px}
-h1{font-size:20px;margin:8px 0 12px}h2{font-size:15px;margin:0 0 10px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
-.big{font-size:44px;font-weight:600;font-variant-numeric:tabular-nums}
-.mut{color:var(--mut);font-size:13px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
-label{display:flex;flex-direction:column;font-size:12px;color:var(--mut);gap:3px}
-input,select{background:#0f1114;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:7px;font:inherit}
-input[type=number]{width:72px}input[type=time]{width:120px}
-button{background:#2a2f37;color:var(--fg);border:0;border-radius:8px;padding:9px 13px;font:inherit;cursor:pointer}
-button.p{background:var(--acc);color:#111;font-weight:600}button.d{background:transparent;color:var(--bad);border:1px solid #4a2a2c}
-.days{display:flex;gap:4px}.days span{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);cursor:pointer;user-select:none;font-size:13px}
-.days span.on{background:var(--acc);color:#111;border-color:var(--acc)}
-.alarm{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}.alarm:first-child{border:0;margin:0;padding:0}
-.sw{flex-direction:row;align-items:center;gap:6px;color:var(--fg);font-size:14px}
-#ringbar{display:none;background:var(--acc);color:#111}#ringbar button{background:#111;color:var(--fg)}
-.pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;background:#2a2f37}.pill.ok{background:#173a2b;color:var(--ok)}.pill.bad{background:#3d1d1f;color:var(--bad)}
-#live{display:grid;grid-template-columns:1.5fr 1fr;gap:12px}
-#live .lbl{font-size:12px;color:var(--mut);margin:0 0 4px}
-#ceil{width:100%;height:auto;border-radius:8px;background:#07080b;display:block}
-.panel2{background:#0f1114;border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:10px}
-#front svg,#modSvg{display:block;width:100%;height:auto}
-.vbar{height:6px;background:#2b3038;border-radius:3px;overflow:hidden;margin-top:6px}.vbar i{display:block;height:100%;background:var(--acc);width:0}
-@media(max-width:560px){#live{grid-template-columns:1fr}}
-#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#000;padding:8px 14px;border-radius:8px;display:none}
+:root{--bg:#10141c;--grp:#192030;--line:#273046;--fg:#e9edf4;--mut:#8b95aa;--on:#f5a524;--led:#ff4a35;--bad:#ff6b6b;--r:14px}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:520px;margin:auto;padding:12px 16px 40px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--on);outline-offset:2px}
+[hidden]{display:none!important}
+.top{display:flex;align-items:center;justify-content:space-between;min-height:44px}
+.top h1{font-size:17px;font-weight:600;margin:0}
+.link{background:none;border:0;color:var(--on);padding:10px 4px;font-size:16px}
+.back{padding-left:0}
+h2{font-size:15px;font-weight:500;color:var(--mut);margin:26px 4px 8px}
+.grp{background:var(--grp);border-radius:var(--r);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:52px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .grow{flex:1;min-width:0}
+.row small{display:block;color:var(--mut);font-size:13px;margin-top:1px}
+.tap{width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line)}
+.grp>.tap:first-child{border-top:0}
+.tap:active{background:#1f2738}
+.note{color:var(--mut);font-size:13px;margin:8px 4px 0}
+/* switch */
+.sw{position:relative;width:51px;height:31px;flex:none}
+.sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
+.sw i{position:absolute;inset:0;border-radius:31px;background:#3a4357;transition:background .15s}
+.sw i::after{content:"";position:absolute;left:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff;transition:transform .15s}
+.sw input:checked+i{background:var(--on)}.sw input:checked+i::after{transform:translateX(20px)}
+.sw input:focus-visible+i{outline:2px solid var(--on);outline-offset:2px}
+/* hero */
+.hero{padding:18px 0 4px}
+#face{display:block;width:100%;max-width:340px;height:auto}
+#date{color:var(--mut);margin-top:6px}
+#nextLine{margin-top:2px}
+#warn{color:var(--bad);font-size:14px;margin-top:6px}
+/* alarm list */
+.al .t{font-size:30px;font-weight:300;font-variant-numeric:tabular-nums;letter-spacing:-.5px;line-height:1.1}
+.al .t span{font-size:15px;margin-left:3px;color:var(--mut)}
+.al.off .t,.al.off .lbl{color:var(--mut)}
+.btn-tag{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:6px;padding:0 5px;margin-left:6px;color:var(--mut)}
+.add{width:100%;margin-top:10px;padding:13px;border:1px dashed var(--line);border-radius:var(--r);background:none;color:var(--on)}
+/* ringing */
+#ring{background:var(--on);color:#1a1205;border-radius:var(--r);padding:16px;margin-top:10px}
+#ring b{display:block;font-size:20px}
+#ring .acts{display:flex;gap:10px;margin-top:12px}
+#ring button{flex:1;padding:14px;border:0;border-radius:10px;font-weight:600;font-size:17px}
+#ring .snz{background:#1a1205;color:var(--on)}#ring .stp{background:#fff3dc;color:#1a1205}
+/* editor + settings fields */
+input[type=text],input[type=url],input[type=password],select,input[type=time]{background:#0f141e;border:1px solid var(--line);border-radius:10px;padding:9px 10px;min-width:0}
+.row input[type=text],.row input[type=url],.row input[type=password]{flex:1}
+.row select{max-width:60%}
+#eTime{font-size:44px;font-weight:300;padding:6px 10px;width:100%;text-align:center;color-scheme:dark;font-variant-numeric:tabular-nums}
+.days{display:flex;gap:6px;justify-content:space-between;width:100%}
+.days button{flex:1;aspect-ratio:1;max-width:44px;border-radius:50%;border:1px solid var(--line);background:none;font-size:14px}
+.days button.on{background:var(--on);border-color:var(--on);color:#1a1205;font-weight:600}
+.chips{display:flex;gap:6px;flex-wrap:wrap;width:100%}
+.chips button{flex:1;border:1px solid var(--line);background:none;border-radius:99px;padding:5px 6px;font-size:13px;color:var(--mut);white-space:nowrap}
+.chips button.on{color:var(--fg);border-color:var(--mut)}
+input[type=range]{flex:1;accent-color:var(--on);min-width:0}
+.val{min-width:40px;text-align:right;color:var(--mut);font-variant-numeric:tabular-nums}
+.pbtn{border:0;border-radius:10px;padding:9px 14px;background:#2a3346}
+.danger{color:var(--bad)}
+details>summary{list-style:none;cursor:pointer;padding:14px 16px;color:var(--on)}
+details>summary::-webkit-details-marker{display:none}
+details[open]>summary{border-bottom:1px solid var(--line)}
+.prev{display:grid;grid-template-columns:1.4fr 1fr;gap:10px;padding:12px 16px}
+.prev p{margin:0 0 4px;font-size:13px;color:var(--mut)}
+.prev svg{display:block;width:100%;height:auto;border-radius:8px}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#000c;color:#fff;padding:8px 14px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style></head><body><main>
-<h1>Ceiling Clock</h1>
 
-<div class="card" id="ringbar"><div class="row" style="justify-content:space-between">
-<b id="ringtxt">Alarm</b><span><button id="bSnz" onclick="act('snooze')">Snooze</button> <button onclick="act('dismiss')">Dismiss</button></span></div></div>
-
-<div class="card">
-<div class="big" id="clock">--:--</div>
-<div class="mut" id="date"></div>
-<div class="row"><span class="pill" id="sync">sync</span><span class="pill" id="rtc">RTC</span><span class="mut" id="next"></span></div>
-<div class="row">
-<button onclick="act('front')" id="bFront">Front display</button>
-<button onclick="act('proj')" id="bProj">Projector</button>
-<button onclick="act('flip').then(load)" id="bFlip">Flip projection</button>
-<button onclick="act('peek')">Show 15 s</button>
-<button onclick="act('resync')">Resync time</button></div>
-</div>
-
-<div class="card"><h2>Right now</h2>
-<div id="live">
- <div><p class="lbl" id="ceilLbl">On the ceiling</p><svg id="ceil" viewBox="0 0 336 192"></svg></div>
- <div>
-  <div class="panel2" id="front"><p class="lbl" id="frontLbl">Front display</p><svg viewBox="0 0 200 60" id="frontSvg"></svg></div>
-  <div class="panel2"><p class="lbl">Projector module (as wired, before the mirror)</p><svg viewBox="0 0 200 60" id="modSvg"></svg></div>
-  <div class="panel2"><p class="lbl">Sound</p><div id="spk">Silent</div><div class="vbar"><i id="vbar"></i></div></div>
+<!-- ============ home ============ -->
+<section id="vHome">
+ <div class="top"><h1>Ceiling Clock</h1><button class="link" onclick="go('settings')">Settings</button></div>
+ <div id="ring" hidden><b id="ringTxt">Alarm</b><span id="ringSub"></span>
+  <div class="acts"><button class="snz" id="bSnz" onclick="act('snooze')">Snooze</button><button class="stp" onclick="act('dismiss')">Stop</button></div></div>
+ <div class="hero">
+  <svg id="face" viewBox="0 0 200 60" role="img" aria-label="Current time"></svg>
+  <div id="date"></div>
+  <div id="nextLine"></div>
+  <div id="warn" hidden></div>
  </div>
-</div></div>
+ <h2>Alarms</h2>
+ <div class="grp" id="alarms"></div>
+ <button class="add" onclick="addAlarm()">Add alarm</button>
+ <p class="note">The two alarm buttons on the clock switch alarms 1 and 2 on and off.</p>
+ <h2>Displays</h2>
+ <div class="grp">
+  <div class="row"><div class="grow">Front display<small id="fSub"></small></div><label class="sw"><input type="checkbox" id="tFront" onchange="toggleDisp('front',this.checked)" aria-label="Front display"><i></i></label></div>
+  <div class="row"><div class="grow">Ceiling projection<small id="pSub"></small></div><label class="sw"><input type="checkbox" id="tProj" onchange="toggleDisp('proj',this.checked)" aria-label="Ceiling projection"><i></i></label></div>
+ </div>
+</section>
 
-<div class="card"><h2>Alarms</h2><div id="alarms"></div>
-<div class="row" style="margin-top:12px"><button onclick="addAlarm()">+ Add alarm</button><button class="p" onclick="save()">Save</button></div></div>
+<!-- ============ one alarm ============ -->
+<section id="vAlarm" hidden>
+ <div class="top"><button class="link back" onclick="go('')">‹ Alarms</button><button class="link" onclick="go('')">Done</button></div>
+ <input type="time" id="eTime" aria-label="Alarm time">
+ <p class="note" id="eBtn"></p>
+ <h2>Repeat</h2>
+ <div class="grp"><div class="row"><div class="days" id="eDays"></div></div>
+  <div class="row"><div class="chips" id="eChips"></div></div></div>
+ <h2>Alarm</h2>
+ <div class="grp">
+  <div class="row"><div class="grow">On</div><label class="sw"><input type="checkbox" id="eOn" aria-label="Alarm on"><i></i></label></div>
+  <div class="row"><span>Name</span><input type="text" id="eLabel" maxlength="40"></div>
+  <div class="row"><span>Sound</span><select id="eSound" class="grow" style="max-width:none"></select></div>
+  <div class="row"><span>Volume</span><input type="range" id="eVol" min="0" max="21"><span class="val" id="eVolV"></span></div>
+  <div class="row"><button class="pbtn" id="ePlay">Play</button><button class="pbtn" onclick="act('stop')">Stop</button><span class="grow"></span><button class="pbtn" id="eRing">Ring now</button></div>
+ </div>
+ <h2>More</h2>
+ <div class="grp"><details id="eMore"><summary>Internet radio, fade-in, snooze</summary>
+  <div class="row"><input type="url" id="eStream" placeholder="Internet radio, MP3 or podcast link (optional)"></div>
+  <div class="row" id="eStreamNote" hidden><small>Plays this link instead of the sound. A podcast plays its newest episode. If it hasn't started after 25 seconds, the sound above rings instead.</small></div>
+  <div class="row"><span class="grow">Fade in over</span><select id="eRamp"></select></div>
+  <div class="row"><span class="grow">Snooze for</span><select id="eSnooze"></select></div>
+  <div class="row"><span class="grow">Stop ringing after</span><select id="eMax"></select></div>
+  <div class="row"><div class="grow">Skip the next one<small>Then it carries on as usual</small></div><label class="sw"><input type="checkbox" id="eSkip" aria-label="Skip the next one"><i></i></label></div>
+ </details></div>
+ <div class="grp" style="margin-top:26px"><button class="row tap danger" onclick="delAlarm()">Delete alarm</button></div>
+</section>
 
-<div class="card"><h2>Displays</h2>
-<div class="row"><b style="width:100%">Front display</b>
-<label>Mode<select id="f_mode"></select></label>
-<label>Day brightness (0-7)<input type="number" min="0" max="7" id="f_day"></label>
-<label>Night brightness (0-7)<input type="number" min="0" max="7" id="f_night"></label></div>
-<div class="row"><b style="width:100%">Ceiling projector</b>
-<label>Mode<select id="p_mode"></select></label>
-<label>Day brightness (0-7)<input type="number" min="0" max="7" id="p_day"></label>
-<label>Night brightness (0-7)<input type="number" min="0" max="7" id="p_night"></label></div>
-<div class="row">
-<label class="sw"><input type="checkbox" id="mx">Mirror left/right</label>
-<label class="sw"><input type="checkbox" id="my">Mirror top/bottom</label>
-<label class="sw"><input type="checkbox" id="ud">Upside down (turn 180°)</label></div>
-<div class="mut" style="margin:-4px 0 8px">The lens and mirror flip the picture. Set these until the time reads correctly on the ceiling.</div>
-<div class="row"><label class="sw"><input type="checkbox" id="showAlarm">Turn displays on while an alarm rings</label></div>
-<div class="row"><b style="width:100%">Night</b>
-<label>Starts<input type="time" id="nStart"></label><label>Ends<input type="time" id="nEnd"></label>
-<label class="sw"><input type="checkbox" id="useLdr">Also when room is dark</label>
-<label>Dark below<input type="number" min="0" max="4095" id="ldrT"></label><span class="mut">sensor now: <span id="ldr">-</span></span></div>
-<div class="row"><button class="p" onclick="save()">Save</button></div></div>
+<!-- ============ settings ============ -->
+<section id="vSettings" hidden>
+ <div class="top"><button class="link back" onclick="go('')">‹ Clock</button><h1>Settings</h1><span style="width:60px"></span></div>
 
-<div class="card"><h2>Sounds</h2><div id="sounds"></div>
-<div class="row"><input type="file" id="upfile" accept=".mp3,.wav,.m4a,.aac,.flac,.ogg,.opus"><button onclick="upload()">Upload</button></div>
-<div class="mut" id="fs"></div></div>
+ <h2>Displays</h2>
+ <div class="grp">
+  <div class="row"><span class="grow">Front display</span><select id="sFMode"></select></div>
+  <div class="row"><span>Day</span><input type="range" min="0" max="7" id="sFDay"><span class="val" id="sFDayV"></span></div>
+  <div class="row"><span>Night</span><input type="range" min="0" max="7" id="sFNight"><span class="val" id="sFNightV"></span></div>
+ </div>
+ <div class="grp" style="margin-top:12px">
+  <div class="row"><span class="grow">Ceiling projection</span><select id="sPMode"></select></div>
+  <div class="row"><span>Day</span><input type="range" min="0" max="7" id="sPDay"><span class="val" id="sPDayV"></span></div>
+  <div class="row"><span>Night</span><input type="range" min="0" max="7" id="sPNight"><span class="val" id="sPNightV"></span></div>
+ </div>
+ <div class="grp" style="margin-top:12px">
+  <div class="row"><div class="grow">Light up while an alarm rings<small>Even if a display is switched off</small></div><label class="sw"><input type="checkbox" id="sShow" aria-label="Light up while an alarm rings"><i></i></label></div>
+ </div>
 
-<div class="card"><h2>Time &amp; system</h2>
-<div class="row"><label>Time zone (POSIX)<input id="tz" style="width:240px"></label><label>NTP server<input id="ntp"></label></div>
-<div class="row"><label class="sw"><input type="checkbox" id="h24">24-hour clock</label></div>
-<div class="row"><label>Web password (blank = none, user "admin")<input type="password" id="pw"></label></div>
-<div class="row"><button class="p" onclick="save()">Save</button></div>
-<div class="row"><label>Firmware update (.bin)<input type="file" id="fwfile" accept=".bin"></label><button onclick="fwUpdate()">Update</button></div>
-<div class="mut" id="sys"></div></div>
-</main><div id="toast"></div>
+ <h2>Ceiling picture</h2>
+ <div class="grp">
+  <div class="prev"><div><p>On the ceiling</p><svg id="ceil" viewBox="0 0 336 192"></svg></div><div><p>Projector display</p><svg id="modSvg" viewBox="0 0 200 60"></svg></div></div>
+  <div class="row"><span class="grow">Mirror left to right</span><label class="sw"><input type="checkbox" id="sMx" aria-label="Mirror left to right"><i></i></label></div>
+  <div class="row"><span class="grow">Mirror top to bottom</span><label class="sw"><input type="checkbox" id="sMy" aria-label="Mirror top to bottom"><i></i></label></div>
+  <div class="row"><span class="grow">Turn upside down</span><label class="sw"><input type="checkbox" id="sUd" aria-label="Turn upside down"><i></i></label></div>
+  <button class="row tap" onclick="act('peek')" style="color:var(--on)">Show the ceiling time for 15 seconds</button>
+ </div>
+ <p class="note">The lens and mirror flip the picture. Change these until the time reads right from your pillow.</p>
+
+ <h2>Night</h2>
+ <div class="grp">
+  <div class="row"><span class="grow">From</span><input type="time" id="sNStart"></div>
+  <div class="row"><span class="grow">Until</span><input type="time" id="sNEnd"></div>
+  <div class="row"><div class="grow">Also when the room is dark<small id="sLdrNow"></small></div><label class="sw"><input type="checkbox" id="sLdr" aria-label="Also when the room is dark"><i></i></label></div>
+  <div class="row" id="sLdrRow"><span>Dark below</span><input type="range" min="0" max="4095" step="25" id="sLdrT"><span class="val" id="sLdrTV"></span></div>
+ </div>
+ <p class="note">At night the displays and the alarm buttons' lights use their night brightness.</p>
+
+ <h2>Sounds</h2>
+ <div class="grp" id="sounds"></div>
+ <div class="grp" style="margin-top:12px"><label class="row tap" style="color:var(--on);cursor:pointer">Upload a sound (MP3 or WAV)<input type="file" id="upfile" accept=".mp3,.wav,.m4a,.aac,.flac,.ogg,.opus" hidden onchange="upload()"></label></div>
+ <p class="note" id="fs"></p>
+
+ <h2>Time</h2>
+ <div class="grp">
+  <div class="row"><span class="grow">24-hour clock</span><label class="sw"><input type="checkbox" id="sH24" aria-label="24-hour clock"><i></i></label></div>
+  <div class="row"><span>Time zone</span><select id="sTz" class="grow"></select></div>
+  <div class="row" id="sTzRow" hidden><input type="text" id="sTzCustom" placeholder="POSIX time zone, e.g. CST6CDT,M3.2.0,M11.1.0"></div>
+  <div class="row"><span>Time server</span><input type="text" id="sNtp"></div>
+  <button class="row tap" onclick="act('resync').then(()=>toast('Syncing time'))" style="color:var(--on)">Sync the time now</button>
+ </div>
+
+ <h2>Buttons on the clock</h2>
+ <div class="grp">
+  <div class="row"><div class="grow">Alarm 1 and Alarm 2<small>Press to switch that alarm on or off. The front display shows its time or OFF, and the button lights up for a moment. While an alarm rings, either one stops it.</small></div></div>
+  <div class="row"><div class="grow">Snooze (top)<small>Snoozes a ringing alarm; hold 2 s to stop it. Otherwise shows the time on the ceiling and lights the buttons of the alarms that are on.</small></div></div>
+  <div class="row"><div class="grow">Side button<small>Press: front display on or off. Hold 3 s: ceiling projection on or off. Hold 10 s: forget Wi-Fi.</small></div></div>
+ </div>
+
+ <h2>Security and updates</h2>
+ <div class="grp">
+  <div class="row"><span>Password</span><input type="password" id="sPw" placeholder="None" autocomplete="new-password"></div>
+  <label class="row tap" style="color:var(--on);cursor:pointer">Update firmware (.bin file)<input type="file" id="fwfile" accept=".bin" hidden onchange="fwUpdate()"></label>
+ </div>
+ <p class="note">With a password set, the page asks for user name admin and that password.</p>
+ <p class="note" id="sys"></p>
+</section>
+</main><div id="toast" role="status"></div>
 <script>
-const $=id=>document.getElementById(id);let C=null,S=[];const DN=['S','M','T','W','T','F','S'];
-const MODES=['Always on','Always off','Only at night','Only in daytime'];
-const toast=t=>{$('toast').textContent=t;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',2500)};
+const $=id=>document.getElementById(id);let C=null,S=[],ST=null,cur=-1;
+const DN=['S','M','T','W','T','F','S'],DNL=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MODES=[[0,'Always'],[2,'Only at night'],[3,'Only in daytime'],[1,'Off']];
+const TZ=[['Eastern (US)','EST5EDT,M3.2.0,M11.1.0'],['Central (US)','CST6CDT,M3.2.0,M11.1.0'],['Mountain (US)','MST7MDT,M3.2.0,M11.1.0'],['Arizona','MST7'],
+ ['Pacific (US)','PST8PDT,M3.2.0,M11.1.0'],['Alaska','AKST9AKDT,M3.2.0,M11.1.0'],['Hawaii','HST10'],['UK and Ireland','GMT0BST,M3.5.0/1,M10.5.0'],
+ ['Central Europe','CET-1CEST,M3.5.0,M10.5.0/3'],['Eastern Europe','EET-2EEST,M3.5.0/3,M10.5.0/4'],['UTC','UTC0']];
+let tt;const toast=t=>{const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('show'),2200)};
 const hm=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
-const mh=s=>{const[a,b]=s.split(':');return(+a)*60+(+b)};
+const mh=s=>{const[a,b]=(s||'0:0').split(':');return(+a)*60+(+b)};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 async function act(d,extra=''){await fetch('/api/action?do='+d+extra,{method:'POST'});poll()}
-function fmtT(ep){const d=new Date(ep*1000);return d.toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit',hour12:!C.hour24})}
-// ---- live view
+function clock12(h,m){if(C&&C.hour24)return[hm(h*60+m),''];return[(h%12||12)+':'+String(m).padStart(2,'0'),h<12?'AM':'PM']}
+function fmtWhen(ep){const d=new Date(ep*1000),n=new Date(ST?ST.now*1000:Date.now()),t=clock12(d.getHours(),d.getMinutes()).join(' ').trim();
+ const days=Math.round((new Date(d.getFullYear(),d.getMonth(),d.getDate())-new Date(n.getFullYear(),n.getMonth(),n.getDate()))/864e5);
+ return (days==0?'today':days==1?'tomorrow':DNL[d.getDay()])+' at '+t}
+function daysText(a){const d=a.days;if(!d)return'Once';if(d==127)return'Every day';if(d==62)return'Weekdays';if(d==65)return'Weekends';
+ return DNL.filter((_,b)=>d>>b&1).join(', ')}
+
+// ---- 7-segment drawing (TM1637 bit order; bit 0x80 of digit 1 is the colon)
 const SEG=[0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F];
 function segDigit(x,m,col,off){const P=[[4,0,26,5],[27,3,5,22],[27,30,5,22],[4,51,26,5],[0,30,5,22],[0,3,5,22],[4,25.5,26,5]];
  return P.map((p,i)=>`<rect x="${x+p[0]}" y="${4+p[1]}" width="${p[2]}" height="${p[3]}" rx="2" fill="${(m>>i)&1?col:off}"/>`).join('')}
-// four segment bytes (TM1637 bit order) drawn as a 200 x 60 display; bit 0x80 of digit 1 is the colon
 function segs4(g,col,off,bg){return `<rect width="200" height="60" rx="6" fill="${bg}"/>`+segDigit(14,g[0],col,off)+segDigit(52,g[1],col,off)+
  `<circle cx="99" cy="22" r="3" fill="${g[1]&0x80?col:off}"/><circle cx="99" cy="40" r="3" fill="${g[1]&0x80?col:off}"/>`+segDigit(114,g[2],col,off)+segDigit(152,g[3],col,off)}
-function drawFront(s,lv){const d=new Date(s.now*1000);let h=d.getHours(),m=d.getMinutes();const h24=C&&C.hour24;
- if(!h24){h%=12;if(!h)h=12}const on=lv.frontOn,col=`rgba(255,40,30,${0.35+0.65*lv.frontBright/7})`;
- const g=s.timeValid?[(h24||h>=10)?SEG[Math.floor(h/10)]:0,SEG[h%10]|0x80,SEG[Math.floor(m/10)],SEG[m%10]]:[0x40,0x40|0x80,0x40,0x40];
- $('frontSvg').innerHTML=segs4(on?g:[0,0,0,0],col,'#2a0d0d','#0a0505');
- $('frontLbl').textContent='Front display · '+(on?'on, brightness '+lv.frontBright+'/7':'off (dark)')}
-function drawCeil(s,lv){const on=lv.projOn,a=0.3+0.7*(lv.projBright||0)/7,col=`rgba(255,60,40,${a})`;
+function timeSegs(s){if(!s.timeValid)return[0x40,0xC0,0x40,0x40];const d=new Date(s.now*1000);let h=d.getHours(),m=d.getMinutes();const h24=C&&C.hour24;
+ if(!h24){h%=12;if(!h)h=12}return[(h24||h>=10)?SEG[Math.floor(h/10)]:0,SEG[h%10]|0x80,SEG[Math.floor(m/10)],SEG[m%10]]}
+function drawCeil(s){const lv=s.live||{},on=lv.projOn,a=0.3+0.7*(lv.projBright||0)/7,col=`rgba(255,74,53,${a})`;
  const t=(lv.timeSegs||[0,0,0,0]).slice();if(s.timeValid)t[1]|=0x80;
- $('ceil').innerHTML='<rect width="336" height="192" rx="8" fill="#07080b"/>'+(on?`<g transform="translate(18,46) scale(1.5)" style="filter:blur(1.2px)">${segs4(t,col,'rgba(0,0,0,0)','rgba(0,0,0,0)')}</g>`:
-  '<text x="168" y="100" fill="#4a4f57" font-size="15" text-anchor="middle" font-family="system-ui">Projector off</text>');
- $('modSvg').innerHTML=segs4(on?(lv.projSegs||[0,0,0,0]):[0,0,0,0],`rgba(255,40,30,${a})`,'#2a0d0d','#0a0505');
- const fl=[lv.mirrorX&&'mirrored left/right',lv.mirrorY&&'mirrored top/bottom',lv.upsideDown&&'turned 180°'].filter(Boolean).join(', ');
- $('ceilLbl').textContent='On the ceiling · '+(on?'brightness '+lv.projBright+'/7':'projector off');
- $('modSvg').previousElementSibling.textContent='Projector module, as it lights up'+(fl?' ('+fl+')':' (not flipped)')}
-function drawSpk(s,lv){const v=lv.vol||0,st=s.stream||{};let t;
- if(st.state=='connecting')t='Connecting to stream…';
- else if(s.playing)t=(s.ring=='ringing'?(s.source=='backup'?'Backup sound playing':s.source=='stream'?'Alarm stream playing':'Alarm sound playing'):'Preview playing')+(s.source=='stream'&&st.title?' · '+st.title:'')+' · volume '+v+'/21';
- else t=s.ring=='snoozed'?'Snoozed':s.ring=='idle'&&st.state=='failed'?'Stream failed: '+st.note:'Silent';
- if(s.source=='backup'&&st.note)t+=' (stream: '+st.note+')';
- $('spk').textContent=t;
- $('vbar').style.width=(s.playing?v/21*100:0)+'%'}
-function drawLive(s){if(!s.live)return;drawCeil(s,s.live);drawFront(s,s.live);drawSpk(s,s.live)}
-async function poll(){try{const s=await(await fetch('/api/state')).json();drawLive(s);
- const d=new Date(s.now*1000);
- $('clock').textContent=s.timeValid?d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit',hour12:C?!C.hour24:true}):'--:--';
- $('date').textContent=s.timeValid?d.toDateString():'Waiting for time';
- const ago=s.lastSync?Math.round((s.now-s.lastSync)/60):null;
- $('sync').textContent=ago===null?'not synced yet':'synced '+(ago<1?'just now':ago+' min ago');$('sync').className='pill '+(ago!==null&&ago<180?'ok':'bad');
- $('rtc').textContent=s.rtc?'RTC backup ok':'no RTC';$('rtc').className='pill '+(s.rtc?'ok':'bad');
- $('next').textContent=s.nextAt?'Next: '+s.nextLabel+' '+fmtT(s.nextAt):'No alarms set';
- $('bFront').textContent='Front display: '+(s.frontOn?'on':'off');$('bProj').textContent='Projector: '+(s.projOn?'on':'off');
- if(s.live)$('bFlip').textContent='Flip projection'+(s.live.upsideDown?' (now upside down)':'');
- $('ldr').textContent=s.ldr+(s.night?' (night)':'');
- $('ringbar').style.display=s.ring=='idle'?'none':'block';$('bSnz').style.display=s.ring=='ringing'?'':'none';
- $('ringtxt').textContent=s.ring=='ringing'?(s.ringLabel||'Alarm')+' ringing':'Snoozed until '+fmtT(s.snoozeUntil);
- $('fs').textContent='Storage: '+(s.fsUsed/1048576).toFixed(1)+' of '+(s.fsTotal/1048576).toFixed(1)+' MB used';
- $('sys').textContent='Firmware '+s.fw+(s.fwBuild?' (built '+s.fwBuild+')':'')+' · IP '+s.ip+' · Wi-Fi '+s.rssi+' dBm';
+ $('ceil').innerHTML='<rect width="336" height="192" rx="8" fill="#07090e"/>'+(on?`<g transform="translate(18,46) scale(1.5)" style="filter:blur(1.2px)">${segs4(t,col,'rgba(0,0,0,0)','rgba(0,0,0,0)')}</g>`:
+  '<text x="168" y="100" fill="#4a5266" font-size="16" text-anchor="middle" font-family="system-ui">Projection off</text>');
+ $('modSvg').innerHTML=segs4(on?(lv.projSegs||[0,0,0,0]):[0,0,0,0],`rgba(255,74,53,${a})`,'#2a0f0d','#0b0708')}
+
+// ---- screens
+function go(v){location.hash=v}
+function route(){const h=location.hash.slice(1);const m=h.match(/^alarm\/(\d+)$/);
+ $('vHome').hidden=!!h;$('vSettings').hidden=h!='settings';$('vAlarm').hidden=!m;
+ if(m&&C&&C.alarms[+m[1]]){cur=+m[1];fillEditor()}else{cur=-1;if(m)go('')}
+ if(h=='settings'&&C)fillSettings();if(!h&&C)renderHome();window.scrollTo(0,0)}
+window.addEventListener('hashchange',route);
+
+// ---- saving: every change goes to the clock a moment later
+let saveT=null,busy=0;
+function saveSoon(){clearTimeout(saveT);saveT=setTimeout(saveNow,400)}
+async function saveNow(){clearTimeout(saveT);saveT=null;busy++;
+ try{const r=await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(C)});
+  if(!r.ok){toast('Not saved: the clock didn\'t answer');return}
+  const n=await r.json();if(!saveT&&busy==1)C=n;toast('Saved')}
+ catch(e){toast('Not saved: the clock didn\'t answer')}finally{busy--}}
+
+// ---- home
+function renderHome(){
+ $('alarms').innerHTML=C.alarms.map((a,i)=>{const[t,ap]=clock12(a.hour,a.minute);
+  return `<div class="row al ${a.enabled?'':'off'}"><button class="grow" style="background:none;border:0;text-align:left;padding:0" onclick="go('alarm/${i}')" aria-label="Edit ${esc(a.label)}">
+  <div class="t">${t}<span>${ap}</span></div><small class="lbl">${a.label&&a.label!='Alarm'&&a.label!=daysText(a)?esc(a.label)+' · ':''}${daysText(a)}${a.skipNext&&a.enabled?' · skipping the next one':''}${i<2?`<span class="btn-tag">button ${i+1}</span>`:''}</small></button>
+  <label class="sw"><input type="checkbox" ${a.enabled?'checked':''} onchange="setOn(${i},this.checked)" aria-label="${esc(a.label)} on"><i></i></label></div>`}).join('')
+  ||'<div class="row"><span class="grow" style="color:var(--mut)">No alarms yet.</span></div>';
+ dispRow('front','tFront','fSub');dispRow('proj','tProj','pSub')}
+function dispRow(k,id,sub){const m=C[k].mode;$(id).checked=m!=1;$(sub).textContent=MODES.find(x=>x[0]==m)[1]}
+function setOn(i,v){C.alarms[i].enabled=v;if(v)C.alarms[i].skipNext=false;renderHome();saveNow()}
+async function toggleDisp(k,v){const m=C[k].mode;if((m!=1)!=v){await act(k=='front'?'front':'proj');C=await(await fetch('/api/config')).json();renderHome()}}
+function addAlarm(){if(C.alarms.length>=8)return toast('The clock holds up to 8 alarms');
+ C.alarms.push({enabled:true,hour:7,minute:0,days:62,skipNext:false,label:'Alarm',sound:'/sounds/beep.wav',stream:'',volume:12,rampSec:60,snoozeMin:9,maxRingMin:30});
+ saveNow();go('alarm/'+(C.alarms.length-1))}
+
+// ---- alarm editor
+const RAMP=[[0,'No fade-in'],[30,'30 seconds'],[60,'1 minute'],[120,'2 minutes'],[300,'5 minutes'],[600,'10 minutes']];
+const SNZ=[5,7,9,10,15,20,30].map(m=>[m,m+' minutes']),MAXR=[[5,'5 minutes'],[10,'10 minutes'],[15,'15 minutes'],[30,'30 minutes'],[60,'1 hour']];
+function opts(list,val){if(!list.some(x=>x[0]==val))list=[...list,[val,val+'']].sort((a,b)=>a[0]-b[0]);return list.map(x=>`<option value="${x[0]}" ${x[0]==val?'selected':''}>${x[1]}</option>`).join('')}
+function soundOpts(sel){return S.map(x=>`<option ${x.path==sel?'selected':''} value="${esc(x.path)}">${esc(x.path.replace('/sounds/','').replace(/\.[^.]+$/,''))}</option>`).join('')}
+function fillEditor(){const a=C.alarms[cur];
+ $('eTime').value=hm(a.hour*60+a.minute);$('eOn').checked=a.enabled;$('eLabel').value=a.label;
+ $('eSound').innerHTML=soundOpts(a.sound);$('eVol').value=a.volume;$('eVolV').textContent=Math.round(a.volume/21*100)+'%';
+ $('eStream').value=a.stream||'';$('eStreamNote').hidden=!a.stream;
+ $('eRamp').innerHTML=opts(RAMP,a.rampSec);$('eSnooze').innerHTML=opts(SNZ,a.snoozeMin);$('eMax').innerHTML=opts(MAXR,a.maxRingMin);
+ $('eSkip').checked=a.skipNext;$('eMore').open=!!a.stream;
+ $('eBtn').textContent=cur<2?'Alarm button '+(cur+1)+' on the clock switches this alarm on and off.':'';
+ drawDays()}
+function drawDays(){const a=C.alarms[cur];
+ $('eDays').innerHTML=DN.map((n,b)=>`<button class="${a.days>>b&1?'on':''}" aria-pressed="${!!(a.days>>b&1)}" aria-label="${DNL[b]}" onclick="C.alarms[cur].days^=${1<<b};drawDays();saveSoon()">${n}</button>`).join('');
+ $('eChips').innerHTML=[[62,'Weekdays'],[65,'Weekends'],[127,'Every day'],[0,'Once']].map(([d,n])=>`<button class="${a.days==d?'on':''}" onclick="C.alarms[cur].days=${d};drawDays();saveSoon()">${n}</button>`).join('')}
+function ed(id,fn,ev='change'){$(id).addEventListener(ev,e=>{if(cur<0)return;fn(C.alarms[cur],e.target);saveSoon()})}
+ed('eTime',(a,t)=>{const m=mh(t.value);a.hour=Math.floor(m/60);a.minute=m%60});
+ed('eOn',(a,t)=>{a.enabled=t.checked});
+ed('eLabel',(a,t)=>{a.label=t.value.trim()||'Alarm'});
+ed('eSound',(a,t)=>{a.sound=t.value});
+ed('eVol',(a,t)=>{a.volume=+t.value;$('eVolV').textContent=Math.round(a.volume/21*100)+'%'},'input');
+ed('eStream',(a,t)=>{a.stream=t.value.trim();$('eStreamNote').hidden=!a.stream});
+ed('eRamp',(a,t)=>{a.rampSec=+t.value});ed('eSnooze',(a,t)=>{a.snoozeMin=+t.value});ed('eMax',(a,t)=>{a.maxRingMin=+t.value});
+ed('eSkip',(a,t)=>{a.skipNext=t.checked});
+$('ePlay').onclick=()=>{const a=C.alarms[cur];act('test',(a.stream?'&stream='+encodeURIComponent(a.stream):'&sound='+encodeURIComponent(a.sound))+'&vol='+a.volume)};
+$('eRing').onclick=async()=>{await saveNow();act('ring','&id='+cur)};
+async function delAlarm(){if(!confirm('Delete this alarm?'))return;C.alarms.splice(cur,1);cur=-1;await saveNow();go('')}
+
+// ---- settings
+function fillSettings(){const mo=MODES.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('');
+ $('sFMode').innerHTML=mo;$('sPMode').innerHTML=mo;$('sFMode').value=C.front.mode;$('sPMode').value=C.proj.mode;
+ for(const[id,v]of[['sFDay',C.front.dayBright],['sFNight',C.front.nightBright],['sPDay',C.proj.dayBright],['sPNight',C.proj.nightBright]]){$(id).value=v;$(id+'V').textContent=v}
+ $('sShow').checked=C.showOnAlarm;$('sMx').checked=C.projMirrorX;$('sMy').checked=C.projMirrorY;$('sUd').checked=C.projUpsideDown;
+ $('sNStart').value=hm(C.nightStart);$('sNEnd').value=hm(C.nightEnd);$('sLdr').checked=C.useLdr;$('sLdrT').value=C.ldrThreshold;$('sLdrTV').textContent=C.ldrThreshold;$('sLdrRow').hidden=!C.useLdr;
+ $('sH24').checked=C.hour24;$('sNtp').value=C.ntp;$('sPw').value=C.webPassword||'';
+ const known=TZ.some(z=>z[1]==C.tz);$('sTz').innerHTML=TZ.map(z=>`<option value="${z[1]}">${z[0]}</option>`).join('')+'<option value="">Other…</option>';
+ $('sTz').value=known?C.tz:'';$('sTzRow').hidden=known;$('sTzCustom').value=C.tz;renderSounds()}
+function st(id,fn,ev='change'){$(id).addEventListener(ev,e=>{fn(e.target);saveSoon()})}
+st('sFMode',t=>C.front.mode=+t.value);st('sPMode',t=>C.proj.mode=+t.value);
+for(const[id,k,f]of[['sFDay','front','dayBright'],['sFNight','front','nightBright'],['sPDay','proj','dayBright'],['sPNight','proj','nightBright']])
+ st(id,t=>{C[k][f]=+t.value;$(id+'V').textContent=t.value},'input');
+st('sShow',t=>C.showOnAlarm=t.checked);st('sMx',t=>C.projMirrorX=t.checked);st('sMy',t=>C.projMirrorY=t.checked);st('sUd',t=>C.projUpsideDown=t.checked);
+st('sNStart',t=>C.nightStart=mh(t.value));st('sNEnd',t=>C.nightEnd=mh(t.value));
+st('sLdr',t=>{C.useLdr=t.checked;$('sLdrRow').hidden=!t.checked});st('sLdrT',t=>{C.ldrThreshold=+t.value;$('sLdrTV').textContent=t.value},'input');
+st('sH24',t=>C.hour24=t.checked);st('sNtp',t=>C.ntp=t.value.trim()||'pool.ntp.org');st('sPw',t=>C.webPassword=t.value);
+st('sTz',t=>{$('sTzRow').hidden=!!t.value;if(t.value)C.tz=t.value});st('sTzCustom',t=>{if(t.value.trim())C.tz=t.value.trim()});
+function renderSounds(){$('sounds').innerHTML=S.map(x=>{const n=x.path.replace('/sounds/','');return `<div class="row"><div class="grow">${esc(n.replace(/\.[^.]+$/,''))}<small>${(x.size/1024).toFixed(0)} KB</small></div>
+ <button class="pbtn" onclick="act('test','&vol=12&sound='+encodeURIComponent('${esc(x.path)}'))">Play</button><button class="pbtn" onclick="act('stop')">Stop</button>
+ ${n=='beep.wav'?'':`<button class="pbtn danger" onclick="delSound('${esc(n)}')" aria-label="Delete ${esc(n)}">Delete</button>`}</div>`}).join('')}
+async function loadSounds(){S=await(await fetch('/api/sounds')).json()}
+async function upload(){const f=$('upfile').files[0];if(!f)return;const fd=new FormData();fd.append('file',f,f.name);toast('Uploading '+f.name+'…');
+ const r=await fetch('/api/sounds',{method:'POST',body:fd});toast(r.ok?'Uploaded '+f.name:await r.text());$('upfile').value='';await loadSounds();renderSounds()}
+async function delSound(n){if(!confirm('Delete '+n+'?'))return;await fetch('/api/sounds/delete?name='+encodeURIComponent(n),{method:'POST'});await loadSounds();renderSounds()}
+async function fwUpdate(){const f=$('fwfile').files[0];if(!f)return;if(!confirm('Update the clock with '+f.name+'? It restarts afterwards.'))return;
+ const fd=new FormData();fd.append('fw',f,f.name);toast('Updating, keep the clock plugged in…');const r=await fetch('/update',{method:'POST',body:fd});toast(await r.text());$('fwfile').value=''}
+
+// ---- live state, once a second
+async function poll(){try{const s=await(await fetch('/api/state')).json();ST=s;
+ $('face').innerHTML=segs4(timeSegs(s),'#ff4a35','#1d151b','rgba(0,0,0,0)');
+ const d=new Date(s.now*1000);$('date').textContent=s.timeValid?d.toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'}):'Waiting for the time';
+ $('nextLine').textContent=s.nextAt?'Next alarm '+fmtWhen(s.nextAt):'No alarms on';
+ const ago=s.lastSync?(s.now-s.lastSync)/60:null,w=!s.timeValid?'The clock doesn\'t know the time yet. Check its Wi-Fi.':ago===null||ago>180?'The time hasn\'t synced for a while. Check the Wi-Fi.':'';
+ $('warn').hidden=!w;$('warn').textContent=w;
+ $('ring').hidden=s.ring=='idle';$('bSnz').hidden=s.ring!='ringing';
+ $('ringTxt').textContent=s.ring=='ringing'?(s.ringLabel||'Alarm'):'Snoozed';
+ $('ringSub').textContent=s.ring=='snoozed'?'Rings again '+fmtWhen(s.snoozeUntil):s.source=='stream'&&s.stream&&s.stream.title?s.stream.title:'';
+ if(C&&typeof s.alarmsOn=='number'&&!saveT&&!busy){let ch=false;C.alarms.forEach((a,i)=>{const on=!!(s.alarmsOn>>i&1);if(a.enabled!=on){a.enabled=on;ch=true}});
+  if(ch){if(!$('vHome').hidden)renderHome();if(cur>=0)$('eOn').checked=C.alarms[cur].enabled}}
+ if(!$('vSettings').hidden){drawCeil(s);$('sLdrNow').textContent='Light sensor reads '+s.ldr+' now (0 is dark)';
+  $('fs').textContent='Storage: '+(s.fsUsed/1048576).toFixed(1)+' of '+(s.fsTotal/1048576).toFixed(1)+' MB used';
+  const ago2=s.lastSync?Math.round((s.now-s.lastSync)/60):null;
+  $('sys').textContent='Firmware '+s.fw+(s.fwBuild?', built '+s.fwBuild:'')+'. IP '+s.ip+', Wi-Fi '+s.rssi+' dBm. Time '+(ago2===null?'not synced yet':'synced '+(ago2<1?'just now':ago2+' min ago'))+(s.rtc?', backup clock fitted.':', no backup clock.')}
 }catch(e){}}
-function soundOpts(sel){return S.map(x=>`<option ${x.path==sel?'selected':''} value="${x.path}">${x.path.replace('/sounds/','')}</option>`).join('')}
-function renderAlarms(){$('alarms').innerHTML=C.alarms.map((a,i)=>`<div class="alarm">
-<div class="row"><label class="sw"><input type="checkbox" ${a.enabled?'checked':''} onchange="C.alarms[${i}].enabled=this.checked">On</label>
-<input value="${a.label.replace(/"/g,'&quot;')}" oninput="C.alarms[${i}].label=this.value" style="flex:1">
-<input type="time" value="${hm(a.hour*60+a.minute)}" onchange="const m=mh(this.value);C.alarms[${i}].hour=Math.floor(m/60);C.alarms[${i}].minute=m%60"></div>
-<div class="row"><div class="days">${DN.map((n,b)=>`<span class="${a.days>>b&1?'on':''}" onclick="C.alarms[${i}].days^=${1<<b};renderAlarms()">${n}</span>`).join('')}</div>
-<span class="mut">${a.days?'':'One time'}</span></div>
-<div class="row"><label style="flex:1">Stream or podcast URL (optional)<input type="url" placeholder="https://… internet radio, MP3 link or podcast feed" value="${(a.stream||'').replace(/"/g,'&quot;')}" onchange="C.alarms[${i}].stream=this.value.trim();renderAlarms()"></label></div>
-${a.stream?'<div class="mut" style="margin:-4px 0 6px">Plays this instead of the sound file. A podcast feed plays its newest episode. If the stream hasn\'t started within 25 seconds or drops out, the backup sound rings instead.</div>':''}
-<div class="row"><label>${a.stream?'Backup sound':'Sound'}<select onchange="C.alarms[${i}].sound=this.value">${soundOpts(a.sound)}</select></label>
-<label>Volume (0-21)<input type="number" min="0" max="21" value="${a.volume}" onchange="C.alarms[${i}].volume=+this.value"></label>
-<label>Fade-in (s)<input type="number" min="0" max="1800" value="${a.rampSec}" onchange="C.alarms[${i}].rampSec=+this.value"></label></div>
-<div class="row"><label>Snooze (min)<input type="number" min="1" max="60" value="${a.snoozeMin}" onchange="C.alarms[${i}].snoozeMin=+this.value"></label>
-<label>Auto-stop (min)<input type="number" min="1" max="120" value="${a.maxRingMin}" onchange="C.alarms[${i}].maxRingMin=+this.value"></label></div>
-<div class="row"><button onclick="testSound(${i})">${a.stream?'Preview stream':'Preview sound'}</button><button onclick="act('stop')">Stop</button>
-<button onclick="save().then(()=>act('ring','&id=${i}'))">Ring now</button>
-<button onclick="save().then(()=>act('skip','&id=${i}')).then(load)">${a.skipNext?'Un-skip next':'Skip next'}</button>
-<button class="d" onclick="C.alarms.splice(${i},1);renderAlarms()">Delete</button></div></div>`).join('')||'<div class="mut">No alarms yet.</div>'}
-function addAlarm(){if(C.alarms.length>=8)return toast('Max 8 alarms');C.alarms.push({enabled:true,hour:7,minute:0,days:62,skipNext:false,label:'Alarm',sound:'/sounds/beep.wav',stream:'',volume:12,rampSec:60,snoozeMin:9,maxRingMin:30});renderAlarms()}
-function testSound(i){const a=C.alarms[i];act('test',(a.stream?'&stream='+encodeURIComponent(a.stream):'&sound='+encodeURIComponent(a.sound))+'&vol='+a.volume)}
-function fill(){const opt=MODES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');$('f_mode').innerHTML=opt;$('p_mode').innerHTML=opt;
- $('f_mode').value=C.front.mode;$('f_day').value=C.front.dayBright;$('f_night').value=C.front.nightBright;
- $('p_mode').value=C.proj.mode;$('p_day').value=C.proj.dayBright;$('p_night').value=C.proj.nightBright;
- $('mx').checked=C.projMirrorX;$('my').checked=C.projMirrorY;$('ud').checked=C.projUpsideDown;
- $('showAlarm').checked=C.showOnAlarm;$('nStart').value=hm(C.nightStart);$('nEnd').value=hm(C.nightEnd);
- $('useLdr').checked=C.useLdr;$('ldrT').value=C.ldrThreshold;
- $('tz').value=C.tz;$('ntp').value=C.ntp;$('h24').checked=C.hour24;$('pw').value=C.webPassword;renderAlarms()}
-function collect(){C.front={mode:+$('f_mode').value,dayBright:+$('f_day').value,nightBright:+$('f_night').value};
- C.proj={mode:+$('p_mode').value,dayBright:+$('p_day').value,nightBright:+$('p_night').value};
- C.projMirrorX=$('mx').checked;C.projMirrorY=$('my').checked;C.projUpsideDown=$('ud').checked;
- C.showOnAlarm=$('showAlarm').checked;C.nightStart=mh($('nStart').value);C.nightEnd=mh($('nEnd').value);
- C.useLdr=$('useLdr').checked;C.ldrThreshold=+$('ldrT').value;
- C.tz=$('tz').value.trim();C.ntp=$('ntp').value.trim();C.hour24=$('h24').checked;C.webPassword=$('pw').value}
-async function save(){collect();const r=await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(C)});
- if(r.ok){C=await r.json();fill();toast('Saved')}else toast('Save failed')}
-async function loadSounds(){S=await(await fetch('/api/sounds')).json();
- $('sounds').innerHTML=S.map(x=>`<div class="row" style="justify-content:space-between"><span>${x.path.replace('/sounds/','')} <span class="mut">${(x.size/1024).toFixed(0)} KB</span></span>
- <span><button onclick="act('test','&vol=12&sound='+encodeURIComponent('${x.path}'))">Play</button> <button onclick="act('stop')">Stop</button>
- ${x.path.endsWith('/beep.wav')?'':`<button class="d" onclick="delSound('${x.path.replace('/sounds/','')}')">Delete</button>`}</span></div>`).join('')}
-async function upload(){const f=$('upfile').files[0];if(!f)return;const fd=new FormData();fd.append('file',f,f.name);toast('Uploading…');
- const r=await fetch('/api/sounds',{method:'POST',body:fd});toast(r.ok?'Uploaded':await r.text());await loadSounds();renderAlarms()}
-async function delSound(n){if(!confirm('Delete '+n+'?'))return;await fetch('/api/sounds/delete?name='+encodeURIComponent(n),{method:'POST'});await loadSounds();renderAlarms()}
-async function fwUpdate(){const f=$('fwfile').files[0];if(!f)return;const fd=new FormData();fd.append('fw',f,f.name);toast('Updating, do not unplug…');
- const r=await fetch('/update',{method:'POST',body:fd});toast(await r.text())}
-async function load(){C=await(await fetch('/api/config')).json();await loadSounds();fill()}
+async function load(){C=await(await fetch('/api/config')).json();await loadSounds();route()}
 load().then(poll);setInterval(poll,1000);
 </script></body></html>)rawliteral";

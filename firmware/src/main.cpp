@@ -24,7 +24,7 @@
 #include "feed_scan.h"
 #include "net_fetch.h"
 
-#define FW_VERSION "2.0.0"   // bump on every release
+#define FW_VERSION "2.1.0"   // bump on every release
 #ifndef FW_BUILD
 #define FW_BUILD __DATE__ " " __TIME__   // set by build_stamp.py in PlatformIO builds
 #endif
@@ -37,6 +37,7 @@ struct LiveState {
   uint8_t projSegs[4] = {0, 0, 0, 0};   // what the projector's own display shows (mirrored)
   bool frontOn = false; uint8_t frontBright = 0;
   uint8_t vol = 0;
+  bool alarmLed[2] = {false, false};
 } live;
 
 // ---------------------------------------------------------------- hardware
@@ -397,13 +398,17 @@ void renderProj(const struct tm& lt, bool visible, uint8_t bright) {
 // (shown even when the display is switched off). Letters: P projector, d front display.
 const uint8_t LET_P = SEG_A | SEG_B | SEG_E | SEG_F | SEG_G, LET_d = SEG_B | SEG_C | SEG_D | SEG_E | SEG_G;
 const uint8_t LET_o = SEG_C | SEG_D | SEG_E | SEG_G, LET_n = SEG_C | SEG_E | SEG_G, LET_F = SEG_A | SEG_E | SEG_F | SEG_G;
+const uint8_t LET_O = SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F, LET_E = SEG_A | SEG_D | SEG_E | SEG_F | SEG_G;
 uint8_t frontMsg[4];
 uint32_t frontMsgUntil = 0, frontMsgSeq = 0;
+void showFront(const uint8_t m[4], uint32_t ms) {
+  memcpy(frontMsg, m, 4);
+  frontMsgUntil = millis() + ms;
+  frontMsgSeq++;
+}
 void flashFront(uint8_t who, bool on) {
   const uint8_t m[4] = {who, 0, LET_o, on ? LET_n : LET_F};
-  memcpy(frontMsg, m, 4);
-  frontMsgUntil = millis() + 1500;
-  frontMsgSeq++;
+  showFront(m, 1500);
 }
 
 void renderFront(const struct tm& lt, bool visible, uint8_t bright) {
@@ -445,7 +450,65 @@ struct Button {
   uint8_t pin; bool down = false; uint32_t t0 = 0, lastChange = 0; uint8_t longLevel = 0;
   explicit Button(uint8_t p) : pin(p) {}
 };
-Button btnA(PIN_BTN_A), btnB(PIN_BTN_B);
+Button btnA(PIN_BTN_A), btnB(PIN_BTN_B), btnAl[2] = {Button(PIN_BTN_AL1), Button(PIN_BTN_AL2)};
+
+// The alarm buttons' lights are dark except for short feedback:
+//   LS_SHOW   steady for a few seconds (the alarm is on)
+//   LS_OFF    two quick blinks, then dark (the alarm is now off)
+//   while that alarm rings: slow blink, so you can see which button stops it
+const uint8_t LED_PIN[2] = {PIN_LED_AL1, PIN_LED_AL2};
+enum LedShow : uint8_t { LS_DARK, LS_SHOW, LS_OFF };
+LedShow ledShow[2] = {LS_DARK, LS_DARK};
+uint32_t ledFrom[2] = {0, 0};
+void ledFeedback(int i, LedShow s) { ledShow[i] = s; ledFrom[i] = millis(); }
+
+void renderAlarmLeds(bool night) {
+  uint32_t ms = millis();
+  uint16_t full = night ? 120 : 1023;  // 10-bit PWM; dim at night
+  for (int i = 0; i < 2; i++) {
+    bool on = false;
+    uint32_t t = ms - ledFrom[i];
+    if (ringState == RS_RINGING && ringAlarm == i) on = (ms / 500) % 2 == 0;
+    else if (ledShow[i] == LS_SHOW) { on = t < 3000; if (!on) ledShow[i] = LS_DARK; }
+    else if (ledShow[i] == LS_OFF) { on = t < 800 && (t / 200) % 2 == 0; if (t >= 800) ledShow[i] = LS_DARK; }
+    uint16_t duty = on ? full : 0;
+    live.alarmLed[i] = on;
+    static uint16_t last[2] = {9999, 9999};
+    if (duty != last[i]) { ledcWrite(LED_PIN[i], duty); last[i] = duty; }
+  }
+}
+
+// The time of alarm i on the front display, e.g. " 6:30"
+void showAlarmTime(int i) {
+  uint8_t d[4];
+  seg::timeDigits(cfg.alarms[i].t.hour, cfg.alarms[i].t.minute, cfg.hour24, true, d);
+  d[1] |= seg::COLON;
+  showFront(d, 2500);
+}
+
+// Alarm button i: switch alarm i on or off. While an alarm rings, either button stops it (it stays on
+// for next time). Feedback: on = the alarm's time on the front display and the light on for 3 s;
+// off = "OFF" and two quick blinks.
+void alarmButton(int i) {
+  if (ringState != RS_IDLE) { dismiss(); ledFeedback(i, LS_DARK); return; }
+  if (i >= cfg.alarmCount) {           // no alarm set up for this button yet
+    const uint8_t m[4] = {LET_n, LET_o, LET_n, LET_E};
+    showFront(m, 2000);
+    ledFeedback(i, LS_OFF);
+    return;
+  }
+  AlarmTime& t = cfg.alarms[i].t;
+  t.enabled = !t.enabled;
+  t.skipNext = false;
+  saveConfig();
+  if (t.enabled) { showAlarmTime(i); ledFeedback(i, LS_SHOW); }
+  else { const uint8_t m[4] = {0, LET_O, LET_F, LET_F}; showFront(m, 2500); ledFeedback(i, LS_OFF); }
+}
+
+// Snooze button while nothing rings: light the buttons of the alarms that are on, for a quick check
+void showAlarmStatus() {
+  for (int i = 0; i < 2; i++) if (i < cfg.alarmCount && cfg.alarms[i].t.enabled) ledFeedback(i, LS_SHOW);
+}
 
 void toggleFront() {
   if (cfg.front.mode != DM_OFF) { prevFrontMode = cfg.front.mode; cfg.front.mode = DM_OFF; }
@@ -481,10 +544,12 @@ void handleButtons() {
   int a = pollButton(btnA, aLevels, 1);
   if (a == 1) {
     if (ringState == RS_RINGING) snooze();
-    else peekUntilMs = millis() + 15000;
+    else { peekUntilMs = millis() + 15000; showAlarmStatus(); }
   } else if (a == 2) {
     dismiss();
   }
+  static const uint32_t noLevels[] = {0};
+  for (int i = 0; i < 2; i++) if (pollButton(btnAl[i], noLevels, 0) == 1) alarmButton(i);
   int b = pollButton(btnB, bLevels, 2);
   if (b == 1) { toggleFront(); flashFront(LET_d, cfg.front.mode != DM_OFF); }
   else if (b == 2) { toggleProjector(); flashFront(LET_P, cfg.proj.mode != DM_OFF); }
@@ -527,6 +592,9 @@ void apiState() {
   if (i >= 0) { d["nextId"] = i; d["nextAt"] = (long long)when; d["nextLabel"] = cfg.alarms[i].label; }
   d["ldr"] = ldrRaw;
   d["night"] = nightNow;
+  int on = 0;
+  for (int k = 0; k < cfg.alarmCount; k++) if (cfg.alarms[k].t.enabled) on |= 1 << k;
+  d["alarmsOn"] = on;   // so the page notices the alarm buttons
   d["frontOn"] = displayVisible(cfg.front);
   d["projOn"] = displayVisible(cfg.proj);
   d["playing"] = soundPlaying();
@@ -553,6 +621,8 @@ void apiState() {
   lv["mirrorX"] = cfg.projMirrorX;
   lv["mirrorY"] = cfg.projMirrorY;
   lv["upsideDown"] = cfg.projUpsideDown;
+  JsonArray al = lv["alarmLeds"].to<JsonArray>();
+  for (int i = 0; i < 2; i++) al.add(live.alarmLed[i]);
   sendJson(d);
 }
 
@@ -714,6 +784,9 @@ void setup() {
   Serial.begin(115200);
   pinMode(PIN_BTN_A, INPUT_PULLUP);
   pinMode(PIN_BTN_B, INPUT_PULLUP);
+  pinMode(PIN_BTN_AL1, INPUT_PULLUP);
+  pinMode(PIN_BTN_AL2, INPUT_PULLUP);
+  for (int i = 0; i < 2; i++) { ledcAttach(LED_PIN[i], 5000, 10); ledcWrite(LED_PIN[i], 0); }
   analogReadResolution(12);
 
   front.setBrightness(2, true);
@@ -774,6 +847,7 @@ void loop() {
   serviceRing(now);
   if (testPlaying && !soundPlaying() && streamState != SS_CONNECTING) testPlaying = false;
 
+  renderAlarmLeds(nightNow);  // every pass: the blinks are faster than a frame
   static uint32_t lastFrame = 0;
   if (millis() - lastFrame >= 250) {
     lastFrame = millis();
