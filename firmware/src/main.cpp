@@ -24,7 +24,7 @@
 #include "feed_scan.h"
 #include "net_fetch.h"
 
-#define FW_VERSION "2.2.0"   // bump on every release
+#define FW_VERSION "2.2.1"   // bump on every release
 #ifndef FW_BUILD
 #define FW_BUILD __DATE__ " " __TIME__   // set by build_stamp.py in PlatformIO builds
 #endif
