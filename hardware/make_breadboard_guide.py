@@ -355,7 +355,7 @@ def build_steps():
              need=['2 more small push buttons', '2 LEDs, any colour', '2 × 220 Ω resistors'],
              intro='In the finished clock these are two 16 mm buttons with a light inside: one switches alarm 1 on and off, the other alarm 2. On the breadboard a small push button and an ordinary LED stand in for each. The LED\'s <b>long leg is +</b>. The 220 Ω resistor limits its current; without it the LED and the ESP32 pin are overloaded.',
              parts=ap, wires=aw,
-             test='Press alarm button <b>1</b>: the front display shows alarm 1\'s time, LED 1 lights for 3 seconds, and on the clock\'s page alarm 1\'s switch turns on. Press it again: the display shows <b>OFF</b> and LED 1 blinks twice. Do the same with button 2. Then press button <b>A</b> (snooze): the LEDs of the alarms that are on light up for 3 seconds.',
+             test='Press alarm button <b>1</b>: the front display shows <b>1 on</b> and then alarm 1\'s time, LED 1 lights for 3 seconds, and on the clock\'s page alarm 1\'s switch turns on. Press it again: the display shows <b>1 oF</b> and LED 1 blinks twice. Do the same with button 2. Then press button <b>A</b> (snooze): the LEDs of the alarms that are on light up for 3 seconds.',
              fix=[('Button does nothing', f'Check the wires go to diagonally opposite legs (rows {r1} and {r1 + 2}, {r2} and {r2 + 2}) and that the button straddles the gap.'),
                   ('The page changes but the LED never lights', 'The LED is the wrong way round (long leg goes in the row with the wire from the ESP32), or the resistor isn\'t reaching the − rail.'),
                   ('The LED is very bright, or the ESP32 resets', 'The resistor is missing or isn\'t 220 Ω. Check the bands.')])
@@ -978,6 +978,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <main>
 <h1>Breadboard test</h1>
 <p class="lead">Wire the clock's electronics up on a breadboard and check every part works, before you solder anything or print the case. You add one part at a time and test it, so if something doesn't work you know exactly where to look. No soldering is needed except for the parts that only come with solder pads or loose pins (the ESP32's headers, the USB-C breakout and the amplifier). Allow an evening.</p>
+<p class="warn" style="margin-top:0">Built your breadboard from an earlier version of this guide, with the Nokia LCD, the sunrise ring and the projector LED? <a href="rewire.html"><b>Rewire it for the current design</b></a>: what comes out, what moves, and the alarm buttons.</p>
 
 <h2>Where does the ESP32 go?</h2>
 <p>Pick one; the pictures and wire lists below change to match. Your ticks are kept separately for each.</p>
