@@ -29,8 +29,9 @@
 #define PIN_BTN_A      6   // top: snooze / hold = stop; when quiet: show the time and which alarms are on
 #define PIN_BTN_B     14   // back: front display on/off, hold 3 s = projector on/off, hold 10 s = Wi-Fi reset
 
-// Alarm buttons: 16 mm momentary buttons with a built-in LED (red or green, the 3-6 V kind).
-// Button to GND (internal pull-up); LED + to the LED pin, LED - to GND. The lights only come on
+// Alarm buttons: 16 mm momentary buttons with an LED inside (red or green), for example Adafruit 1440.
+// Button to GND (internal pull-up); LED pin -> 220 ohm -> LED +, LED - to GND (about 5 mA). Buttons sold with
+// a built-in resistor for 3-6 V go straight to the pin. The lights only come on
 // briefly: after a press, when you press snooze to check, and while that alarm rings.
 #define PIN_BTN_AL1    8   // alarm 1 on/off
 #define PIN_BTN_AL2    9   // alarm 2 on/off

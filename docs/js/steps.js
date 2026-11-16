@@ -51,14 +51,14 @@ export const STEPS = [
   {
     title: 'Build the electronics board',
     view: { visible: s3, highlight: ELEC, explode: 0.6, camera: [240, 320, 300], target: [25, 30, 25] },
-    html: `<p>Use a 70 × 50 mm perfboard. Follow the <a href="wiring.html">wiring page</a> for every connection.</p>
+    html: `<p>Use a 70 × 50 mm perfboard cut down to <b>70 × 40</b>: score across it with a knife along a row of holes, four rows in from one long edge, and snap it. The alarm buttons hang down just in front of it. Follow the <a href="wiring.html">wiring page</a> for every connection.</p>
 <ol>
 <li>Solder two rows of female headers so the ESP32-S3 board plugs in rather than being soldered. That way you can replace or reflash it easily.</li>
-<li>Add the 5 V and GND rails, the 100 µF capacitor by the amplifier, the 10 kΩ resistor for the light sensor, and the two 220 Ω resistors for the alarm buttons' lights.</li>
+<li>Add the 5 V and GND rails, the 100 µF capacitor by the amplifier, the 10 kΩ resistor for the light sensor, and the two 220 Ω resistors for the alarm buttons' lights. Keep the right-hand two thirds of the board's front edge (the edge toward the front of the clock) free of anything taller than 2.5 mm: the alarm buttons' bodies end just above it.</li>
 <li>The MAX98357A and DS3231 sit on the floor in front of the board, on short leads.</li>
 <li>Bring every off-board connection to a pin header along the board's left edge: both displays, speaker, buttons, LDR, power. The two alarm buttons' lights each need a 220 Ω resistor on the board, between the ESP32 pin (10 or 13) and the header. Then each wire plugs in during final assembly.</li>
 <li><b>Test before mounting:</b> ideally build it all on a breadboard first (see <a href="breadboard.html">Breadboard test</a>). At least flash the firmware (see <a href="firmware.html">Firmware</a>), check the web page loads and "Ring now" beeps.</li>
-<li>Press the board down onto the four corner pads (front right of the base) until the four hooks on its short edges click over it. To remove it, ease the hooks outward with a fingernail.</li></ol>`,
+<li>Press the board down onto the four corner pads (right half of the base), header side toward the back, until the four hooks on its short edges click over it. To remove it, ease the hooks outward with a fingernail.</li></ol>`,
   },
   {
     title: 'Projector display and its holder',
@@ -94,9 +94,9 @@ export const STEPS = [
     title: 'Lid and buttons',
     view: { visible: s7, highlight: ['lid', 'ref_button', 'ref_alarmbtns', 'ref_ldr', 'pins_asm'], explode: 0.3, camera: [300, 330, 400], target: [0, 60, 0] },
     html: `<ol>
-<li>Push the 16 mm snooze button through the middle hole near the front of the lid, and the two lit alarm buttons through the holes either side of it: <b>alarm 1 on the left</b>, alarm 2 on the right. Tighten the nuts.</li>
+<li>Push the 16 mm snooze button through the hole at the front left of the lid, and the two lit alarm buttons through the pair of holes at the front right, well away from snooze so a sleepy hand doesn't switch an alarm off: <b>alarm 1 on the left</b>, alarm 2 on the right. Tighten the nuts.</li>
 <li>Plug their leads onto the board's header: each alarm button has two switch wires and two light wires (the light's + goes to the 220 Ω resistor).</li>
-<li>Glue the LDR into the small hole at the front-right corner, with its face flush with the top.</li>
+<li>Glue the LDR into the small hole at the front-left corner, with its face flush with the top. (It's away from the alarm buttons, so their lights don't fool it.)</li>
 <li>Lay the lid on so the barrel and end cap sit in its cut-out. Lock it with a short pin in each of the three corners and a long pin through each of the end cap's two tabs: push the pin in with its wing head <b>along</b> the slot beside the hole, then turn the head a quarter turn either way until it lies <b>crosswise</b> and clicks.</li></ol>`,
   },
   {

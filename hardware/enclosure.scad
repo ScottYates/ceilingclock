@@ -87,9 +87,10 @@ lid_cut = [cap_x0 - 0.5, br_x1 + 0.5, ax_y - br_R - 0.5];   // x from, x to, y f
 blk_x = br_x1 + 0.5;                                       // right bearing block, x from here to the wall
 
 // other lid features
-button_xy = [-50, -35]; button_hole = 16.2;
-alarm_xy = [[-25, -35], [0, -35]];        // lit alarm buttons 1 and 2, right of snooze (the ESP32 is under the right half)
-ldr_xy = [60, -50];                      // clear of the corner pins and the barrel
+button_xy = [-50, -52]; button_hole = 16.2;
+alarm_xy = [[38, -52], [62, -52]];        // lit alarm buttons 1 and 2: front right, well away from snooze. Their
+                                          // bodies and tabs hang 27.5 mm below the lid, in front of the circuit board
+ldr_xy = [-70, -55];                     // front left: clear of the corner pins, button B, and the alarm buttons' lights
 // front display: TM1637 4-digit module. Set to "0.36" (42 x 24 mm board, default) or "0.56" (~50 mm display).
 tm_size = "0.36";
 tm_disp = tm_size == "0.56" ? [50.4, 19, 8] : [30.2, 14.2, 7.2];   // display face w, h, depth from the board
@@ -98,8 +99,9 @@ tm_w = tm_disp[0] + 1; tm_h = tm_disp[1] + 1; tm_z = 28;          // front windo
 tm_pcb_y = -box_d/2 + wall + tm_disp[2];                          // PCB plane (display face against the wall)
 // left side panel: USB-C power and button B
 usb_y = -8;  usb_z = 18;  btnb_y = -40;  btnb_z = 28;
-// circuit board: 70 x 50 mm perfboard resting on 4 pads, held by 4 snap hooks on its short edges
-pb_xy = [45, -27];  pb_size = [70, 50];  pb_boss_h = 12;
+// circuit board: a 70 x 50 mm perfboard cut down to 70 x 40 (14 rows), resting on 4 pads, held by 4 snap hooks on
+// its short edges. Its back edge stays clear of the bearing block; its front edge clears the alarm buttons' tabs.
+pb_xy = [45, -24.5];  pb_size = [70, 40];  pb_boss_h = 12;
 pb_top = feet_h + floor_t + pb_boss_h + 1.6;           // top surface of the board
 hook_t = 1.4;  hook_lip = 0.9;  hook_w = 8;  hook_dy = 12;
 // speaker (40 mm), facing down through the floor

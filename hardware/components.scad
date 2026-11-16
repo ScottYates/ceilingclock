@@ -94,12 +94,13 @@ module ref_window() M("acrylic_red") translate([-tm_w/2 + 0.2, -box_d/2, tm_z - 
 // ---------------------------------------------------------------- buttons
 module ref_button()  translate([button_xy[0], button_xy[1], lid_top]) button16(panel = lid_t);
 // lit alarm buttons: a 16 mm momentary button with an LED ring, shown lit green
-module button16lit(len = 18, panel = wall) {
-  M("black") { cylinder(d = 19, h = 2, $fn = 48); translate([0, 0, -len]) cylinder(d = 15.8, h = len, $fn = 40); }
-  M("led_green") translate([0, 0, 2]) difference() { cylinder(d = 14, h = 0.4, $fn = 40); translate([0, 0, -1]) cylinder(d = 10, h = 3, $fn = 40); }
-  M("alu") translate([0, 0, 2]) cylinder(d = 9.6, h = 0.3, $fn = 40);
-  M("metal_dark") translate([0, 0, -panel - 0.2 - 3]) cylinder(d = 22 / cos(30), h = 3, $fn = 6);
-  M("gold") for (s = [-1, 1], t = [-1, 1]) translate([s * 3.5 - 1, t * 3 - 0.3, -len - 6]) cube([2, 0.6, 6]);
+// 16 mm lit button, Adafruit 1440 and its R16 family (dimension drawing: cdn-shop.adafruit.com/datasheets/R16diagram.jpg):
+// 18 mm bezel, 13 mm cap standing 6.3 mm proud, body 22 mm below the panel's top face, then 5.5 mm tabs.
+module button16lit(len = 22, panel = wall) {
+  M("black") { cylinder(d = 18, h = 2, $fn = 48); translate([0, 0, -len]) cylinder(d = 15.6, h = len, $fn = 40); }
+  M("led_green") translate([0, 0, 2]) cylinder(d = 13, h = 4.3, $fn = 40);
+  M("black") translate([0, 0, -panel - 3]) cylinder(d = 21, h = 3, $fn = 40);          // plastic nut
+  M("gold") for (s = [-1, 1], t = [-1, 1]) translate([s * 3 - 0.3, t * 3 - 1, -len - 5.5]) cube([0.6, 2, 5.5]);
 }
 module ref_alarmbtns() for (p = alarm_xy) translate([p[0], p[1], lid_top]) button16lit(panel = lid_t);
 module ref_buttonB() translate([-box_w/2, btnb_y, btnb_z]) rotate([0, -90, 0]) button16();   // left side wall
@@ -123,10 +124,12 @@ module ref_perfboard() {
   }
   // female headers for the ESP32 board
   M("black") for (s = [-1, 1]) translate([pb_xy[0] - 22 * 2.54 / 2, pb_xy[1] + s * 11.43 - 1.27, pb_top]) female_header(22);
-  // 10 k for the light sensor, 100 uF for the amplifier, power terminal
-  translate([pb_xy[0] - 18, pb_xy[1] - 18.5, pb_top + 3]) resistor_2w(10);
-  translate([pb_xy[0] - 25, pb_xy[1] + 18.5, pb_top]) electrolytic(6.3, 11);
-  translate([pb_xy[0] + 18, pb_xy[1] - 22.5, pb_top]) screw_terminal(2);
+  // 100 uF for the amplifier in the front strip at the left (the alarm buttons hang just in front of the strip's right
+  // part, so keep it free of anything taller than 2.5 mm); 10 k for the light sensor and the two 220 R for the alarm
+  // lights in the back strip; power terminal at the left end between the header rows
+  translate([pb_xy[0] - 25, pb_xy[1] - 16.4, pb_top]) electrolytic(6.3, 11);
+  for (i = [0:2]) translate([pb_xy[0] - 8 + i * 14, pb_xy[1] + 16.4, pb_top + 2.5]) resistor_2w(8);
+  translate([pb_xy[0] - 26.4, pb_xy[1] - 5.5, pb_top]) rotate([0, 0, 90]) screw_terminal(2);   // between the header rows, left end
 }
 module ref_esp32() {
   L = 62.7; W = 25.4; z0 = pb_top + 8.5 + 2.5;      // its pin strips sit on top of the female headers
@@ -210,8 +213,8 @@ module ref_wires() {
     wire([button_xy[0] + s * 3.5, button_xy[1], lid_top - 24], [-30, -12, 24], [bx + 3 + s, pb_xy[1] - 4, hz]);
   // alarm buttons -> board: two switch wires and two light wires each
   for (i = [0:1], k = [0:3]) M(["wire_white", "wire_black", "wire_red", "wire_black"][k])
-    wire([alarm_xy[i][0] + (k % 2 ? 1 : -1) * 3.5, alarm_xy[i][1] + (k < 2 ? -3 : 3), lid_top - 24], [alarm_xy[i][0], -14, 22],
-         [bx + 6 + i * 6 + k * 1.3, pb_xy[1] + 10, hz]);
+    wire([alarm_xy[i][0] + (k % 2 ? 1 : -1) * 3, alarm_xy[i][1] + (k < 2 ? -3 : 3), lid_top - 27.5], [alarm_xy[i][0] - 25, -58, floor_top + 3],
+         [bx + 6 + i * 6 + k * 1.3, pb_xy[1] - 14, hz]);
   // speaker -> amplifier -> board
   M("wire_red") wire([spk_xy[0] + 15, spk_xy[1], floor_top + 4], [-18, -44, 14], [-6.2, -49.5, floor_top + 7]);
   M("wire_black") wire([spk_xy[0] + 8, spk_xy[1] - 12, floor_top + 4], [-20, -54, 16], [-1.1, -49.5, floor_top + 7]);
