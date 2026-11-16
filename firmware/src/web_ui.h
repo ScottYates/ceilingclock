@@ -189,9 +189,9 @@ details[open]>summary{border-bottom:1px solid var(--line)}
 
  <h2>Buttons on the clock</h2>
  <div class="grp">
-  <div class="row"><div class="grow">Alarm 1 and Alarm 2<small>Press: switch that alarm on (the front display shows "1 on", then its time, and the button lights for a moment) or off ("1 oF", two blinks). While an alarm rings, either one stops it. Holding longer does the same as a press.</small></div></div>
-  <div class="row"><div class="grow">Snooze (top)<small>While ringing: press to snooze ("SnoZ", then when it rings again); hold 2 s to stop ("StoP"). Otherwise: shows which alarms are on ("AL12" both, "AL1-" only alarm 1, "AL--" none), lights their buttons, and shows the time on the ceiling for 15 s.</small></div></div>
-  <div class="row"><div class="grow">Side button<small>Press: front display on or off ("d on" / "d oF"). Hold 3 s: ceiling projection on or off ("P on" / "P oF"). Keep holding to 10 s: forget the Wi-Fi and restart in setup mode ("rSEt").</small></div></div>
+  <div class="row"><div class="grow">Alarm 1 and Alarm 2<small>Press: switch that alarm on (the front display shows "1 on", then its time, and the button lights for a moment) or off ("1 oF", two blinks). While an alarm rings, either one stops it. Hold 2 s to set that alarm's time: "SEt1", then the time (24-hour) with the hours blinking. Snooze adds one, the side button takes one away (hold to go faster). Press the alarm button to move to the minutes, and again to save; that also switches the alarm on. Leave it 30 s to keep the old time ("CAnC").</small></div></div>
+  <div class="row"><div class="grow">Snooze (top)<small>While ringing: press to snooze ("SnoZ", then when it rings again); hold 2 s to stop ("StoP"). Otherwise: shows which alarms are on ("AL12" both, "AL1-" only alarm 1, "AL--" none), lights their buttons, and shows the time on the ceiling for 15 s. While setting an alarm: adds one.</small></div></div>
+  <div class="row"><div class="grow">Side button<small>Press: front display on or off ("d on" / "d oF"). Hold 3 s: ceiling projection on or off ("P on" / "P oF"). Keep holding to 10 s: forget the Wi-Fi and restart in setup mode ("rSEt"). While setting an alarm: takes one away.</small></div></div>
   <div class="row"><div class="grow">Messages<small>Changes made on this page show on the front display too, so the clock always says what just happened.</small></div></div>
  </div>
 

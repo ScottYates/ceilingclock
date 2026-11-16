@@ -413,6 +413,44 @@ def s_loop_hang(c):
     c.wait(lambda: ringing(c), 10, 'rings after the reset')
 
 
+
+# ---- setting an alarm's time from the clock's buttons
+def press(c, b, ms=150, gap=0.35):
+    c.post(f'/sim/button?b={b}&ms={ms}')
+    time.sleep(ms / 1000 + gap)
+
+
+def s_set_from_buttons(c):
+    """Hold alarm 1, change the time with snooze and the side button, save: it rings at the new time."""
+    c.start()
+    now = c.state()['now']
+    c.set_alarms([alarm(now + 6 * 3600, enabled=False)], hour24=True)
+    target = (now // 60 + 3) * 60                         # three minutes on, in hours and minutes
+    t = time.gmtime(target)
+    a0 = c.config()['alarms'][0]
+    press(c, '1', ms=2600, gap=1.3)                       # hold: set mode
+    dh = (t.tm_hour - a0['hour']) % 24
+    for _ in range(dh): press(c, 'A', gap=0.25)
+    press(c, '1')                                         # to the minutes
+    up = (t.tm_min - a0['minute']) % 60                   # the short way round: snooze up or the side button down
+    for _ in range(up if up <= 30 else 60 - up): press(c, 'A' if up <= 30 else 'B', gap=0.2)
+    press(c, '1', gap=0.5)                                # save
+    a = c.config()['alarms'][0]
+    assert (a['hour'], a['minute'], a['enabled']) == (t.tm_hour, t.tm_min, True), f'saved {a["hour"]}:{a["minute"]:02d} on={a["enabled"]}, wanted {t.tm_hour}:{t.tm_min:02d}'
+    ring_and_check(c, target, 'rings at the time set on the clock')
+
+
+def s_ring_while_setting(c):
+    """An alarm comes due while another alarm is being set on the clock: setting ends and it rings."""
+    c.start()
+    at = next_minute(c)
+    c.set_alarms([alarm(at), alarm(at + 7200, enabled=False)])
+    press(c, '2', ms=2600, gap=1.3)                       # setting alarm 2...
+    press(c, 'A')
+    ring_and_check(c, at, 'alarm 1 rings during setting')
+    assert c.config()['alarms'][1]['enabled'] is False, 'alarm 2 left as it was'
+
+
 SCENARIOS = {n[2:]: f for n, f in globals().items() if n.startswith('s_')}
 
 if __name__ == '__main__':

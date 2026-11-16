@@ -26,7 +26,7 @@
 #include "persist.h"
 #include <esp_task_wdt.h>
 
-#define FW_VERSION "2.3.2"   // bump on every release
+#define FW_VERSION "2.4.0"   // bump on every release
 #ifndef FW_BUILD
 #define FW_BUILD __DATE__ " " __TIME__   // set by build_stamp.py in PlatformIO builds
 #endif
@@ -495,6 +495,7 @@ void renderProj(const struct tm& lt, bool visible, uint8_t bright) {
 //   SnoZ          snoozed (then the time it rings again, and A or P)        StoP   alarm stopped
 //   AL12 / AL1- / AL-2 / AL--   which of alarms 1 and 2 are on (snooze button when nothing rings)
 //   FLIP          projection turned upside down    rSEt   Wi-Fi forgotten, restarting
+//   SEt1          setting alarm 1's time (hold its button); CAnC: left without saving
 const uint8_t LET_P = SEG_A | SEG_B | SEG_E | SEG_F | SEG_G, LET_d = SEG_B | SEG_C | SEG_D | SEG_E | SEG_G;
 const uint8_t LET_o = SEG_C | SEG_D | SEG_E | SEG_G, LET_n = SEG_C | SEG_E | SEG_G, LET_F = SEG_A | SEG_E | SEG_F | SEG_G;
 const uint8_t LET_O = SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F, LET_E = SEG_A | SEG_D | SEG_E | SEG_F | SEG_G;
@@ -533,6 +534,14 @@ void flashFront(uint8_t who, bool on) {
   showFront(m, 1500);
 }
 
+// Setting an alarm's time from the clock (hold its button): which alarm (-1 = not setting), which part
+// (0 = hours, 1 = minutes), the time being set, and when a button was last pressed.
+int setAlarm = -1;
+uint8_t setField = 0;
+int setH = 0, setM = 0;
+uint32_t setLastMs = 0, setStepMs = 0;
+const uint32_t SET_TIMEOUT_MS = 30000;
+
 void renderFront(const struct tm& lt, bool visible, uint8_t bright) {
   live.frontOn = visible;
   live.frontBright = bright;
@@ -549,6 +558,22 @@ void renderFront(const struct tm& lt, bool visible, uint8_t bright) {
     return;
   }
   frontMsgUntil = 0;
+  if (setAlarm >= 0) {   // setting an alarm: its time in 24-hour form, the part being set blinking
+    uint32_t ms = millis();
+    bool show = (ms / 400) % 2 == 0 || ms - setStepMs < 600;   // steady while it is being changed
+    uint8_t d[4];
+    seg::timeDigits(setH, setM, true, true, d);
+    d[1] |= seg::COLON;
+    if (!show) { d[setField * 2] = 0; d[setField * 2 + 1] &= seg::COLON; }
+    static uint8_t lastD[4] = {1, 1, 1, 1};
+    if (memcmp(d, lastD, 4) || lastKey != -3) {
+      front.setBrightness(max(bright, (uint8_t)3), true);
+      front.setSegments(d);
+      memcpy(lastD, d, 4);
+      lastKey = -3;
+    }
+    return;
+  }
   int key = visible ? (lt.tm_hour * 60 + lt.tm_min) * 8 + bright + (timeValid() ? 0 : 100000) : -1;
   if (key == lastKey) return;
   lastKey = key;
@@ -570,7 +595,7 @@ void renderFront(const struct tm& lt, bool visible, uint8_t bright) {
 
 // ---------------------------------------------------------------- buttons
 struct Button {
-  uint8_t pin; bool down = false; uint32_t t0 = 0, lastChange = 0; uint8_t longLevel = 0;
+  uint8_t pin; bool down = false; uint32_t t0 = 0, lastChange = 0, nextRepeat = 0; uint8_t longLevel = 0;
   explicit Button(uint8_t p) : pin(p) {}
 };
 Button btnA(PIN_BTN_A), btnB(PIN_BTN_B), btnAl[2] = {Button(PIN_BTN_AL1), Button(PIN_BTN_AL2)};
@@ -592,6 +617,7 @@ void renderAlarmLeds(bool night) {
     bool on = false;
     uint32_t t = ms - ledFrom[i];
     if (ringState == RS_RINGING && ringAlarm == i) on = (ms / 500) % 2 == 0;
+    else if (setAlarm == i) on = true;   // being set: steady, so you can see which alarm
     else if (ledShow[i] == LS_SHOW) { on = t < 3000; if (!on) ledShow[i] = LS_DARK; }
     else if (ledShow[i] == LS_OFF) { on = t < 800 && (t / 200) % 2 == 0; if (t >= 800) ledShow[i] = LS_DARK; }
     uint16_t duty = on ? full : 0;
@@ -701,9 +727,78 @@ int pollButton(Button& b, const uint32_t* levels, int nLevels) {
   return 0;
 }
 
+// ---------------------------------------------------------------- setting an alarm's time from the clock
+// Hold an alarm button 2 s: "SEt1", then the alarm's time (24-hour form) with the hours blinking. Snooze (top)
+// adds one, the side button takes one away; holding either repeats. A tap on the alarm button moves to the
+// minutes; the next tap saves, switches the alarm on, and shows "1 on" and the time. 30 s without a press
+// leaves it unchanged ("CAnC"). An alarm that starts ringing ends setting without saving.
+const uint8_t LET_C = SEG_A | SEG_D | SEG_E | SEG_F;
+void startSetting(int i) {
+  if (i >= cfg.alarmCount) { const uint8_t m[4] = {LET_n, LET_o, LET_n, LET_E}; showFront(m, 2000); ledFeedback(i, LS_OFF); return; }
+  setAlarm = i; setField = 0;
+  setH = cfg.alarms[i].t.hour; setM = cfg.alarms[i].t.minute;
+  setLastMs = millis(); setStepMs = 0;
+  btnA.longLevel = btnB.longLevel = 1;   // a press already under way doesn't count
+  const uint8_t m[4] = {LET_S, LET_E, LET_t, seg::DIGIT[(i + 1) % 10]};
+  showFront(m, 900);
+}
+void endSetting(bool save) {
+  int i = setAlarm;
+  setAlarm = -1;
+  if (i < 0) return;
+  if (!save) {
+    if (ringState == RS_IDLE) { const uint8_t m[4] = {LET_C, LET_A, LET_n, LET_C}; showFront(m, 1500); }
+    return;
+  }
+  AlarmTime& t = cfg.alarms[i].t;
+  bool wasOn = t.enabled;
+  t.hour = setH; t.minute = setM; t.enabled = true; t.skipNext = false;
+  saveConfig();
+  if (wasOn) {   // announceChanges() only speaks up when on/off changes: say it here
+    const uint8_t m[4] = {seg::DIGIT[(i + 1) % 10], 0, LET_o, LET_n};
+    showFront(m, 1200);
+    showClockTime(setH, setM, 2000);
+    ledFeedback(i, LS_SHOW);
+  }
+}
+void stepSetting(int dir) {
+  if (setField == 0) setH = (setH + dir + 24) % 24;
+  else setM = (setM + dir + 60) % 60;
+  setLastMs = setStepMs = millis();
+}
+// Snooze and the side button while setting: a step on each press, then repeats while held
+void setKey(Button& b, int dir) {
+  bool pressed = digitalRead(b.pin) == LOW;
+  uint32_t ms = millis();
+  if (pressed != b.down && ms - b.lastChange > 30) {
+    b.lastChange = ms;
+    b.down = pressed;
+    b.longLevel = 1;   // so letting go after setting ends isn't taken as a press
+    if (pressed) { stepSetting(dir); b.nextRepeat = ms + 600; }
+    return;
+  }
+  if (b.down && (int32_t)(ms - b.nextRepeat) >= 0) { stepSetting(dir); b.nextRepeat = ms + (setField ? 80 : 200); }
+}
+
 void handleButtons() {
   static const uint32_t aLevels[] = {2000};
   static const uint32_t bLevels[] = {3000, 10000};
+  static const uint32_t alLevels[] = {2000};
+  if (setAlarm >= 0) {
+    if (ringState != RS_IDLE) { endSetting(false); return; }
+    setKey(btnA, +1);
+    setKey(btnB, -1);
+    for (int i = 0; i < 2; i++) {
+      int r = pollButton(btnAl[i], alLevels, 1);
+      if (r == 1 && i == setAlarm) {
+        setLastMs = millis();
+        if (setField == 0) { setField = 1; setStepMs = 0; }
+        else endSetting(true);
+      }
+    }
+    if (setAlarm >= 0 && millis() - setLastMs > SET_TIMEOUT_MS) endSetting(false);
+    return;
+  }
   int a = pollButton(btnA, aLevels, 1);
   if (a == 1) {
     if (ringState == RS_RINGING) snooze();
@@ -711,8 +806,15 @@ void handleButtons() {
   } else if (a == 2) {
     dismiss();
   }
-  static const uint32_t noLevels[] = {0};
-  for (int i = 0; i < 2; i++) if (pollButton(btnAl[i], noLevels, 0) == 1) alarmButton(i);
+  for (int i = 0; i < 2; i++) {
+    int r = pollButton(btnAl[i], alLevels, 1);
+    if (r == 1) alarmButton(i);
+    else if (r == 2) {   // held 2 s: set its time (or, while an alarm rings, stop it like a tap)
+      if (ringState != RS_IDLE) { dismiss(); ledFeedback(i, LS_DARK); }
+      else startSetting(i);
+      if (setAlarm >= 0) return;
+    }
+  }
   int b = pollButton(btnB, bLevels, 2);
   if (b == 1) toggleFront();            // announceChanges() shows "d on" / "d oF"
   else if (b == 2) toggleProjector();   // "P on" / "P oF"

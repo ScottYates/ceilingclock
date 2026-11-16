@@ -67,7 +67,7 @@
   }
 
   const ready = (async () => {
-    const r = await fetch(new URL('ceilingclock.wasm?v=14', document.currentScript ? document.currentScript.src : location.href));
+    const r = await fetch(new URL('ceilingclock.wasm?v=15', document.currentScript ? document.currentScript.src : location.href));
     const { instance } = await WebAssembly.instantiate(await r.arrayBuffer(), { wasi_snapshot_preview1: wasi, env });
     X = instance.exports;
     X._initialize();
@@ -254,12 +254,12 @@
     bar.innerHTML = `<div class="in"><div class="hd">Simulator controls <span id="simclock"></span><button id="simtoggle" aria-expanded="true">Hide</button></div><div class="body">
 <div class="srow"><span>Time</span><button data-f="60">+1 min</button><button data-f="600">+10 min</button><button data-f="3600">+1 hour</button></div>
 <div class="srow"><span>Front display</span><svg id="simfront" viewBox="0 0 200 60" width="160" height="48" role="img" aria-label="Front display"></svg><span id="simdisp" class="hint"></span></div>
-<div class="srow"><span>Alarm buttons</span><button data-b="1&ms=150"><i class="simled" id="simled0"></i>Alarm 1: <b id="simal0">off</b></button><button data-b="2&ms=150"><i class="simled" id="simled1"></i>Alarm 2: <b id="simal1">off</b></button></div>
-<div class="srow"><span></span><span class="hint">Press: switch that alarm on (front display: 1 on, then its time) or off (1 oF). While an alarm rings: stop it. Holding longer does the same as a press. The dot is the button's light: like on the real clock, it lights only for a moment after a change, while that alarm rings, or when you press Snooze.</span></div>
+<div class="srow"><span>Alarm buttons</span><button data-b="1&ms=150"><i class="simled" id="simled0"></i>Alarm 1: <b id="simal0">off</b></button><button data-b="2&ms=150"><i class="simled" id="simled1"></i>Alarm 2: <b id="simal1">off</b></button><button data-b="1&ms=2300">Hold 1 for 2 s</button><button data-b="2&ms=2300">Hold 2 for 2 s</button></div>
+<div class="srow"><span></span><span class="hint">Press: switch that alarm on (front display: 1 on, then its time) or off (1 oF). While an alarm rings: stop it. Hold 2 s: set that alarm's time (SEt1, then the time with the hours blinking; Snooze adds one, the side button takes one away; press the alarm button to move to the minutes, and again to save and switch it on). The dot is the button's light: like on the real clock, it lights only for a moment after a change, while that alarm rings, or when you press Snooze.</span></div>
 <div class="srow"><span>Snooze (top)</span><button data-b="A&ms=150">Press</button><button data-b="A&ms=2300">Hold 2 s</button></div>
-<div class="srow"><span></span><span class="hint">While ringing: press snoozes (SnoZ, then when it rings again); hold 2 s stops (StoP). Otherwise a press shows which alarms are on (AL12, AL1-, AL-2, AL--) and the time on the ceiling.</span></div>
+<div class="srow"><span></span><span class="hint">While ringing: press snoozes (SnoZ, then when it rings again); hold 2 s stops (StoP). Otherwise a press shows which alarms are on (AL12, AL1-, AL-2, AL--) and the time on the ceiling. While setting an alarm: adds one.</span></div>
 <div class="srow"><span>Side button</span><button data-b="B&ms=150">Press</button><button data-b="B&ms=3300">Hold 3 s</button></div>
-<div class="srow"><span></span><span class="hint">Press: front display on or off (d on / d oF). Hold 3 s: ceiling projection on or off (P on / P oF). On the real clock, holding on to 10 s forgets the Wi-Fi and restarts in setup mode (rSEt).</span></div>
+<div class="srow"><span></span><span class="hint">Press: front display on or off (d on / d oF). Hold 3 s: ceiling projection on or off (P on / P oF). On the real clock, holding on to 10 s forgets the Wi-Fi and restarts in setup mode (rSEt). While setting an alarm: takes one away.</span></div>
 <div class="srow"><span>Room light</span>dark <input type="range" min="0" max="4095" value="2000" id="simldr"> bright</div>
 <div class="srow"><span>Internet</span><button id="simnet">On</button><label style="display:inline-flex;gap:4px;align-items:center"><input type="checkbox" id="simsound" checked style="width:auto;margin:0"> Play sounds</label><button id="simsample">Use sample podcast</button></div>
 <div class="srow"><span>Lens focus</span>down <input type="range" min="-5" max="5" step="0.5" value="0" id="simfocus"> up</div>
