@@ -22,10 +22,10 @@
 </main>
 <footer>Ceiling Clock · <a href="https://github.com/ScottYates/ceilingclock/blob/main/hardware/enclosure.scad">edit the model in OpenSCAD</a></footer>
 <script type="module">
-import { STEPS } from './js/steps.js?v=20261115b';
+import { STEPS } from './js/steps.js?v=20261115c';
 document.getElementById('steps').innerHTML = STEPS.map((s, i) => `
 <section class="step" id="step-${i + 1}">
-  <div><img src="img/step-${i + 1}.png" alt="3D view of step ${i + 1}: ${s.title}" loading="lazy">
+  <div><img src="img/step-${i + 1}.png?v=20261115c" alt="3D view of step ${i + 1}: ${s.title}" loading="lazy">
   <p style="margin:6px 0 0;font-size:.85rem"><a href="index.html#step=${i}">Open in 3D →</a></p></div>
   <div><div class="num">Step ${i + 1} of ${STEPS.length}</div><h2>${s.title}</h2>${s.html}</div>
 </section>`).join('');
