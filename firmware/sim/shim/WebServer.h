@@ -30,6 +30,9 @@ class WebServer {
   bool authenticate(const char* user, const char* pass);
   void requestAuthentication();
   HTTPUpload& upload() { return upload_; }
+  // The connecting computer (its address as the clock sees it): the request's peer on the PC, the page itself in the browser
+  struct Client { std::string ip; IPAddressSim remoteIP() const { IPAddressSim a; a.ip = ip; return a; } };
+  Client client() { return Client{clientIp_}; }
 
   // Runs one request through the firmware's handlers. The response is captured in resp*
   // (used by the browser build, where there are no sockets).
@@ -44,6 +47,7 @@ class WebServer {
                 const std::map<std::string, std::string>& headers);
   bool simRoute(const std::string& path);
   int port_, listen_ = -1, client_ = -1;
+  std::string clientIp_ = "127.0.0.1";
   bool sent_ = false;
   std::vector<Route> routes_;
   Handler notFound_;

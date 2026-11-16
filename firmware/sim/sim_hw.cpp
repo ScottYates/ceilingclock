@@ -586,8 +586,12 @@ void WebServer::begin() {
 
 void WebServer::handleClient() {
   if (listen_ < 0) return;
-  int fd = accept(listen_, nullptr, nullptr);
+  sockaddr_in peer{}; socklen_t plen = sizeof peer;
+  int fd = accept(listen_, (sockaddr*)&peer, &plen);
   if (fd < 0) return;
+  char ipbuf[INET_ADDRSTRLEN] = "0.0.0.0";
+  inet_ntop(AF_INET, &peer.sin_addr, ipbuf, sizeof ipbuf);
+  clientIp_ = ipbuf;
   timeval tv{3, 0}; setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof tv);
   std::string req; char buf[8192]; size_t hdrEnd = std::string::npos;
   while (hdrEnd == std::string::npos) {

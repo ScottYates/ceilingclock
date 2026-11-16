@@ -33,6 +33,8 @@ void configToJson(const Config& c, JsonDocument& doc) {
   doc["projUpsideDown"] = c.projUpsideDown;
   doc["showOnAlarm"] = c.showOnAlarm;
   doc["webPassword"] = c.webPassword;
+  JsonArray tr = doc["trusted"].to<JsonArray>();
+  for (int i = 0; i < c.trustedCount; i++) tr.add(c.trusted[i]);
   JsonArray arr = doc["alarms"].to<JsonArray>();
   for (int i = 0; i < c.alarmCount; i++) {
     const AlarmCfg& a = c.alarms[i];
@@ -68,6 +70,15 @@ bool configFromJson(Config& c, JsonVariantConst v) {
   c.projUpsideDown = v["projUpsideDown"] | c.projUpsideDown;
   c.showOnAlarm = v["showOnAlarm"] | c.showOnAlarm;
   c.webPassword = v["webPassword"] | c.webPassword;
+  JsonArrayConst tr = v["trusted"];
+  if (!tr.isNull()) {
+    c.trustedCount = 0;
+    for (JsonVariantConst t : tr) {
+      String ip = t | "";
+      ip.trim();
+      if (ip.length() >= 7 && ip.length() <= 15 && c.trustedCount < Config::MAX_TRUSTED) c.trusted[c.trustedCount++] = ip;
+    }
+  }
   JsonArrayConst arr = v["alarms"];
   if (!arr.isNull()) {
     c.alarmCount = 0;

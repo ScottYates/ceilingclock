@@ -40,6 +40,10 @@ struct Config {
   bool projUpsideDown = false;    // turn the projected picture 180 degrees
   bool showOnAlarm = true;        // displays turn on while ringing even if set to off
   String webPassword = "";        // empty = no login (user name is "admin")
+  // Computers (by their address on the home network) that don't need the password: see authed() in main.cpp
+  static const int MAX_TRUSTED = 4;
+  String trusted[MAX_TRUSTED];
+  uint8_t trustedCount = 0;
   uint8_t alarmCount = 0;
   AlarmCfg alarms[MAX_ALARMS];
 };

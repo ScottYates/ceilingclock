@@ -26,7 +26,7 @@
 #include "persist.h"
 #include <esp_task_wdt.h>
 
-#define FW_VERSION "2.4.0"   // bump on every release
+#define FW_VERSION "2.5.0"   // bump on every release
 #ifndef FW_BUILD
 #define FW_BUILD __DATE__ " " __TIME__   // set by build_stamp.py in PlatformIO builds
 #endif
@@ -830,8 +830,16 @@ void handleButtons() {
 }
 
 // ---------------------------------------------------------------- web server
+// The address of the computer making this request, as the clock sees it on the home network
+String clientIp() { return server.client().remoteIP().toString(); }
+// A computer on the trusted list (Settings > Security) doesn't need the password; everyone else does
+bool trustedClient() {
+  String ip = clientIp();
+  for (int i = 0; i < cfg.trustedCount; i++) if (cfg.trusted[i] == ip) return true;
+  return false;
+}
 bool authed() {
-  if (cfg.webPassword.isEmpty()) return true;
+  if (cfg.webPassword.isEmpty() || trustedClient()) return true;
   if (server.authenticate("admin", cfg.webPassword.c_str())) return true;
   server.requestAuthentication();
   return false;
@@ -850,6 +858,7 @@ void apiState() {
   d["now"] = (long long)now;
   d["timeValid"] = timeValid();
   d["lastSync"] = (long long)lastNtpSync;
+  d["you"] = clientIp();  d["youTrusted"] = trustedClient();
   d["rtc"] = rtcPresent;
   d["ip"] = WiFi.localIP().toString();
   d["rssi"] = WiFi.RSSI();
@@ -1035,7 +1044,7 @@ void setupServer() {
             [] {
               HTTPUpload& up = server.upload();
               if (up.status == UPLOAD_FILE_START) {
-                if (!cfg.webPassword.isEmpty() && !server.authenticate("admin", cfg.webPassword.c_str())) return;
+                if (!cfg.webPassword.isEmpty() && !trustedClient() && !server.authenticate("admin", cfg.webPassword.c_str())) return;
                 Update.begin(UPDATE_SIZE_UNKNOWN);
               } else if (up.status == UPLOAD_FILE_WRITE) {
     feedWatchdog();

@@ -198,9 +198,12 @@ details[open]>summary{border-bottom:1px solid var(--line)}
  <h2>Security and updates</h2>
  <div class="grp">
   <div class="row"><span>Password</span><input type="password" id="sPw" placeholder="None" autocomplete="new-password"></div>
+  <div class="row"><div class="grow">Trusted computers<small>These don't need the password; every other phone or computer does. They're known by their address on your home network, so give each one a fixed address in your router.</small></div></div>
+  <div id="sTrust"></div>
+  <button class="row tap" id="sTrustMe" onclick="trustMe()" style="color:var(--on)" hidden></button>
   <label class="row tap" style="color:var(--on);cursor:pointer">Update firmware (.bin file)<input type="file" id="fwfile" accept=".bin" hidden onchange="fwUpdate()"></label>
  </div>
- <p class="note">With a password set, the page asks for user name admin and that password.</p>
+ <p class="note">With a password set, the page asks for user name admin and that password, except on a trusted computer.</p>
  <p class="note" id="sys"></p>
 </section>
 </main><div id="toast" role="status"></div>
@@ -320,7 +323,7 @@ function fillSettings(){const mo=MODES.map(x=>`<option value="${x[0]}">${x[1]}</
  $('sNStart').value=hm(C.nightStart);$('sNEnd').value=hm(C.nightEnd);$('sLdr').checked=C.useLdr;$('sLdrT').value=C.ldrThreshold;$('sLdrTV').textContent=C.ldrThreshold;$('sLdrRow').hidden=!C.useLdr;
  $('sH24').checked=C.hour24;$('sNtp').value=C.ntp;$('sPw').value=C.webPassword||'';
  const known=TZ.some(z=>z[1]==C.tz);$('sTz').innerHTML=TZ.map(z=>`<option value="${z[1]}">${z[0]}</option>`).join('')+'<option value="">Other…</option>';
- $('sTz').value=known?C.tz:'';$('sTzRow').hidden=known;$('sTzCustom').value=C.tz;renderSounds()}
+ $('sTz').value=known?C.tz:'';$('sTzRow').hidden=known;$('sTzCustom').value=C.tz;renderSounds();renderTrust()}
 function st(id,fn,ev='change'){$(id).addEventListener(ev,e=>{fn(e.target);saveSoon()})}
 st('sFMode',t=>C.front.mode=+t.value);st('sPMode',t=>C.proj.mode=+t.value);
 for(const[id,k,f]of[['sFDay','front','dayBright'],['sFNight','front','nightBright'],['sPDay','proj','dayBright'],['sPNight','proj','nightBright']])
@@ -330,6 +333,11 @@ st('sNStart',t=>C.nightStart=mh(t.value));st('sNEnd',t=>C.nightEnd=mh(t.value));
 st('sLdr',t=>{C.useLdr=t.checked;$('sLdrRow').hidden=!t.checked});st('sLdrT',t=>{C.ldrThreshold=+t.value;$('sLdrTV').textContent=t.value},'input');
 st('sH24',t=>C.hour24=t.checked);st('sNtp',t=>C.ntp=t.value.trim()||'pool.ntp.org');st('sPw',t=>C.webPassword=t.value);
 st('sTz',t=>{$('sTzRow').hidden=!!t.value;if(t.value)C.tz=t.value});st('sTzCustom',t=>{if(t.value.trim())C.tz=t.value.trim()});
+function renderTrust(){const t=C.trusted||[],me=ST&&ST.you;
+ $('sTrust').innerHTML=t.map((ip,i)=>`<div class="row"><div class="grow">${esc(ip)}${ip==me?'<small>This computer</small>':''}</div><button class="pbtn danger" onclick="untrust(${i})" aria-label="Stop trusting ${esc(ip)}">Remove</button></div>`).join('');
+ const b=$('sTrustMe');b.hidden=!me||t.includes(me)||t.length>=4;b.textContent='Trust this computer ('+(me||'')+')'}
+function trustMe(){C.trusted=[...(C.trusted||[]),ST.you];renderTrust();saveNow().then(()=>toast('This computer is trusted'))}
+function untrust(i){C.trusted.splice(i,1);renderTrust();saveSoon()}
 function renderSounds(){$('sounds').innerHTML=S.map(x=>{const n=x.path.replace('/sounds/','');return `<div class="row"><div class="grow">${esc(n.replace(/\.[^.]+$/,''))}<small>${(x.size/1024).toFixed(0)} KB</small></div>
  <button class="pbtn" onclick="act('test','&vol=12&sound='+encodeURIComponent('${esc(x.path)}'))">Play</button><button class="pbtn" onclick="act('stop')">Stop</button>
  ${n=='beep.wav'?'':`<button class="pbtn danger" onclick="delSound('${esc(n)}')" aria-label="Delete ${esc(n)}">Delete</button>`}</div>`}).join('')}
@@ -341,7 +349,7 @@ async function fwUpdate(){const f=$('fwfile').files[0];if(!f)return;if(!confirm(
  const fd=new FormData();fd.append('fw',f,f.name);toast('Updating, keep the clock plugged in…');const r=await fetch('/update',{method:'POST',body:fd});toast(await r.text());$('fwfile').value=''}
 
 // ---- live state, once a second
-async function poll(){try{const s=await(await fetch('/api/state')).json();ST=s;
+async function poll(){try{const s=await(await fetch('/api/state')).json();ST=s;if(C&&s.you&&!poll.me){poll.me=1;renderTrust()}
  $('face').innerHTML=segs4(timeSegs(s),'#ff4a35','#1d151b','rgba(0,0,0,0)');
  const d=new Date(s.now*1000);$('date').textContent=s.timeValid?d.toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'}):'Waiting for the time';
  $('nextLine').textContent=s.nextAt?'Next alarm '+fmtWhen(s.nextAt):'No alarms on';

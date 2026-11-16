@@ -8,7 +8,7 @@
 #define WIFI_STA 1
 #define WIFI_AP 2
 #define WL_DISCONNECTED 6
-struct IPAddressSim { String toString() const { return "127.0.0.1"; } };
+struct IPAddressSim { std::string ip = "127.0.0.1"; String toString() const { return String(ip.c_str()); } };
 struct WiFiClass {
   int status() { return sim::wifiLinked() ? WL_CONNECTED : WL_DISCONNECTED; }
   int getMode() { return sim::hw.portalActive ? (WIFI_STA | WIFI_AP) : WIFI_STA; }
