@@ -1,8 +1,8 @@
 # Usage: python3 hardware/make_rewire_guide.py
-# Writes docs/rewire.html: how to change a breadboard built from the old guide (firmware 1.x: Nokia 5110 LCD,
-# sunrise ring, projector LED and MOSFET) into the current one (second TM1637 as the projector, two alarm
-# buttons with lights), for the one-breadboard layout. The pictures use make_breadboard_guide.py's layout and
-# drawing code; the old parts sit where the old guide (commit 5269020) put them.
+# Writes docs/rewire.html: bringing a one-breadboard build made before firmware 2.0 up to date. Such a board
+# has the build guide's steps up to the amplifier; the old projector parts (Nokia LCD, sunrise ring, projector
+# LED) weren't wired. Added: the second TM1637 as the projector, and the two alarm buttons with lights. The
+# pictures use make_breadboard_guide.py's layout and drawing code.
 import os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -10,13 +10,6 @@ import make_breadboard_guide as g
 from make_breadboard_guide import W_, esp, hl, rl, md, esc, COL, COLNAME, MIRROR
 
 g.LAY = 'one'
-# the old modules, where the old guide drew them
-g.MODS.update({
-    'lcd':    (800, 30, 980, 175, 'left', ['RST', 'CE', 'DC', 'DIN', 'CLK', 'VCC', 'BL', 'GND'], '#b03030', 'Nokia 5110 LCD', ''),
-    'ring':   (800, 200, 980, 320, 'left', ['DI', '5V', 'GND'], '#1d1d1d', 'WS2812B ring', ''),
-    'mosfet': (800, 345, 980, 455, 'left', ['TRIG', 'GND', 'VIN+', 'VIN−', 'OUT+', 'OUT−'], '#2a6f9e', 'MOSFET module', ''),
-    'led':    (840, 490, 980, 570, 'left', ['LED +', 'LED −'], '#d39a00', '3 W LED star', 'on metal'),
-})
 G = g.G
 NEW = {s['id']: s for s in g.build_steps()}
 g.check_holes(list(NEW.values()))
@@ -25,35 +18,8 @@ def part(**k):
     k.setdefault('wires', []); k.setdefault('parts', []); k.setdefault('mods', [])
     return k
 
-# ---------------------------------------------------------------- the board as built from the old guide
-# (old pins: LCD RST 8, DC 9, CE 10, DIN 11, CLK 12; projector LED 13; ring 18)
-KEEP = [NEW[i] for i in ('power', 'buttons', 'tm1637', 'ldr', 'supply', 'amp')]   # unchanged since then
-LCD_GONE = part(wires=[W_('brown', esp('8'), md('lcd', 'RST', 'LCD RST')),
-                       W_('purple', esp('10'), md('lcd', 'CE', 'LCD CE')),
-                       W_('cyan', esp('9'), md('lcd', 'DC', 'LCD DC')),
-                       W_('gnd', md('lcd', 'BL', 'LCD BL'), rl('t-', 27))], mods=['lcd'])
-LCD_STAYS = part(wires=[W_('green', esp('11'), md('lcd', 'DIN', 'LCD DIN')),
-                        W_('yellow', esp('12'), md('lcd', 'CLK', 'LCD CLK')),
-                        W_('3v3', md('lcd', 'VCC', 'LCD VCC'), rl('t+', 28)),
-                        W_('gnd', md('lcd', 'GND', 'LCD GND'), rl('t-', 29))])
-RING = part(wires=[W_('green', esp('18'), hl(50, 'j', note='one end of the 330 Ω')),
-                   W_('green', hl(54, 'j', note='other end of the 330 Ω'), md('ring', 'DI', 'ring DI')),
-                   W_('5v', md('ring', '5V', 'ring 5V'), rl('b+', 27)),
-                   W_('gnd', md('ring', 'GND', 'ring GND'), rl('b-', 28))],
-            parts=[('res', 50, 54, 'h', '330 Ω', None), ('cap', 23, '1000 µF')], mods=['ring'])
-LED = part(wires=[W_('grey', esp('13'), md('mosfet', 'TRIG', 'module TRIG')),
-                  W_('gnd', md('mosfet', 'GND', 'module trigger GND'), rl('b-', 26)),
-                  W_('5v', md('mosfet', 'VIN+', 'module VIN+', None), rl('b+', 29), 'screw terminal–male'),
-                  W_('gnd', md('mosfet', 'VIN−', 'module VIN−', None), rl('b-', 25), 'screw terminal–male'),
-                  W_('5v', md('mosfet', 'OUT+', 'module OUT+', None), hl(56, 'a', note='one end of the 4.7 Ω'), 'screw terminal–male'),
-                  W_('5v', hl(60, 'a', note='other end of the 4.7 Ω'), md('led', 'LED +', 'LED +', None), 'male–soldered lead'),
-                  W_('gnd', md('led', 'LED −', 'LED −', None), md('mosfet', 'OUT−', 'module OUT−', None), 'soldered lead–screw terminal')],
-           parts=[('res', 56, 60, 'c', '4.7 Ω 2 W', None)], mods=['mosfet', 'led'])
-# the projector display, wired with the LCD's old jumpers: the green one stays on DIO
-PROJ = part(wires=[W_('yellow', esp(str(G('PIN_PROJ_CLK'))), md('proj', 'CLK', 'projector CLK')),
-                   W_('green', esp(str(G('PIN_PROJ_DIO'))), md('proj', 'DIO', 'projector DIO')),
-                   W_('3v3', md('proj', 'VCC', 'projector VCC'), rl('t+', 28)),
-                   W_('gnd', md('proj', 'GND', 'projector GND'), rl('t-', 29))], mods=['proj'])
+# ---------------------------------------------------------------- the board as it is (build guide up to the amplifier)
+KEEP = [NEW[i] for i in ('power', 'buttons', 'tm1637', 'ldr', 'supply', 'amp')]
 ALARM = NEW['alarmbtn']
 
 def merge(*xs): return part(wires=[w for x in xs for w in x['wires']], parts=[p for x in xs for p in x['parts']],
@@ -101,69 +67,41 @@ STEPS = []
 def step(sid, title, time, intro, pic, lists='', after='', test='', fix=(), warn=''):
     STEPS.append(dict(sid=sid, title=title, time=time, intro=intro, pic=pic, lists=lists, after=after, test=test, fix=fix, warn=warn))
 
-step('unplug', 'Unplug everything', '1 min',
-     'Unplug the USB cable from the computer and the 5 V adapter. Every change below is made with the power off.',
-     picture('rw-unplug', part(), merge(*KEEP, LCD_GONE, LCD_STAYS, RING, LED), badges=False),
-     after='<p class="mut">This is your board now, built from the old guide: the Nokia LCD, the sunrise ring and the projector LED on the right. Your ESP32 already runs the new firmware (2.3.0), which no longer uses the LCD, the ring or the LED.</p>')
+PROJ_NEW = part(wires=NEW['proj']['wires'], mods=['proj'])
+step('start', 'Your board now, and clearing space', '5 min',
+     'Your board has everything up to the amplifier from the <a href="breadboard.html">build guide</a>, on one breadboard: the front display, buttons A and B, the light sensor, the 5 V supply and the amplifier. The old projector parts (Nokia LCD, sunrise ring, projector LED) were never wired, so nothing has to come out. ESP32 pins 8 to 13 are free, and the right-hand end of the board (rows 49 to 60) is empty: that\'s where the new parts go.',
+     picture('rw-start', part(), merge(*KEEP), badges=False),
+     after='<ol class="todo"><li>Unplug the USB cable from the computer and the 5 V adapter.</li>'
+           '<li>Lift the computer\'s USB cable off the breadboard and lay it to the right of the ESP32\'s USB port, away from rows 25 to 60. It lies across the holes the alarm buttons and lights use.</li>'
+           '<li>If a loose wire runs from beside the ESP32 to a foil tab (a probe point from <a href="amp-test.html">testing the amplifier</a>), take it out. It isn\'t part of the clock.</li></ol>')
 
-step('ring', 'Take out the sunrise ring', '5 min',
-     'The sunrise light is gone from the design. Take out its four wires, the 330 Ω resistor and the big 1000 µF capacitor in the bottom rails. '
-     f'The resistor in row 50–54 sits exactly where the first alarm light goes in step 6.',
-     picture('rw-ring', merge(*KEEP, LCD_GONE, LCD_STAYS, LED), RING, remove=True),
-     lists=wire_list('rw-ring', RING['wires'], 'Pull out') +
-           f'<ol class="place"><li>Pull out the <b>330 Ω resistor</b> (orange-orange-brown) from <b>{MIRROR["h"]}50</b> and <b>{MIRROR["h"]}54</b>.</li>'
-           '<li>Pull out the <b>1000 µF capacitor</b> (the big blue one) from the bottom rails. The small <b>100 µF</b> one by the amplifier stays.</li>'
-           '<li>Put the ring away; it isn\'t used any more.</li></ol>',
-     fix=[('Two capacitors in the bottom rails: which is which?', 'The 1000 µF is the bigger one, at about row 23. The 100 µF that stays is at about row 19, next to the amplifier\'s wires.')])
-
-step('led', 'Take out the projector LED and its switch', '5 min',
-     'The projector no longer needs a lamp: the new projector display lights its own digits. Take out the MOSFET module, the 3 W LED and the 4.7 Ω resistor with their seven wires.',
-     picture('rw-led', merge(*KEEP, LCD_GONE, LCD_STAYS), LED, remove=True),
-     lists=wire_list('rw-led', LED['wires'], 'Take out') +
-           f'<ol class="place"><li>Pull out the <b>4.7 Ω 2 W resistor</b> (the big blue one) from <b>{MIRROR["c"]}56</b> and <b>{MIRROR["c"]}60</b>. It\'s next to where the second alarm button goes.</li>'
-           '<li>Unscrew the wires from the MOSFET module\'s terminals. Keep the module and LED for something else; the clock doesn\'t use them.</li></ol>',
-     fix=[('A wire is soldered to the LED star', 'Leave it on the star; just pull its other end out of the breadboard or terminal.')])
-
-step('lcd', 'Unplug the LCD', '5 min',
-     'The new projector display needs only two data wires: GPIO 12 and 11, the LCD\'s old CLK and DIN wires. They stay, along with its + and − wires. The other four come out: RST, CE and DC (GPIO 8, 10 and 9; the alarm buttons use those pins now) and the backlight wire.',
-     picture('rw-lcd', merge(*KEEP, LCD_STAYS), LCD_GONE, remove=True),
-     lists=wire_list('rw-lcd', LCD_GONE['wires'], 'Take out') +
-           '<p>Then pull the female ends of the other four wires (yellow CLK, green DIN, orange VCC, black GND) off the LCD\'s pins, and leave their other ends in the breadboard. Put the LCD away.</p>',
-     warn='Leave the yellow wire in the row of <b>pin 12</b> and the green one in the row of <b>pin 11</b>. Those two go to the new display in the next step.')
-
-step('proj', 'Fit the second TM1637 as the projector', '5 min',
-     'The projector is now a second four-digit display, the same kind as the front one. A lens in the clock images its digits onto the ceiling. It plugs onto the four wires the LCD had, with the breadboard ends where they already are.',
-     picture('rw-proj', merge(*KEEP), PROJ),
-     lists=wire_list('rw-proj', PROJ['wires'], 'Move', [
-         'from the LCD\'s <b>CLK</b> to the projector display\'s <b>CLK</b>. Its other end stays beside ESP32 pin 12.',
-         'from the LCD\'s <b>DIN</b> to the projector display\'s <b>DIO</b>. Its other end stays beside ESP32 pin 11. (The build guide draws this wire white; colour doesn\'t matter.)',
-         'from the LCD\'s <b>VCC</b> to the projector display\'s <b>VCC</b>. Its other end stays in the top + rail.',
-         'from the LCD\'s <b>GND</b> to the projector display\'s <b>GND</b>. Its other end stays in the top − rail.']),
-     after='<p>Plug the USB cable back into the computer (the 5 V adapter can wait).</p>',
+step('proj', 'Projector display (second TM1637)', '5 min',
+     NEW['proj']['intro'] + ' It needs four new female–male jumper wires.',
+     picture('rw-proj', merge(*KEEP), PROJ_NEW),
+     lists='<h3>Connect</h3>' + wire_list('rw-proj', PROJ_NEW['wires'], 'Add') +
+           '<p class="mut">The two data wires go in the holes in front of the yellow strip, beside pins 11 and 12. That\'s rows 17 (pin 11) and 18 (pin 12); counting back from the <b>5V</b> pin\'s hole, they\'re the 4th and 3rd. Wire colours don\'t matter; the pictures use the guide\'s.</p>',
+     after='<p>Plug the USB cable back into the computer.</p>',
      test=NEW['proj']['test'], fix=NEW['proj']['fix'],
-     warn='Don\'t swap the two displays\' wires: the front display stays on pins 4 and 5.')
+     warn='Don\'t mix up the two displays: the front one stays on pins 4 and 5.')
 
-step('alarm', 'Add the two alarm buttons and their lights', '15 min',
-     ALARM['intro'] + ' They go in the rows the ring\'s and LED\'s resistors used. Unplug the USB cable while you add them.',
-     picture('rw-alarm', merge(*KEEP, PROJ), ALARM),
+step('alarm', 'Alarm buttons and their lights', '15 min',
+     ALARM['intro'] + ' Unplug the USB cable while you add them.',
+     picture('rw-alarm', merge(*KEEP, PROJ_NEW), ALARM),
      lists='<h3>Place the parts</h3><ol class="place">' + ''.join(f'<li>{t}</li>' for t in ALARM['place']) + '</ol>'
            '<h3>Connect</h3>' + wire_list('rw-alarm', ALARM['wires'], 'Add'),
      test='Plug the USB cable back in. ' + ALARM['test'], fix=ALARM['fix'],
-     warn='Each wire to the ESP32 goes into the free hole beside the pin, in the column nearest you (the same column as every other ESP32 wire).')
+     warn='Rows 49 and 55 are next to the light sensor\'s resistor (row 48). Count carefully: the purple wire goes in row 49, not 48.')
 
-ALL = merge(*KEEP, PROJ, ALARM)
 FINAL = [s for s in g.build_steps() if s['id'] in ('power', 'buttons', 'alarmbtn', 'tm1637', 'proj', 'ldr', 'supply', 'amp')]
-final_lines = []
-for st in FINAL:
-    for w in (PROJ['wires'] if st['id'] == 'proj' else st['wires']): final_lines.append((st['title'], w))   # your green DIO wire
+final_lines = [(st['title'], w) for st in FINAL for w in st['wires']]
 final_wires = [w for _, w in final_lines]
 step('check', 'Check the whole board', '10 min',
-     'Everything on the board, as the current build guide has it. Go through the list once with the power off; tick each wire as you find it. Anything left over that isn\'t on the list (a stray wire in rows 23–29 of the rails, or in rows 49–60) should come out.',
-     picture('rw-check', part(), merge(*KEEP, PROJ, ALARM) | dict(wires=final_wires)),
+     'Everything on the board, as the build guide has it. Go through the list once with the power off and tick each wire as you find it. Your colours may differ (your amplifier wires are purple, blue and white, and the light sensor\'s wire is red); what matters is where each end goes.',
+     picture('rw-check', part(), merge(*KEEP, PROJ_NEW, ALARM) | dict(wires=final_wires)),
      lists=wire_list('rw-check', final_wires, 'Check', [f'<span class="mut">{esc(t)}</span><br>{w["ta"]} <span class="arr">→</span> {w["tb"]}' for t, w in final_lines]),
      test='Plug in the USB cable and the 5 V adapter. The front display shows the time; the projector display shows it flipped; '
           'alarm buttons 1 and 2 switch their alarms and their lights blink; button B switches the front display (hold 3 s for the projector); '
-          'button A shows which alarms are on; under <b>Sounds</b>, <b>Play</b> on beep.wav beeps four times.')
+          'button A lights the LEDs of the alarms that are on; under <b>Sounds</b>, <b>Play</b> on beep.wav beeps four times.')
 
 # ---------------------------------------------------------------- page
 def page():
@@ -187,7 +125,7 @@ def page():
     return f'''<!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rewire an older breadboard · Ceiling Clock</title>
+<title>Update an older breadboard · Ceiling Clock</title>
 <link rel="stylesheet" href="style.css?v=20261030w">
 {css}
 <style>.pins{{border-collapse:collapse;margin:8px 0 14px}}.pins td,.pins th{{border:1px solid var(--line);padding:5px 10px;text-align:left}}.pins th{{background:#f3f1ea}}
@@ -198,20 +136,18 @@ def page():
 <nav><a href="index.html">3D model</a><a href="assembly.html">Assembly</a><a href="wiring.html">Wiring</a><a href="breadboard.html" class="on">Breadboard test</a><a href="parts.html">Parts</a><a href="demo/">Live demo</a><a href="firmware.html">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
 </div></header>
 <main>
-<h1>Rewire an older breadboard</h1>
-<p class="lead">For a breadboard built from the first version of the guide, on <b>one breadboard</b>: with the Nokia LCD, the sunrise ring and the projector LED. Since firmware 2.0 the projector is a second TM1637 display, the ring and LED are gone, and two alarm buttons with lights switch the alarms on and off. Allow 45 minutes. The pictures show your board turned with row 1 on the left, as in the <a href="breadboard.html">build guide</a>.</p>
+<h1>Update an older breadboard</h1>
+<p class="lead">For a breadboard built before firmware 2.0 on <b>one breadboard</b>: everything up to the amplifier from the <a href="breadboard.html">build guide</a>. Since 2.0 the ceiling projector is a second TM1637 display (the Nokia LCD, sunrise ring and projector LED are gone from the design), and two alarm buttons with lights switch the alarms on and off. Nothing on your board changes; you add those two things. Allow 30 minutes. The pictures show your board turned with row 1 on the left.</p>
 
-<h2>What changes</h2>
-<table class="pins"><tr><th>ESP32 pin</th><th>Old board</th><th>Now</th></tr>
-<tr><td>8</td><td>LCD RST</td><td>Alarm button 1</td></tr>
-<tr><td>9</td><td>LCD DC</td><td>Alarm button 2</td></tr>
-<tr><td>10</td><td>LCD CE</td><td>Alarm 1 light</td></tr>
-<tr><td>11</td><td>LCD DIN</td><td>Projector display DIO (same wire)</td></tr>
-<tr><td>12</td><td>LCD CLK</td><td>Projector display CLK (same wire)</td></tr>
-<tr><td>13</td><td>Projector LED (MOSFET TRIG)</td><td>Alarm 2 light</td></tr>
-<tr><td>18</td><td>Sunrise ring</td><td>Not used</td></tr>
-<tr><td>4, 5, 6, 7, 14, 15, 16, 17</td><td colspan="2">Unchanged: front display, buttons A and B, light sensor, amplifier</td></tr></table>
-<div class="need"><b>You need:</b> <span class="chip">A second TM1637 display, the same kind as the front one</span><span class="chip">2 small push buttons</span><span class="chip">2 LEDs, any colour</span><span class="chip">2 × 220 Ω resistors (red-red-brown)</span><span class="chip">6 male–male jumper wires</span></div>
+<h2>What's new</h2>
+<table class="pins"><tr><th>ESP32 pin</th><th>Goes to</th></tr>
+<tr><td>12</td><td>Projector display CLK</td></tr>
+<tr><td>11</td><td>Projector display DIO</td></tr>
+<tr><td>8</td><td>Alarm button 1</td></tr>
+<tr><td>9</td><td>Alarm button 2</td></tr>
+<tr><td>10</td><td>Alarm 1 light</td></tr>
+<tr><td>13</td><td>Alarm 2 light</td></tr></table>
+<div class="need"><b>You need:</b> <span class="chip">A second TM1637 display, the same kind as the front one</span><span class="chip">2 small push buttons</span><span class="chip">2 LEDs, any colour</span><span class="chip">2 × 220 Ω resistors (red-red-brown)</span><span class="chip">4 female–male jumper wires</span><span class="chip">6 male–male jumper wires</span></div>
 <p class="mut">Firmware: your clock already runs 2.3.0, which expects this wiring. Nothing to flash.</p>
 <div class="toc" style="display:flex">{''.join(toc)}</div>
 {''.join(secs)}

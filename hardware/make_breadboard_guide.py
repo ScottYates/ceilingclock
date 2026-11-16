@@ -978,7 +978,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <main>
 <h1>Breadboard test</h1>
 <p class="lead">Wire the clock's electronics up on a breadboard and check every part works, before you solder anything or print the case. You add one part at a time and test it, so if something doesn't work you know exactly where to look. No soldering is needed except for the parts that only come with solder pads or loose pins (the ESP32's headers, the USB-C breakout and the amplifier). Allow an evening.</p>
-<p class="warn" style="margin-top:0">Built your breadboard from an earlier version of this guide, with the Nokia LCD, the sunrise ring and the projector LED? <a href="rewire.html"><b>Rewire it for the current design</b></a>: what comes out, what moves, and the alarm buttons.</p>
+<p class="warn" style="margin-top:0">Built your breadboard before firmware 2.0, on one breadboard? <a href="rewire.html"><b>Update it</b></a>: add the projector display and the alarm buttons to what you have.</p>
 
 <h2>Where does the ESP32 go?</h2>
 <p>Pick one; the pictures and wire lists below change to match. Your ticks are kept separately for each.</p>
