@@ -26,7 +26,7 @@
 #include "persist.h"
 #include <esp_task_wdt.h>
 
-#define FW_VERSION "2.3.0"   // bump on every release
+#define FW_VERSION "2.3.1"   // bump on every release
 #ifndef FW_BUILD
 #define FW_BUILD __DATE__ " " __TIME__   // set by build_stamp.py in PlatformIO builds
 #endif
@@ -971,6 +971,12 @@ void setup() {
   // Seed the clock from the DS3231 so alarms work even without Wi-Fi.
   Wire.begin(PIN_SDA, PIN_SCL);
   rtcPresent = rtc.begin(&Wire);
+  if (!rtcPresent) {   // on one breadboard the module goes on the front-edge pins instead (pins.h)
+    Wire.end();
+    Wire.begin(PIN_SDA_ALT, PIN_SCL_ALT);
+    rtcPresent = rtc.begin(&Wire);
+    if (rtcPresent) Serial.printf("DS3231 on pins %d and %d\n", PIN_SDA_ALT, PIN_SCL_ALT);
+  }
   setenv("TZ", cfg.tz.c_str(), 1);
   tzset();
   if (rtcPresent && !rtc.lostPower()) {

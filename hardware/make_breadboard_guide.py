@@ -119,7 +119,7 @@ def rl(k, r, note=''): return E(rail(k, r), 'auto', RAILNAME[k] + (f' {note}' if
 
 # modules (off the breadboard): name -> (x0, y0, x1, y1, pin side, [pins], colour, title, subtitle)
 MODS = {
-  'ds3231': (30, 30, 200, 125, 'right', ['VCC (+)', 'SDA (D)', 'SCL (C)', 'NC', 'GND (−)'], '#1f4e8c', 'DS3231 clock', 'pins: check your board'),
+  'ds3231': (30, 30, 200, 140, 'right', ['VCC (+)', 'SDA (D)', 'SCL (C)', 'NC', 'GND (−)'], '#1f4e8c', 'DS3231 clock', 'pins: check your board'),
   'tm1637': (30, 150, 200, 225, 'right', ['CLK', 'DIO', 'VCC', 'GND'], '#c0392b', 'TM1637 display', ''),
   'amp':    (30, 250, 200, 370, 'right', ['LRC', 'BCLK', 'DIN', 'GAIN', 'SD', 'GND', 'VIN'], '#7b3fa0', 'MAX98357A amp', ''),
   'usbc':   (30, 560, 170, 625, 'right', ['VBUS', 'GND'], '#2a6f9e', 'USB-C breakout', '5 V 3 A supply'),
@@ -397,12 +397,18 @@ def build_steps():
               ('Always about 4000 or more, even in a dim room', f'The ESP32 is seeing the full 3.3 V. Either the 10 kΩ resistor is missing or isn\'t reaching the − rail (one leg in the same row as the sensor\'s second leg, row {L2}; the other in the − rail by the blue line), or the pink wire is in the sensor\'s first row ({L1}, the 3.3 V side) instead of row {L2}.')])
 
     if one:
-        step(id='ds3231', title='Clock module (DS3231): test it later', time='0 min', mods=[], parts=[], wires=[],
-             need=['Nothing for now'],
-             intro='The clock module connects to ESP32 pins 1 and 2. On one breadboard those pins are in column j, and the ESP32 covers every hole beside them, so there is nowhere to plug its wires. Skip this step: the clock runs fine without the module, setting its time from the internet, and the page shows <b>no RTC</b>.',
-             todo=['Test the module when the electronics move to the perfboard (<a href="assembly.html#step-4">assembly step 4</a>), or switch to the two-breadboard layout at the top of this page.'],
-             test='Nothing to test yet. The clock\'s page says <b>no RTC</b>, which is expected.',
-             fix=[('I want to test it now', 'Use the <b>Plugged in across two breadboards</b> layout at the top of the page: there, pins 1 and 2 have free holes.')])
+        step(id='ds3231', title='Clock module (DS3231)', time='5 min', mods=['ds3231'], parts=[],
+             need=['DS3231 module (with its coin cell)'],
+             intro='The battery-backed clock that keeps time when Wi-Fi or power drops. In the finished clock it uses ESP32 pins 1 and 2, but on one breadboard those are on the covered side. '
+                   f'So here it goes on pins <b>{G("PIN_SDA_ALT")}</b> and <b>{G("PIN_SCL_ALT")}</b>, on the front edge: the firmware (2.3.1 or later) looks there when the module isn\'t on 1 and 2.',
+             wires=[W_('blue', esp(str(G('PIN_SDA_ALT'))), md('ds3231', 'SDA (D)', 'module SDA (marked D on mini boards)')),
+                    W_('yellow', esp(str(G('PIN_SCL_ALT'))), md('ds3231', 'SCL (C)', 'module SCL (marked C)')),
+                    W_('3v3', md('ds3231', 'VCC (+)', 'module VCC (+)'), rl('t+', 9)),
+                    W_('gnd', md('ds3231', 'GND (−)', 'module GND (−)'), rl('t-', 10))],
+             test='Press RST on the ESP32. The clock\'s page shows <b>RTC backup ok</b>, and the serial log says <b>DS3231 on pins 18 and 3</b>. Turn your router\'s Wi-Fi off and press RST again: the time is still right.',
+             fix=[('Still says "no RTC"', f'SDA and SCL swapped (SDA goes beside pin {G("PIN_SDA_ALT")}, SCL beside pin {G("PIN_SCL_ALT")}), VCC on 5 V instead of 3.3 V, or firmware older than 2.3.1.'),
+                  ('ZS-042 (larger) board', 'It charges its battery. With a non-rechargeable CR2032, remove the 200 Ω resistor or diode beside the holder first.'),
+                  ('On the perfboard', 'Wire it to pins 1 and 2 as the <a href="wiring.html">wiring page</a> shows; the firmware tries those first.')])
     else:
       step(id='ds3231', title='Clock module (DS3231)', time='5 min', mods=['ds3231'], parts=[],
          need=['DS3231 module (with its coin cell)'],

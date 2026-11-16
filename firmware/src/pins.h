@@ -18,6 +18,12 @@
 // DS3231 real-time clock (I2C)
 #define PIN_SDA        1
 #define PIN_SCL        2
+// Where the firmware looks for the DS3231 if it isn't on pins 1 and 2: the only two free pins on the ESP32's
+// front edge, the side that keeps free holes when the ESP32 is on one breadboard. GPIO 3 is a strapping pin,
+// but only with an eFuse that is off from the factory, and the module's pull-ups would hold it at the
+// default level anyway.
+#define PIN_SDA_ALT   18
+#define PIN_SCL_ALT    3
 
 // Buttons (to GND, internal pull-ups)
 #define PIN_BTN_A      6   // top: snooze / hold = stop; when quiet: show the time and which alarms are on

@@ -20,7 +20,13 @@ def part(**k):
 
 # ---------------------------------------------------------------- the board as it is (build guide up to the amplifier)
 KEEP = [NEW[i] for i in ('power', 'buttons', 'tm1637', 'ldr', 'supply', 'amp')]
-ALARM = NEW['alarmbtn']
+ALARM_FULL = NEW['alarmbtn']
+# Buttons only: no LEDs on hand. The firmware drives pins 10 and 13 whether or not anything is on them;
+# the lights come with the 16 mm lit buttons on the perfboard.
+ALARM = part(wires=[w for w in ALARM_FULL['wires'] if 'LED' not in w['tb']],
+             parts=[p for p in ALARM_FULL['parts'] if p[0] == 'button'])
+ALARM['place'] = g.place_lines(ALARM['parts'])
+LED_WIRES = [w for w in ALARM_FULL['wires'] if 'LED' in w['tb']]
 
 def merge(*xs): return part(wires=[w for x in xs for w in x['wires']], parts=[p for x in xs for p in x['parts']],
                             mods=[m for x in xs for m in x['mods']])
@@ -72,7 +78,7 @@ step('start', 'Your board now, and clearing space', '5 min',
      'Your board has everything up to the amplifier from the <a href="breadboard.html">build guide</a>, on one breadboard: the front display, buttons A and B, the light sensor, the 5 V supply and the amplifier. The old projector parts (Nokia LCD, sunrise ring, projector LED) were never wired, so nothing has to come out. ESP32 pins 8 to 13 are free, and the right-hand end of the board (rows 49 to 60) is empty: that\'s where the new parts go.',
      picture('rw-start', part(), merge(*KEEP), badges=False),
      after='<ol class="todo"><li>Unplug the USB cable from the computer and the 5 V adapter.</li>'
-           '<li>Lift the computer\'s USB cable off the breadboard and lay it to the right of the ESP32\'s USB port, away from rows 25 to 60. It lies across the holes the alarm buttons and lights use.</li>'
+           '<li>Lift the computer\'s USB cable off the breadboard and lay it to the right of the ESP32\'s USB port, away from rows 25 to 60. It lies across the holes the alarm buttons use.</li>'
            '<li>If a loose wire runs from beside the ESP32 to a foil tab (a probe point from <a href="amp-test.html">testing the amplifier</a>), take it out. It isn\'t part of the clock.</li></ol>')
 
 step('proj', 'Projector display (second TM1637)', '5 min',
@@ -84,24 +90,37 @@ step('proj', 'Projector display (second TM1637)', '5 min',
      test=NEW['proj']['test'], fix=NEW['proj']['fix'],
      warn='Don\'t mix up the two displays: the front one stays on pins 4 and 5.')
 
-step('alarm', 'Alarm buttons and their lights', '15 min',
-     ALARM['intro'] + ' Unplug the USB cable while you add them.',
+step('alarm', 'Alarm buttons', '10 min',
+     'In the finished clock these are two 16 mm buttons with a light inside: one switches alarm 1 on and off, the other alarm 2. '
+     'On the breadboard a small push button stands in for each, <b>without the lights</b>: they need LEDs, and the clock works the same without them. '
+     'The lights come back with the 16 mm buttons on the perfboard. Unplug the USB cable while you add the buttons.',
      picture('rw-alarm', merge(*KEEP, PROJ_NEW), ALARM),
      lists='<h3>Place the parts</h3><ol class="place">' + ''.join(f'<li>{t}</li>' for t in ALARM['place']) + '</ol>'
            '<h3>Connect</h3>' + wire_list('rw-alarm', ALARM['wires'], 'Add'),
-     test='Plug the USB cable back in. ' + ALARM['test'], fix=ALARM['fix'],
+     test='Plug the USB cable back in. Press alarm button <b>1</b>: the front display shows <b>1 on</b> and then alarm 1\'s time, and on the clock\'s page alarm 1\'s switch turns on. '
+          'Press it again: the display shows <b>1 oF</b> and the switch turns off. Do the same with button 2. '
+          'Then press button <b>A</b> (snooze) with no alarm ringing: the display shows which alarms are on, for example <b>AL12</b> (both), <b>AL1-</b> (only 1) or <b>AL--</b> (none).',
+     fix=[ALARM_FULL['fix'][0]],
      warn='Rows 49 and 55 are next to the light sensor\'s resistor (row 48). Count carefully: the purple wire goes in row 49, not 48.')
 
-FINAL = [s for s in g.build_steps() if s['id'] in ('power', 'buttons', 'alarmbtn', 'tm1637', 'proj', 'ldr', 'supply', 'amp')]
-final_lines = [(st['title'], w) for st in FINAL for w in st['wires']]
+RTC = NEW['ds3231']
+step('rtc', 'Clock module (DS3231)', '5 min',
+     RTC['intro'] + ' Your clock already runs that firmware.',
+     picture('rw-rtc', merge(*KEEP, PROJ_NEW, ALARM), part(wires=RTC['wires'], mods=['ds3231'])),
+     lists='<h3>Connect</h3>' + wire_list('rw-rtc', RTC['wires'], 'Add') +
+           '<p class="mut">Pin 18 is row 11 and pin 3 is row 13: the two empty holes in front of the yellow strip, just right of the amplifier\'s three wires (rows 8 to 10).</p>',
+     test=RTC['test'], fix=RTC['fix'])
+
+FINAL = [s for s in g.build_steps() if s['id'] in ('power', 'buttons', 'alarmbtn', 'tm1637', 'proj', 'ldr', 'ds3231', 'supply', 'amp')]
+final_lines = [(st['title'], w) for st in FINAL for w in st['wires'] if w not in LED_WIRES]
 final_wires = [w for _, w in final_lines]
 step('check', 'Check the whole board', '10 min',
      'Everything on the board, as the build guide has it. Go through the list once with the power off and tick each wire as you find it. Your colours may differ (your amplifier wires are purple, blue and white, and the light sensor\'s wire is red); what matters is where each end goes.',
      picture('rw-check', part(), merge(*KEEP, PROJ_NEW, ALARM) | dict(wires=final_wires)),
      lists=wire_list('rw-check', final_wires, 'Check', [f'<span class="mut">{esc(t)}</span><br>{w["ta"]} <span class="arr">→</span> {w["tb"]}' for t, w in final_lines]),
      test='Plug in the USB cable and the 5 V adapter. The front display shows the time; the projector display shows it flipped; '
-          'alarm buttons 1 and 2 switch their alarms and their lights blink; button B switches the front display (hold 3 s for the projector); '
-          'button A lights the LEDs of the alarms that are on; under <b>Sounds</b>, <b>Play</b> on beep.wav beeps four times.')
+          'alarm buttons 1 and 2 switch their alarms (<b>1 on</b>, <b>1 oF</b>); button B switches the front display (hold 3 s for the projector); '
+          'button A shows which alarms are on (<b>AL12</b>); under <b>Sounds</b>, <b>Play</b> on beep.wav beeps four times.')
 
 # ---------------------------------------------------------------- page
 def page():
@@ -137,7 +156,7 @@ def page():
 </div></header>
 <main>
 <h1>Update an older breadboard</h1>
-<p class="lead">For a breadboard built before firmware 2.0 on <b>one breadboard</b>: everything up to the amplifier from the <a href="breadboard.html">build guide</a>. Since 2.0 the ceiling projector is a second TM1637 display (the Nokia LCD, sunrise ring and projector LED are gone from the design), and two alarm buttons with lights switch the alarms on and off. Nothing on your board changes; you add those two things. Allow 30 minutes. The pictures show your board turned with row 1 on the left.</p>
+<p class="lead">For a breadboard built before firmware 2.0 on <b>one breadboard</b>: everything up to the amplifier from the <a href="breadboard.html">build guide</a>. Since 2.0 the ceiling projector is a second TM1637 display (the Nokia LCD, sunrise ring and projector LED are gone from the design), and two alarm buttons switch the alarms on and off. Nothing on your board changes; you add those two things, and the DS3231 clock module, which now fits on one breadboard too. The alarm buttons' lights need LEDs, so on the breadboard they are left out; they come with the 16 mm lit buttons later. Allow 25 minutes. The pictures show your board turned with row 1 on the left.</p>
 
 <h2>What's new</h2>
 <table class="pins"><tr><th>ESP32 pin</th><th>Goes to</th></tr>
@@ -145,19 +164,20 @@ def page():
 <tr><td>11</td><td>Projector display DIO</td></tr>
 <tr><td>8</td><td>Alarm button 1</td></tr>
 <tr><td>9</td><td>Alarm button 2</td></tr>
-<tr><td>10</td><td>Alarm 1 light</td></tr>
-<tr><td>13</td><td>Alarm 2 light</td></tr></table>
-<div class="need"><b>You need:</b> <span class="chip">A second TM1637 display, the same kind as the front one</span><span class="chip">2 small push buttons</span><span class="chip">2 LEDs, any colour</span><span class="chip">2 × 220 Ω resistors (red-red-brown)</span><span class="chip">4 female–male jumper wires</span><span class="chip">6 male–male jumper wires</span></div>
-<p class="mut">Firmware: your clock already runs 2.3.0, which expects this wiring. Nothing to flash.</p>
+<tr><td>18</td><td>Clock module (DS3231) SDA: on the breadboard only; pin 1 in the finished clock</td></tr>
+<tr><td>3</td><td>Clock module (DS3231) SCL: on the breadboard only; pin 2 in the finished clock</td></tr>
+<tr><td>10, 13</td><td>Alarm 1 and 2 lights: left empty on the breadboard</td></tr></table>
+<div class="need"><b>You need:</b> <span class="chip">A second TM1637 display, the same kind as the front one</span><span class="chip">2 small push buttons</span><span class="chip">DS3231 clock module, with its coin cell</span><span class="chip">8 female–male jumper wires</span><span class="chip">4 male–male jumper wires</span></div>
+<p class="mut">Firmware: 2.3.1 or later, which also finds the DS3231 on pins 18 and 3. Your clock has it.</p>
 <div class="toc" style="display:flex">{''.join(toc)}</div>
 {''.join(secs)}
 
 <h2>Where to go from here</h2>
 <ol class="next">
 <li><b>See it on the ceiling.</b> In a dark room, hold the lens about 106 mm above the projector display and focus it on the ceiling (<a href="breadboard.html#s-optics">bonus step in the build guide</a>). Set the flips under <b>Settings › Ceiling picture</b>.</li>
-<li><b>Get the parts the breadboard doesn't use</b> (<a href="parts.html">parts list</a>): the two <b>16 mm lit buttons</b> for the alarms, the 16 mm buttons for A and B, the <b>DS3231</b> clock module, the perfboard, the lens and the mirror.</li>
+<li><b>Get the parts the breadboard doesn't use</b> (<a href="parts.html">parts list</a>): the two <b>16 mm lit buttons</b> for the alarms, the 16 mm buttons for A and B, the perfboard, the lens and the mirror.</li>
 <li><b>Print the case</b> while you wait (<a href="assembly.html#step-1">assembly step 1</a>). It already has the two alarm-button holes in the lid and the projector display's holder in the barrel.</li>
-<li><b>Build the electronics board</b> (<a href="assembly.html#step-4">assembly step 4</a>): the same connections, soldered on perfboard, <b>with the DS3231</b>. On one breadboard there's no room for it, and it closes the one gap left in the alarms: after a power cut while the internet is also down, the clock only knows the time if the DS3231 is fitted. From then on the 5 V supply powers the ESP32 too, and firmware updates go over Wi-Fi.</li>
+<li><b>Build the electronics board</b> (<a href="assembly.html#step-4">assembly step 4</a>): the same connections, soldered on perfboard. The two alarm lights go in (pins 10 and 13, with the 16 mm lit buttons), and the DS3231 moves to pins 1 and 2 as the <a href="wiring.html">wiring page</a> shows. From then on the 5 V supply powers the ESP32 too, and firmware updates go over Wi-Fi.</li>
 <li><b>Assemble the case</b>: <a href="assembly.html#step-2">speaker</a>, front display, the projector display and lens in the barrel, the lid buttons, then focus and aim (assembly steps 2–9). The <a href="wiring.html">wiring page</a> has the full pin list.</li>
 </ol>
 </main>

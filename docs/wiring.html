@@ -33,6 +33,7 @@
 
 <h3>Board notes</h3>
 <ul>
+<li><b>DS3231 on pins 1 and 2</b> (SDA, SCL). If it isn't found there, firmware 2.3.1 and later also look on pins 18 and 3: the one-breadboard test uses those, because pins 1 and 2 are on the covered side.</li>
 <li><b>DS3231 ZS-042 boards</b> trickle-charge their battery. With a non-rechargeable CR2032, remove the 200 Ω resistor or diode next to the battery holder first.</li>
 <li><b>MAX98357A:</b> leave GAIN unconnected (9 dB) and SD unconnected (left + right mix).</li>
 <li><b>TM1637 modules:</b> the digits on many of them lean slightly to the right. On the ceiling, after mirroring left/right, they lean the other way. That's the module, not a wiring fault.</li>

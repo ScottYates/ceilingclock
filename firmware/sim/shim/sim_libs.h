@@ -46,7 +46,7 @@ struct UpdateClass {
   bool hasError() { return false; }
 };
 extern UpdateClass Update;
-struct TwoWire { void begin(int, int) {} };
+struct TwoWire { bool begin(int, int) { return true; } bool end() { return true; } };
 extern TwoWire Wire;
 
 // ---------------------------------------------------------------- RTC (absent in the simulator; time comes from "NTP")
