@@ -26,7 +26,7 @@
 #include "persist.h"
 #include <esp_task_wdt.h>
 
-#define FW_VERSION "2.3.1"   // bump on every release
+#define FW_VERSION "2.3.2"   // bump on every release
 #ifndef FW_BUILD
 #define FW_BUILD __DATE__ " " __TIME__   // set by build_stamp.py in PlatformIO builds
 #endif
@@ -490,9 +490,9 @@ void renderProj(const struct tm& lt, bool visible, uint8_t bright) {
 // ---------------------------------------------------------------- front display
 // Short messages on the front display whenever something changes, from a button or from the web page,
 // so you can tell what happened (shown even when the display is switched off):
-//   1 on / 1 oF   alarm 1 switched on (then its time) or off; 2..8 likewise
+//   1 on / 1 oF   alarm 1 switched on (then its time, and A or P in 12-hour mode) or off; 2..8 likewise
 //   d on / d oF   front display on or off        P on / P oF   ceiling projection on or off
-//   SnoZ          snoozed (then the time it rings again)        StoP   alarm stopped
+//   SnoZ          snoozed (then the time it rings again, and A or P)        StoP   alarm stopped
 //   AL12 / AL1- / AL-2 / AL--   which of alarms 1 and 2 are on (snooze button when nothing rings)
 //   FLIP          projection turned upside down    rSEt   Wi-Fi forgotten, restarting
 const uint8_t LET_P = SEG_A | SEG_B | SEG_E | SEG_F | SEG_G, LET_d = SEG_B | SEG_C | SEG_D | SEG_E | SEG_G;
@@ -601,12 +601,17 @@ void renderAlarmLeds(bool night) {
   }
 }
 
-// A clock time on the front display after the current message, e.g. " 6:30"
+// A clock time on the front display after the current message, e.g. " 6:30". In 12-hour mode a short "A" or "P"
+// follows in the last digit: the display can't show AM/PM any other way (no "M", and the colon's two dots are one LED).
 void showClockTime(int hour, int minute, uint32_t ms) {
   uint8_t d[4];
   seg::timeDigits(hour, minute, cfg.hour24, true, d);
   d[1] |= seg::COLON;
   thenFront(d, ms);
+  if (!cfg.hour24) {
+    const uint8_t ap[4] = {0, 0, 0, hour < 12 ? LET_A : LET_P};
+    thenFront(ap, 900);
+  }
 }
 void showClockTime(time_t t, uint32_t ms) {
   struct tm lt;
