@@ -50,6 +50,7 @@ $(WASM_OUT): $(FW)/*.cpp $(FW)/*.h sim_hw.cpp sim_wasm.cpp shim/*.h newlib/*.c n
 	$(WASM_CXX) $(WASM_FLAGS) -c sim_hw.cpp -o $(OUT)/wasm/sim_hw.o
 	$(WASM_CXX) $(WASM_FLAGS) -c sim_wasm.cpp -o $(OUT)/wasm/sim_wasm.o
 	$(WASM_CXX) $(WASM_FLAGS) -mexec-model=reactor $(OUT)/wasm/*.o -lc++abi -Wl,--strip-all -o $@
+	python3 check_wasm_imports.py $@ ../../docs/demo/sim.js || (rm -f $@; false)
 	python3 make_demo_page.py
 
 run: all

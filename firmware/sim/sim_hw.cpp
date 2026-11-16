@@ -727,10 +727,12 @@ bool WebServer::simRoute(const std::string& path) {
     { FAIL_LOCK; if (arg("mode") == "ok") g_audioFail.erase(arg("path").c_str()); else g_audioFail[arg("path").c_str()] = arg("mode").c_str(); }
     send(200, "text/plain", "ok"); return true;
   }
+#ifndef SIM_WASM   // not in the browser: a frozen page has no watchdog to reset it
   if (path == "/sim/hang") {   // loop() stops coming back (runs inside it): the task watchdog must reset the clock
     send(200, "text/plain", "hanging"); printf("[sim] loop() hangs\n"); fflush(stdout);
     for (;;) usleep(1000000);
   }
+#endif
   if (path == "/sim/crash") { send(200, "text/plain", "restarting"); printf("[sim] crash\n"); sim::reset(ESP_RST_PANIC); }
   if (path == "/sim/clock") {   // the clock's own idea of the time, and what it is really
     send(200, "application/json", "{\"system\":" + std::to_string(sim_time(nullptr)) + ",\"real\":" + std::to_string(simRealTime()) +
