@@ -21,7 +21,7 @@ def part(**k):
 # ---------------------------------------------------------------- the board as it is (build guide up to the amplifier)
 KEEP = [NEW[i] for i in ('power', 'buttons', 'tm1637', 'ldr', 'supply', 'amp')]
 ALARM_FULL = NEW['alarmbtn']
-# Buttons only: no LEDs on hand. The firmware drives pins 10 and 13 whether or not anything is on them;
+# Buttons only: the lights' pins (41, 42) are on the edge the ESP32 covers on one breadboard;
 # the lights come with the 16 mm lit buttons on the perfboard.
 ALARM = part(wires=[w for w in ALARM_FULL['wires'] if 'LED' not in w['tb']],
              parts=[p for p in ALARM_FULL['parts'] if p[0] == 'button'])
@@ -122,6 +122,16 @@ step('check', 'Check the whole board', '10 min',
           'alarm buttons 1 and 2 switch their alarms (<b>1 on</b>, <b>1 oF</b>); button B switches the front display (hold 3 s for the projector); '
           'button A shows which alarms are on (<b>AL12</b>); under <b>Sounds</b>, <b>Play</b> on beep.wav beeps four times.')
 
+BAT = NEW['battery']
+SUP5 = NEW['supply']['wires'][[i for sid, i in BAT['drops'] if sid == 'supply'][0]]
+before_bat = merge(*KEEP, PROJ_NEW, ALARM, part(wires=RTC['wires'], mods=['ds3231']))
+before_bat['wires'] = [w for w in before_bat['wires'] if w is not SUP5]
+step('battery', 'Battery base (optional)', '25 min',
+     BAT['intro'] + ' Needs firmware 2.6.0 or later.',
+     picture('rw-battery', before_bat, part(wires=BAT['wires'], mods=BAT['mods'])),
+     lists='<h3>Connect</h3><p>First pull the red VBUS wire from the USB-C breakout off the bottom + rail (row 3); wire 1 below takes its place on the charger.</p>' + wire_list('rw-battery', BAT['wires'], 'Add'),
+     test=BAT['test'], fix=BAT['fix'], warn=BAT['warn'])
+
 # ---------------------------------------------------------------- page
 def page():
     secs, toc = [], []
@@ -166,7 +176,9 @@ def page():
 <tr><td>9</td><td>Alarm button 2</td></tr>
 <tr><td>18</td><td>Clock module (DS3231) SDA: on the breadboard only; pin 1 in the finished clock</td></tr>
 <tr><td>3</td><td>Clock module (DS3231) SCL: on the breadboard only; pin 2 in the finished clock</td></tr>
-<tr><td>10, 13</td><td>Alarm 1 and 2 lights: left empty on the breadboard</td></tr></table>
+<tr><td>41, 42</td><td>Alarm 1 and 2 lights: left out on the breadboard (that edge is covered)</td></tr>
+<tr><td>10</td><td>Battery charger CE (battery base, optional)</td></tr>
+<tr><td>13</td><td>Battery charger PGOOD (battery base, optional)</td></tr></table>
 <div class="need"><b>You need:</b> <span class="chip">A second TM1637 display, the same kind as the front one</span><span class="chip">2 small push buttons</span><span class="chip">DS3231 clock module, with its coin cell</span><span class="chip">8 female–male jumper wires</span><span class="chip">4 male–male jumper wires</span></div>
 <p class="mut">Firmware: 2.3.1 or later, which also finds the DS3231 on pins 18 and 3. Your clock has it.</p>
 <div class="toc" style="display:flex">{''.join(toc)}</div>
@@ -177,7 +189,7 @@ def page():
 <li><b>See it on the ceiling.</b> In a dark room, hold the lens about 106 mm above the projector display and focus it on the ceiling (<a href="breadboard.html#s-optics">bonus step in the build guide</a>). Set the flips under <b>Settings › Ceiling picture</b>.</li>
 <li><b>Get the parts the breadboard doesn't use</b> (<a href="parts.html">parts list</a>): the two <b>16 mm lit buttons</b> for the alarms, the 16 mm buttons for A and B, the perfboard, the lens and the mirror.</li>
 <li><b>Print the case</b> while you wait (<a href="assembly.html#step-1">assembly step 1</a>). It already has the two alarm-button holes in the lid and the projector display's holder in the barrel.</li>
-<li><b>Build the electronics board</b> (<a href="assembly.html#step-4">assembly step 4</a>): the same connections, soldered on perfboard. The two alarm lights go in (pins 10 and 13, with the 16 mm lit buttons), and the DS3231 moves to pins 1 and 2 as the <a href="wiring.html">wiring page</a> shows. From then on the 5 V supply powers the ESP32 too, and firmware updates go over Wi-Fi.</li>
+<li><b>Build the electronics board</b> (<a href="assembly.html#step-4">assembly step 4</a>): the same connections, soldered on perfboard. The two alarm lights go in (pins 41 and 42, with the 16 mm lit buttons), and the DS3231 moves to pins 1 and 2 as the <a href="wiring.html">wiring page</a> shows. From then on the 5 V supply powers the ESP32 too, and firmware updates go over Wi-Fi.</li>
 <li><b>Assemble the case</b>: <a href="assembly.html#step-2">speaker</a>, front display, the projector display and lens in the barrel, the lid buttons, then focus and aim (assembly steps 2–9). The <a href="wiring.html">wiring page</a> has the full pin list.</li>
 </ol>
 </main>

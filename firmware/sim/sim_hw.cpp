@@ -95,6 +95,7 @@ static struct SimEnv {
   SimEnv() {
     auto on = [](const char* k, bool def) { const char* v = getenv(k); return v ? strcmp(v, "0") != 0 : def; };
     sim::hw.rtcPresent = on("SIM_RTC", false);
+    sim::hw.batPresent = on("SIM_BATTERY", false);
     sim::hw.wifiUp = on("SIM_WIFI", true);
     sim::hw.netOk = on("SIM_NET", true);
 #ifndef SIM_WASM
@@ -219,7 +220,34 @@ void EspClass::restart() { printf("ESP.restart()\n"); sim::reset(ESP_RST_SW); }
 
 // ---------------------------------------------------------------- GPIO
 void pinMode(int, int) {}
+// The battery base: PGOOD is low while USB power is there; CE high stops charging.
+void digitalWrite(int pin, int v) { if (pin == PIN_CHG_CE) sim::hw.ce = v == HIGH; }
+static void batteryStep() {
+  using sim::hw;
+  unsigned long ms = millis();
+  float dt = hw.batLast ? (ms - hw.batLast) / 1000.0f : 0;
+  hw.batLast = ms;
+  float perSec = hw.mains ? (!hw.ce && hw.batPct < 100 ? hw.batCharge : 0) : -hw.batDrain;
+  hw.batRate = perSec * 3600;
+  hw.batPct = std::max(0.0f, std::min(100.0f, hw.batPct + perSec * dt));
+}
+uint8_t TwoWire::endTransmission(bool) {
+  bool there = (addr_ == 0x68 && sim::hw.rtcPresent) || (addr_ == 0x36 && sim::hw.batPresent);
+  return there ? 0 : 2;
+}
+uint8_t TwoWire::requestFrom(uint8_t a, uint8_t n) {
+  len_ = pos_ = 0;
+  if (a != 0x36 || !sim::hw.batPresent || n != 2) return 0;
+  batteryStep();
+  uint16_t v = 0;
+  if (reg_ == 0x02) v = (uint16_t)((3.0f + 1.2f * sim::hw.batPct / 100) / 78.125e-6f);   // VCELL
+  else if (reg_ == 0x04) v = (uint16_t)(sim::hw.batPct * 256);                            // SOC
+  else if (reg_ == 0x16) v = (uint16_t)(int16_t)(sim::hw.batRate / 0.208f);              // CRATE
+  buf_[0] = v >> 8; buf_[1] = v & 0xFF; len_ = 2;
+  return 2;
+}
 int digitalRead(int pin) {
+  if (pin == PIN_PGOOD) return sim::hw.mains ? LOW : HIGH;
   int i = pin == PIN_BTN_A ? 0 : pin == PIN_BTN_B ? 1 : pin == PIN_BTN_AL1 ? 2 : pin == PIN_BTN_AL2 ? 3 : -1;
   if (i < 0) return HIGH;
   bool down = millis() < sim::btnUntil[i];
@@ -691,6 +719,16 @@ static std::string jesc(const std::string& s) {
 // Simulator-only endpoints: real hardware state, time travel, buttons, light level, internet, sound files.
 bool WebServer::simRoute(const std::string& path) {
   using sim::hw;
+  if (path == "/sim/battery") {   // ?present=0|1 &pct=50 &mains=0|1 (USB power) &charge=&drain= (% per second)
+    batteryStep();
+    if (hasArg("present")) hw.batPresent = arg("present") != "0";
+    if (hasArg("pct")) hw.batPct = atof(arg("pct").c_str());
+    if (hasArg("mains")) hw.mains = arg("mains") != "0";
+    if (hasArg("charge")) hw.batCharge = atof(arg("charge").c_str());
+    if (hasArg("drain")) hw.batDrain = atof(arg("drain").c_str());
+    send(200, "text/plain", "ok");
+    return true;
+  }
   if (path == "/sim/hw") {
     std::string j = "{\"time\":" + std::to_string(sim_time(nullptr)) + ",\"timeOffset\":" + std::to_string(sim::timeOffset);
     for (int k = 0; k < 2; k++) {
@@ -702,7 +740,9 @@ bool WebServer::simRoute(const std::string& path) {
     j += ",\"audio\":{\"playing\":" + std::string(hw.audioPlaying ? "true" : "false") + ",\"vol\":" + std::to_string(hw.audioVol) +
          ",\"file\":\"" + jesc(hw.audioFile) + "\",\"url\":\"" + jesc(hw.audioUrl) + "\",\"seq\":" + std::to_string(hw.audioSeq) +
          "},\"alarmLeds\":[" + std::to_string(hw.alarmLed[0]) + "," + std::to_string(hw.alarmLed[1]) + "]" +
-         ",\"net\":" + (hw.netOk ? "true" : "false") + ",\"ldr\":" + std::to_string(hw.ldr) + "}";
+         ",\"net\":" + (hw.netOk ? "true" : "false") + ",\"ldr\":" + std::to_string(hw.ldr) +
+         ",\"battery\":{\"present\":" + (hw.batPresent ? "true" : "false") + ",\"pct\":" + std::to_string(hw.batPct) +
+         ",\"mains\":" + (hw.mains ? "true" : "false") + ",\"charging\":" + (hw.mains && !hw.ce && hw.batPct < 100 ? "true" : "false") + "}}";
     send(200, "application/json", String(j));
     return true;
   }

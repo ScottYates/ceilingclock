@@ -451,6 +451,69 @@ def s_ring_while_setting(c):
     assert c.config()['alarms'][1]['enabled'] is False, 'alarm 2 left as it was'
 
 
+
+# ---- battery base: charge limit, running on battery, a gauge that stops answering
+def battery(c):
+    return c.state()['battery']
+
+
+def charger_on(c):
+    return c.get('/sim/hw')['battery']['charging']
+
+
+def s_battery_charge_limit(c):
+    """Charges to the 80 % default and holds there; starts again 3 points below; 100 % charges to full."""
+    c.start(SIM_BATTERY='1')
+    c.post('/sim/battery?pct=74&charge=1&mains=1')                 # 1 % a second
+    c.wait(lambda: charger_on(c), 5, 'charging below the limit')
+    c.wait(lambda: not charger_on(c), 20, 'charging stops at 80 %')
+    b = battery(c)
+    assert 79 <= b['pct'] <= 82 and b['state'] == 'held', f'held at {b}'
+    time.sleep(4)
+    assert not charger_on(c) and battery(c)['pct'] <= 82, 'stays held, not topped up'
+    c.post('/sim/battery?pct=78&charge=0')
+    time.sleep(4)
+    assert not charger_on(c), 'not restarted at 78 % (2 below)'
+    c.post('/sim/battery?pct=77')
+    c.wait(lambda: charger_on(c), 6, 'restarts at 77 % (3 below)')
+    cfg = c.config(); cfg['chargeLimit'] = 100; c.post('/api/config', cfg)
+    c.post('/sim/battery?pct=97&charge=1')
+    c.wait(lambda: battery(c)['pct'] >= 99.5, 15, 'a 100 % limit charges to full')
+
+
+def s_alarm_on_battery(c):
+    """USB power is lost: the clock says so, dims the displays, and the alarm still rings."""
+    c.start(SIM_BATTERY='1')
+    at = next_minute(c)
+    c.set_alarms([alarm(at)])
+    c.post('/sim/battery?pct=60&mains=0&drain=0.001')
+    seen = set()
+    for _ in range(30):
+        seen.add(tuple(c.get('/sim/hw')['front']['segs'])); time.sleep(0.1)
+    assert (0x7C, 0x77, 0x78, 0x78) in seen, 'front display says bAtt'
+    c.wait(lambda: battery(c)['state'] == 'battery', 6, 'knows it is on battery')
+    cfg = c.config()
+    time.sleep(2.5)                                                 # after the message
+    want = min(cfg['front']['nightBright'], 7)
+    got = c.get('/sim/hw')['front']['bright']
+    assert c.state()['night'] or got == want, f'front display at night brightness on battery: {got}, want {want}'
+    b = battery(c)
+    assert b.get('hoursLeft', 0) > 0, f'estimates the time left: {b}'
+    ring_and_check(c, at, 'rings on battery')
+    c.post('/sim/battery?mains=1')
+    c.wait(lambda: battery(c)['state'] != 'battery', 6, 'knows USB power is back')
+
+
+def s_battery_gauge_lost(c):
+    """The fuel gauge stops answering while charging is held: within 30 s charging is left on (the charger stops at full itself)."""
+    c.start(SIM_BATTERY='1')
+    c.post('/sim/battery?pct=85&charge=0')
+    c.wait(lambda: not charger_on(c), 6, 'held above the limit')
+    c.post('/sim/battery?present=0')
+    c.wait(lambda: charger_on(c), 40, 'charging left on without a gauge')
+    assert battery(c)['present'] is False
+
+
 SCENARIOS = {n[2:]: f for n, f in globals().items() if n.startswith('s_')}
 
 if __name__ == '__main__':

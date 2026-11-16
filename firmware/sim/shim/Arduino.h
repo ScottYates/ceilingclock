@@ -120,6 +120,7 @@ unsigned long millis();
 void delay(unsigned long ms);
 void pinMode(int pin, int mode);
 int digitalRead(int pin);
+void digitalWrite(int pin, int v);
 int analogRead(int pin);
 void analogReadResolution(int bits);
 bool ledcAttach(int pin, int freq, int res);
@@ -180,6 +181,10 @@ struct Hw {
   bool wifiConnected = false;         // the clock has joined it (needs autoConnect() or WiFi.begin())
   bool portalActive = false; unsigned long portalStart = 0, portalTimeoutMs = 0;
   bool rtcPresent = false;            // a DS3231 is fitted (SIM_RTC=1)
+  // battery base (SIM_BATTERY=1 or /sim/battery): charge %, USB power present, charger's CE input (HIGH = off),
+  // and how fast it charges and drains in % per real second
+  bool batPresent = false; float batPct = 60; bool mains = true; bool ce = false;
+  float batCharge = 0.01f, batDrain = 0.002f, batRate = 0; unsigned long batLast = 0;
 };
 extern Hw hw;
 bool wifiLinked();

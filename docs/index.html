@@ -49,7 +49,7 @@
 <h2>Build it</h2>
 <div class="grid3">
   <a class="card" href="parts.html" style="text-decoration:none;color:inherit"><h3>1. Order the parts →</h3>One button opens every part on Amazon, ready to add to your cart. Most items come in multi-packs, so expect roughly $150–250 including spares (prices weren't checked).</a>
-  <a class="card" href="assembly.html" style="text-decoration:none;color:inherit"><h3>2. Print and assemble →</h3>Nine 3D-printed parts and nine illustrated steps.</a>
+  <a class="card" href="assembly.html" style="text-decoration:none;color:inherit"><h3>2. Print and assemble →</h3>Nine 3D-printed parts and ten illustrated steps, plus an optional battery base that runs the clock for about three days without power.</a>
   <a class="card" href="firmware.html" style="text-decoration:none;color:inherit"><h3>3. Flash and set up →</h3>PlatformIO firmware, Wi-Fi setup from your phone, then everything is set at <code>ceilingclock.local</code>.</a>
 </div>
 
@@ -59,10 +59,10 @@
 <footer>Ceiling Clock · open hardware and firmware · <a href="https://github.com/ScottYates/ceilingclock">source on GitHub</a></footer>
 
 <script type="module">
-import { createViewer } from './js/viewer.js?v=20261115c';
-import { PARTS } from './js/parts.js?v=20261115c';
-import { STEPS } from './js/steps.js?v=20261115c';
-import { optics } from './js/optics.js?v=20261115c';
+import { createViewer } from './js/viewer.js?v=20261116a';
+import { PARTS } from './js/parts.js?v=20261116a';
+import { STEPS } from './js/steps.js?v=20261116a';
+import { optics } from './js/optics.js?v=20261116a';
 
 const v = createViewer(document.getElementById('viewer'));
 const ex = document.getElementById('explode');

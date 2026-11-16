@@ -9,6 +9,7 @@
 #include <LittleFS.h>
 #include <Update.h>
 #include <Wire.h>
+#include "battery_logic.h"
 #include <RTClib.h>
 #include <TM1637Display.h>
 #include <ArduinoJson.h>
@@ -26,7 +27,7 @@
 #include "persist.h"
 #include <esp_task_wdt.h>
 
-#define FW_VERSION "2.5.0"   // bump on every release
+#define FW_VERSION "2.6.0"   // bump on every release
 #ifndef FW_BUILD
 #define FW_BUILD __DATE__ " " __TIME__   // set by build_stamp.py in PlatformIO builds
 #endif
@@ -496,6 +497,7 @@ void renderProj(const struct tm& lt, bool visible, uint8_t bright) {
 //   AL12 / AL1- / AL-2 / AL--   which of alarms 1 and 2 are on (snooze button when nothing rings)
 //   FLIP          projection turned upside down    rSEt   Wi-Fi forgotten, restarting
 //   SEt1          setting alarm 1's time (hold its button); CAnC: left without saving
+//   bAtt / PLug   USB power lost (running on the battery base) / back; bA 9: battery below 10 %
 const uint8_t LET_P = SEG_A | SEG_B | SEG_E | SEG_F | SEG_G, LET_d = SEG_B | SEG_C | SEG_D | SEG_E | SEG_G;
 const uint8_t LET_o = SEG_C | SEG_D | SEG_E | SEG_G, LET_n = SEG_C | SEG_E | SEG_G, LET_F = SEG_A | SEG_E | SEG_F | SEG_G;
 const uint8_t LET_O = SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F, LET_E = SEG_A | SEG_D | SEG_E | SEG_F | SEG_G;
@@ -830,6 +832,65 @@ void handleButtons() {
 }
 
 // ---------------------------------------------------------------- web server
+// ---------------------------------------------------------------- battery base (optional)
+// A MAX17048 fuel gauge (I2C 0x36) reports the charge; the BQ24074 charger runs the clock from USB when it's
+// there (load sharing) and from the battery when it isn't. Charging stops at cfg.chargeLimit (battery_logic.h).
+// No gauge found: nothing changes (charging left on; the charger stops at full by itself).
+const uint8_t GAUGE_ADDR = 0x36;
+const uint32_t GAUGE_LOST_MS = 30000;    // gauge silent this long: give up on it and leave charging on
+struct Battery {
+  bool gauge = false;      // fuel gauge answering
+  float pct = 0, volts = 0, rate = 0;   // charge %, cell volts, %/hour (+ charging, - discharging)
+  bool external = true;    // USB power present (PGOOD low)
+  bool chargeOn = true;    // charging allowed (CE low)
+  uint32_t lastOk = 0;
+} bat;
+bool onBattery() { return bat.gauge && !bat.external; }
+bool i2cPresent(uint8_t addr) { Wire.beginTransmission(addr); return Wire.endTransmission() == 0; }
+bool gaugeRead(uint8_t reg, uint16_t& v) {
+  Wire.beginTransmission(GAUGE_ADDR);
+  Wire.write(reg);
+  if (Wire.endTransmission(false) != 0) return false;
+  if (Wire.requestFrom(GAUGE_ADDR, (uint8_t)2) != 2) return false;
+  v = (uint16_t)Wire.read() << 8;
+  v |= Wire.read();
+  return true;
+}
+const uint8_t LET_b = SEG_C | SEG_D | SEG_E | SEG_F | SEG_G, LET_u = SEG_C | SEG_D | SEG_E, LET_g = 0x6F;
+void serviceBattery() {
+  static uint32_t last = 0, lastLowMsg = 0;
+  uint32_t ms = millis();
+  if (ms - last < 2000 && last) return;
+  last = ms;
+  uint16_t vc, sc, cr;
+  if (gaugeRead(0x02, vc) && gaugeRead(0x04, sc) && gaugeRead(0x16, cr)) {
+    bat.volts = vc * 78.125e-6f;
+    bat.pct = min(100.0f, sc / 256.0f);
+    bat.rate = (int16_t)cr * 0.208f;
+    bat.gauge = true;
+    bat.lastOk = ms;
+  } else if (bat.gauge && ms - bat.lastOk > GAUGE_LOST_MS) {
+    bat.gauge = false;
+    Serial.println("battery gauge lost: charging left on");
+  }
+  bool ext = !bat.gauge || digitalRead(PIN_PGOOD) == LOW;
+  if (bat.gauge && ext != bat.external) {   // say what happened on the front display
+    const uint8_t plug[4] = {LET_P, LET_L, LET_u, LET_g}, batt[4] = {LET_b, LET_A, LET_t, LET_t};
+    showFront(ext ? plug : batt, 2000);
+    Serial.println(ext ? "USB power back" : "running on battery");
+  }
+  bat.external = ext;
+  bat.chargeOn = chargeWanted(bat.pct, cfg.chargeLimit, bat.chargeOn, bat.gauge);
+  digitalWrite(PIN_CHG_CE, bat.chargeOn ? LOW : HIGH);
+  // Low battery: "bA 9" every 10 minutes below 10 %
+  if (onBattery() && bat.pct < 10 && (lastLowMsg == 0 || ms - lastLowMsg > 600000) && ringState == RS_IDLE) {
+    lastLowMsg = ms;
+    int p = (int)bat.pct;
+    const uint8_t m[4] = {LET_b, LET_A, (uint8_t)(p >= 10 ? seg::DIGIT[p / 10] : 0), seg::DIGIT[p % 10]};
+    showFront(m, 3000);
+  }
+}
+
 // The address of the computer making this request, as the clock sees it on the home network
 String clientIp() { return server.client().remoteIP().toString(); }
 // A computer on the trusted list (Settings > Security) doesn't need the password; everyone else does
@@ -858,6 +919,16 @@ void apiState() {
   d["now"] = (long long)now;
   d["timeValid"] = timeValid();
   d["lastSync"] = (long long)lastNtpSync;
+  {
+    JsonObject b = d["battery"].to<JsonObject>();
+    b["present"] = bat.gauge;
+    if (bat.gauge) {
+      b["pct"] = roundf(bat.pct * 10) / 10; b["volts"] = roundf(bat.volts * 100) / 100; b["rate"] = roundf(bat.rate * 10) / 10;
+      b["external"] = bat.external; b["limit"] = cfg.chargeLimit;
+      b["state"] = !bat.external ? "battery" : !bat.chargeOn ? "held" : bat.pct >= 99.5f ? "full" : "charging";
+      if (!bat.external && bat.rate < -0.05f) b["hoursLeft"] = (int)(bat.pct / -bat.rate);
+    }
+  }
   d["you"] = clientIp();  d["youTrusted"] = trustedClient();
   d["rtc"] = rtcPresent;
   d["ip"] = WiFi.localIP().toString();
@@ -1085,14 +1156,20 @@ void setup() {
   Serial.printf("Start (%s)\n", warm ? "after a reset: resuming" : "power-on");
 
   // Seed the clock from the DS3231 so alarms work even without Wi-Fi.
+  // The DS3231 and the battery gauge share one I2C bus: pins 1 and 2, or on one breadboard the front-edge
+  // pins (pins.h). Use whichever pair something answers on.
   Wire.begin(PIN_SDA, PIN_SCL);
-  rtcPresent = rtc.begin(&Wire);
-  if (!rtcPresent) {   // on one breadboard the module goes on the front-edge pins instead (pins.h)
+  if (!i2cPresent(0x68) && !i2cPresent(GAUGE_ADDR)) {
     Wire.end();
     Wire.begin(PIN_SDA_ALT, PIN_SCL_ALT);
-    rtcPresent = rtc.begin(&Wire);
-    if (rtcPresent) Serial.printf("DS3231 on pins %d and %d\n", PIN_SDA_ALT, PIN_SCL_ALT);
+    if (i2cPresent(0x68) || i2cPresent(GAUGE_ADDR)) Serial.printf("I2C on pins %d and %d\n", PIN_SDA_ALT, PIN_SCL_ALT);
   }
+  rtcPresent = rtc.begin(&Wire);
+  pinMode(PIN_CHG_CE, OUTPUT);
+  digitalWrite(PIN_CHG_CE, LOW);   // charging on until the gauge says otherwise
+  pinMode(PIN_PGOOD, INPUT_PULLUP);
+  serviceBattery();
+  if (bat.gauge) Serial.printf("battery %.0f%% %.2f V\n", bat.pct, bat.volts);
   setenv("TZ", cfg.tz.c_str(), 1);
   tzset();
   if (rtcPresent && !rtc.lostPower()) {
@@ -1184,6 +1261,7 @@ void loop() {
   keepPersist(now);
   if (testPlaying && !soundPlaying() && streamState != SS_CONNECTING) testPlaying = false;
 
+  serviceBattery();
   announceChanges();
   renderAlarmLeds(nightNow);  // every pass: the blinks are faster than a frame
   static uint32_t lastFrame = 0;
@@ -1194,10 +1272,11 @@ void loop() {
     localtime_r(&now, &lt);
     nightNow = computeNight(lt);
 
-    uint8_t projB = nightNow ? cfg.proj.nightBright : cfg.proj.dayBright;
+    bool dim = nightNow || onBattery();   // on battery both displays use their night brightness, to save power
+    uint8_t projB = dim ? cfg.proj.nightBright : cfg.proj.dayBright;
     if (projB < 4 && (millis() < peekUntilMs || ringState != RS_IDLE)) projB = 4;  // easy to see while peeking or ringing
     renderProj(lt, displayVisible(cfg.proj), projB);
-    renderFront(lt, displayVisible(cfg.front), nightNow ? cfg.front.nightBright : cfg.front.dayBright);
+    renderFront(lt, displayVisible(cfg.front), dim ? cfg.front.nightBright : cfg.front.dayBright);
   }
   delay(2);
 }

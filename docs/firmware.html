@@ -68,6 +68,15 @@
 </tbody></table>
 <p>Changes made on the web page show on the front display too: switching an alarm, a display, or flipping the projection (<code>FLIP</code>). Messages show even when the front display is switched off.</p>
 
+<h2 id="battery">Battery</h2>
+<p>With the <a href="assembly.html">battery base</a> fitted (firmware 2.6.0 or later), the clock keeps running when the power goes, about three days on one 13400 mAh pack. A <b>Battery</b> line on the clock's page shows the charge, whether it's charging, and on battery about how many hours are left.</p>
+<ul>
+<li><b>Charge limit.</b> Under <b>Settings › Battery</b>, from 50% to 100% in steps of 5; the default is 80%. Lithium cells kept full wear out faster, and a clock spends nearly all its life on the mains, so 80% gives a longer-lived pack for a little less runtime. The clock stops charging at the limit and starts again when the pack drops 3% below it. At 100% the charger works on its own.</li>
+<li><b>On battery</b> both displays use their night brightness, to make the pack last. Alarms ring as normal.</li>
+<li><b>Messages on the front display:</b> <code>bAtt</code> when the power goes, <code>PLug</code> when it comes back, and <code>bA 9</code> (the charge in %) every 10 minutes once the pack is below 10%.</li>
+<li><b>No gauge:</b> if the fuel gauge stops answering, the clock lets the charger charge to full and assumes it's on mains power, so nothing ever stops it charging by mistake.</li>
+</ul>
+
 <h2>Making sure alarms go off</h2>
 <p>Firmware 2.3.0 was checked for every way an alarm could fail to ring. What it does about each:</p>
 <table><thead><tr><th>If…</th><th>The clock…</th></tr></thead><tbody>

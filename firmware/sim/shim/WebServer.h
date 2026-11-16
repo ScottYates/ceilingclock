@@ -2,6 +2,7 @@
 // Paths under /sim/ are handled by the simulator itself (hardware state, time travel, buttons).
 #pragma once
 #include "Arduino.h"
+#include "sim_libs.h"   // IPAddressSim
 #include <map>
 
 enum HTTPMethod { HTTP_ANY = 0, HTTP_GET = 1, HTTP_POST = 2 };

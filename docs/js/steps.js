@@ -4,7 +4,8 @@
 const ELEC = ['ref_perfboard', 'ref_esp32', 'ref_amp', 'ref_rtc'];
 const BARREL = ['barrel', 'ref_mirror', 'disp_holder', 'ref_projdisp', 'lens_mount', 'pins_barrel', 'sleeve', 'ref_lens', 'lens_cap'];
 const CAP = ['end_cap'];
-const PRINTED = ['base', 'lid', 'barrel', 'disp_holder', 'end_cap', 'lens_mount', 'sleeve', 'lens_cap', 'pins_asm', 'pins_barrel'];
+const BATT = ['batt_base', 'ref_packs', 'ref_bb_boards', 'batt_plate'];
+const PRINTED = ['base', 'batt_base', 'batt_plate', 'lid', 'barrel', 'disp_holder', 'end_cap', 'lens_mount', 'sleeve', 'lens_cap', 'pins_asm', 'pins_barrel'];
 
 const s1 = ['base', 'ref_speaker'];
 const s2 = [...s1, 'ref_tm1637', 'ref_window', 'ref_usbc', 'ref_buttonB'];
@@ -12,14 +13,17 @@ const s3 = [...s2, ...ELEC];
 const s6 = [...s3, ...BARREL, ...CAP];
 const s7 = [...s6, 'lid', 'ref_button', 'ref_alarmbtns', 'ref_ldr', 'pins_asm'];
 const s8 = [...s7, 'ref_wires'];
+const s9 = [...s8, ...BATT];
 
 export const STEPS = [
   {
     title: 'Print the parts',
     view: { visible: PRINTED, highlight: [], explode: 0.75, camera: [420, 380, 560], target: [0, 100, 0] },
-    html: `<p>Print the nine files in <code>hardware/stl/</code>. They are already in printing orientation. The case needs <b>no screws</b>: printed quarter-turn lock pins hold the lid, end cap and lens mount, and the circuit board snaps under printed hooks.</p>
+    html: `<p>Print the eleven files in <code>hardware/stl/</code> (nine without the battery base). They are already in printing orientation. The case needs <b>no screws</b>: printed quarter-turn lock pins hold the lid, end cap and lens mount, and the circuit board snaps under printed hooks.</p>
 <table><thead><tr><th>Part</th><th>Material</th><th>Notes</th></tr></thead><tbody>
 <tr><td>base.stl</td><td>PLA/PETG, black or dark grey</td><td>170 × 135 × 44 mm (56 mm at the bearing). 0.2 mm layers, 3 walls, 15% infill. No supports. For a 0.56" display, print <code>base_056.stl</code> instead.</td></tr>
+<tr><td>batt_base.stl</td><td>Same as base</td><td>The battery tray the clock stands on: 170 × 135 × 27 mm. Optional. Prints open side up, no supports.</td></tr>
+<tr><td>batt_plate.stl</td><td>Same as base</td><td>Its top plate, with rings for the clock's feet. Prints flat, rings up.</td></tr>
 <tr><td>lid.stl</td><td>Same as base</td><td>Prints flat, <b>top face down</b> (as exported): the pins' ramps are on its underside. The top gets the smooth bed finish.</td></tr>
 <tr><td>barrel.stl</td><td><b>Black</b> PLA/PETG</td><td>Opaque, so room light doesn't wash out the picture. Stands on its open end; the mirror ramp inside is a 45° slope, so no supports.</td></tr>
 <tr><td>disp_holder.stl</td><td>Black</td><td>Prints flat.</td></tr>
@@ -100,8 +104,21 @@ export const STEPS = [
 <li>Lay the lid on so the barrel and end cap sit in its cut-out. Lock it with a short pin in each of the three corners and a long pin through each of the end cap's two tabs: push the pin in with its wing head <b>along</b> the slot beside the hole, then turn the head a quarter turn either way until it lies <b>crosswise</b> and clicks.</li></ol>`,
   },
   {
+    title: 'Battery base (optional)',
+    view: { visible: s9, highlight: BATT, explode: 0.45, camera: [380, 160, 420], target: [0, 0, 0] },
+    html: `<p>Runs the clock for about three days without mains power. Skip this step and the clock works as before from the USB-C supply. Needs firmware 2.6.0 or later.</p>
+<ol>
+<li>Solder header pins or short wires to the <b>BQ24074 charger</b>, the <b>MAX17048 fuel gauge</b> and the <b>5 V boost</b>. Drop them into the three pockets at the front of the tray (charger on the left) and fix each with a square of foam tape.</li>
+<li>Wire them as the <a href="wiring.html#battery">wiring page</a> shows: charger OUT to boost VIN, grounds together. Plug the pack into the gauge's JST socket and the gauge's lead into the charger's <b>BAT</b> socket. The pack's lead goes through the notch in the rail in front of its bay.</li>
+<li>Lay the pack in the left bay, label up. The right bay takes a second pack later.</li>
+<li>In the clock, move the USB-C breakout's VBUS wire off the 5 V rail. Run eight wires (VBUS, 5 V back, GND, 3V3, SDA, SCL, CE, PGOOD) down through the slot in the clock's floor, behind the speaker, and through the matching slot in the plate. Leave 10 cm of slack.</li>
+<li>Drop the plate into the tray, slot at the front left, and stand the clock on it with its feet in the four rings.</li>
+<li>Plug in USB power. On the clock's web page, a <b>Battery</b> line shows the charge. The pack charges to 80% and stops there; change that under <b>Settings › Battery</b>.</li></ol>
+<p>Lithium cells need respect: don't crush or pierce the pack, and keep it out of hot sun. The pack's own protection board cuts it off at 2.4 V; the clock shows <code>bA 9</code> on the front display when it's below 10%.</p>`,
+  },
+  {
     title: 'Focus, aim and finish',
-    view: { visible: s8, highlight: [], explode: 0, tilt: 20, beam: true, camera: [2500, 450, 2900], target: [0, 1000, 250] },
+    view: { visible: s9, highlight: [], explode: 0, tilt: 20, beam: true, camera: [2500, 450, 2900], target: [0, 1000, 250] },
     html: `<ol>
 <li>Plug in the 5 V supply. Both displays show <code>-- --</code> until the clock knows the time; connect it to Wi-Fi first (see <a href="firmware.html">Firmware</a>).</li>
 <li><b>Aim:</b> hold the lens mount and roll the barrel toward the front. It clicks every 5°, from 5° back to 30° forward; the grooves on the barrel's right end show the steps. The picture turns with the barrel, so the time stays straight.</li>

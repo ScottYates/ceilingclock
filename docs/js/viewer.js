@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { PARTS, ALL, MATERIALS, AXIS } from './parts.js?v=20261115c';
-import { optics, LENS, CEILING } from './optics.js?v=20261115c';
+import { PARTS, ALL, MATERIALS, AXIS } from './parts.js?v=20261116a';
+import { optics, LENS, CEILING } from './optics.js?v=20261116a';
 
 // createViewer(container) -> { ready: Promise, setState({visible, highlight, explode, tilt, focus, beam, camera, target}), onPick }
-export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'models/clock.glb?v=20261115c' } = {}) {
+export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'models/clock.glb?v=20261116a' } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -78,6 +78,8 @@ export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'mod
 
   function apply() {
     const hl = new Set(state.highlight);
+    // the battery base sits under the clock (z below 0): drop the floor grid beneath it when it's shown
+    grid.position.y = state.visible.includes('batt_base') ? -27 + PARTS.batt_base.explode[2] * state.explode - 0.5 : 0;
     for (const [name, list] of Object.entries(meshes)) {
       const p = PARTS[name];
       const vis = state.visible.includes(name) && !(p.hideExploded && state.explode > 0.04);

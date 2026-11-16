@@ -44,7 +44,7 @@ h2{font-size:15px;font-weight:500;color:var(--mut);margin:26px 4px 8px}
 .hero{padding:18px 0 4px}
 #face{display:block;width:100%;max-width:340px;height:auto}
 #date{color:var(--mut);margin-top:6px}
-#nextLine{margin-top:2px}
+#nextLine{margin-top:2px}#batLine{margin-top:2px;color:var(--mut);font-size:14px}
 #warn{color:var(--bad);font-size:14px;margin-top:6px}
 /* alarm list */
 .al .t{font-size:30px;font-weight:300;font-variant-numeric:tabular-nums;letter-spacing:-.5px;line-height:1.1}
@@ -93,6 +93,7 @@ details[open]>summary{border-bottom:1px solid var(--line)}
   <svg id="face" viewBox="0 0 200 60" role="img" aria-label="Current time"></svg>
   <div id="date"></div>
   <div id="nextLine"></div>
+  <div id="batLine" hidden></div>
   <div id="warn" hidden></div>
  </div>
  <h2>Alarms</h2>
@@ -194,6 +195,13 @@ details[open]>summary{border-bottom:1px solid var(--line)}
   <div class="row"><div class="grow">Side button<small>Press: front display on or off ("d on" / "d oF"). Hold 3 s: ceiling projection on or off ("P on" / "P oF"). Keep holding to 10 s: forget the Wi-Fi and restart in setup mode ("rSEt"). While setting an alarm: takes one away.</small></div></div>
   <div class="row"><div class="grow">Messages<small>Changes made on this page show on the front display too, so the clock always says what just happened.</small></div></div>
  </div>
+
+ <h2>Battery</h2>
+ <div class="grp">
+  <div class="row"><div class="grow" id="sBatNow">No battery base found</div></div>
+  <div class="row"><span>Charge to</span><input type="range" min="50" max="100" step="5" id="sChg"><span class="val" id="sChgV"></span></div>
+ </div>
+ <p class="note">Charging stops here and starts again 3 points below, which is easier on the battery than keeping it full. 80% runs the clock for a few days; set 100% before a storm. On battery both displays use their night brightness.</p>
 
  <h2>Security and updates</h2>
  <div class="grp">
@@ -315,6 +323,9 @@ $('ePlay').onclick=()=>{const a=C.alarms[cur];act('test',(a.stream?'&stream='+en
 $('eRing').onclick=async()=>{await saveNow();act('ring','&id='+cur)};
 async function delAlarm(){if(!confirm('Delete this alarm?'))return;C.alarms.splice(cur,1);cur=-1;await saveNow();go('')}
 
+function batText(b){const p=Math.round(b.pct)+'%';
+ return b.state=='battery'?'On battery, '+p+(b.hoursLeft?', about '+(b.hoursLeft>=48?Math.round(b.hoursLeft/24)+' days':b.hoursLeft+' hours')+' left':''):
+  b.state=='held'?'Battery '+p+', held at '+b.limit+'%':b.state=='full'?'Battery full':'Battery '+p+', charging to '+b.limit+'%'}
 // ---- settings
 function fillSettings(){const mo=MODES.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('');
  $('sFMode').innerHTML=mo;$('sPMode').innerHTML=mo;$('sFMode').value=C.front.mode;$('sPMode').value=C.proj.mode;
@@ -323,7 +334,7 @@ function fillSettings(){const mo=MODES.map(x=>`<option value="${x[0]}">${x[1]}</
  $('sNStart').value=hm(C.nightStart);$('sNEnd').value=hm(C.nightEnd);$('sLdr').checked=C.useLdr;$('sLdrT').value=C.ldrThreshold;$('sLdrTV').textContent=C.ldrThreshold;$('sLdrRow').hidden=!C.useLdr;
  $('sH24').checked=C.hour24;$('sNtp').value=C.ntp;$('sPw').value=C.webPassword||'';
  const known=TZ.some(z=>z[1]==C.tz);$('sTz').innerHTML=TZ.map(z=>`<option value="${z[1]}">${z[0]}</option>`).join('')+'<option value="">Other…</option>';
- $('sTz').value=known?C.tz:'';$('sTzRow').hidden=known;$('sTzCustom').value=C.tz;renderSounds();renderTrust()}
+ $('sTz').value=known?C.tz:'';$('sTzRow').hidden=known;$('sTzCustom').value=C.tz;$('sChg').value=C.chargeLimit;$('sChgV').textContent=C.chargeLimit+'%';renderSounds();renderTrust()}
 function st(id,fn,ev='change'){$(id).addEventListener(ev,e=>{fn(e.target);saveSoon()})}
 st('sFMode',t=>C.front.mode=+t.value);st('sPMode',t=>C.proj.mode=+t.value);
 for(const[id,k,f]of[['sFDay','front','dayBright'],['sFNight','front','nightBright'],['sPDay','proj','dayBright'],['sPNight','proj','nightBright']])
@@ -331,7 +342,7 @@ for(const[id,k,f]of[['sFDay','front','dayBright'],['sFNight','front','nightBrigh
 st('sShow',t=>C.showOnAlarm=t.checked);st('sMx',t=>C.projMirrorX=t.checked);st('sMy',t=>C.projMirrorY=t.checked);st('sUd',t=>C.projUpsideDown=t.checked);
 st('sNStart',t=>C.nightStart=mh(t.value));st('sNEnd',t=>C.nightEnd=mh(t.value));
 st('sLdr',t=>{C.useLdr=t.checked;$('sLdrRow').hidden=!t.checked});st('sLdrT',t=>{C.ldrThreshold=+t.value;$('sLdrTV').textContent=t.value},'input');
-st('sH24',t=>C.hour24=t.checked);st('sNtp',t=>C.ntp=t.value.trim()||'pool.ntp.org');st('sPw',t=>C.webPassword=t.value);
+st('sChg',t=>{C.chargeLimit=+t.value;$('sChgV').textContent=t.value+'%'},'input');st('sH24',t=>C.hour24=t.checked);st('sNtp',t=>C.ntp=t.value.trim()||'pool.ntp.org');st('sPw',t=>C.webPassword=t.value);
 st('sTz',t=>{$('sTzRow').hidden=!!t.value;if(t.value)C.tz=t.value});st('sTzCustom',t=>{if(t.value.trim())C.tz=t.value.trim()});
 function renderTrust(){const t=C.trusted||[],me=ST&&ST.you;
  $('sTrust').innerHTML=t.map((ip,i)=>`<div class="row"><div class="grow">${esc(ip)}${ip==me?'<small>This computer</small>':''}</div><button class="pbtn danger" onclick="untrust(${i})" aria-label="Stop trusting ${esc(ip)}">Remove</button></div>`).join('');
@@ -355,6 +366,8 @@ async function poll(){try{const s=await(await fetch('/api/state')).json();ST=s;i
  $('nextLine').textContent=s.nextAt?'Next alarm '+fmtWhen(s.nextAt):'No alarms on';
  const ago=s.lastSync?(s.now-s.lastSync)/60:null,w=!s.timeValid?'The clock doesn\'t know the time yet. Check its Wi-Fi.':ago===null||ago>180?'The time hasn\'t synced for a while. Check the Wi-Fi.':'';
  $('warn').hidden=!w;$('warn').textContent=w;
+ const b=s.battery||{};$('batLine').hidden=!b.present;if(b.present)$('batLine').textContent=batText(b);
+ if($('sBatNow'))$('sBatNow').innerHTML=b.present?esc(batText(b))+`<small>${b.volts} V${b.rate?' · '+(b.rate>0?'+':'')+b.rate+'% an hour':''}</small>`:'No battery base found<small>Fit one to keep the clock running through power cuts.</small>';
  $('ring').hidden=s.ring=='idle';$('bSnz').hidden=s.ring!='ringing';
  $('ringTxt').textContent=s.ring=='ringing'?(s.ringLabel||'Alarm'):'Snoozed';
  $('ringSub').textContent=s.ring=='snoozed'?'Rings again '+fmtWhen(s.snoozeUntil):s.source=='stream'&&s.stream&&s.stream.title?s.stream.title:'';

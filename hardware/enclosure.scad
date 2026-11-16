@@ -4,7 +4,7 @@
 // z = 0 at the bottom of the feet, front of the clock faces -Y.
 //
 // Render one part:   openscad -D 'part="base"' -D 'print=true' -o base.stl enclosure.scad
-// Parts: base lid barrel disp_holder end_cap lens_mount sleeve lens_cap pins
+// Parts: base batt_base batt_plate lid barrel disp_holder end_cap lens_mount sleeve lens_cap pins
 // No screws: printed quarter-turn lock pins hold the lid, end cap and lens mount; the circuit board snaps under hooks.
 // Bought components (not printed, for the 3D viewer): see components.scad. Add -D 'mat="..."' to
 //   render one material of a component, e.g. -D 'part="ref_tm1637"' -D 'mat="led_red"'.
@@ -168,6 +168,8 @@ module base() {
     // left side: USB-C, button B
     translate([-box_w/2 - 1, usb_y - 5, usb_z - 2.25]) cube([wall + 2, 10, 4.5]);
     translate([-box_w/2 - 1, btnb_y, btnb_z]) rotate([0, 90, 0]) cylinder(d = button_hole, h = wall + 2);
+    // wire slot down to the battery base
+    translate([0, 0, -1]) bb_slot(floor_top + 2);
     // speaker grille
     translate([spk_xy[0], spk_xy[1], -1])
       for (r = [0, 7, 14], a = [0 : (r == 0 ? 360 : 360 / (r * 0.9)) : 359])
@@ -398,6 +400,77 @@ module pin_plate() {
   for (i = [0:4]) translate([(i % 4) * 14, 12 + floor(i / 4) * 12, 0]) lock_pin(GRIP_LONG);
 }
 
+// ---------------------------------------------------------------- battery base
+// A printed tray the clock stands on: same footprint, bb_h tall, z from -bb_h to 0. It holds one or two
+// 4 x 18650 packs (bays at the back) and the charger, fuel gauge and boost (front strip). A top plate drops
+// into a rebate in the tray walls; rings on it locate the clock's four feet, so the clock's weight holds
+// the plate down. The wires (USB VBUS down, 5 V back up, I2C, CE, PGOOD) pass through a slot in the clock's
+// floor and a matching slot in the plate.
+bb_h = 27;  bb_wall = 2.5;  bb_floor = 2;
+bbp_t = 2.5;  bbp_reb = 1.2;  bbp_gap = 0.3;               // top plate thickness, rebate width, fit clearance
+bay = [78, 74];  bay_h = 21;                               // one pack bay (fits packs up to about 76 x 72 x 20)
+bay_y0 = -11;                                              // bays run from here to the back wall
+bay_x = [-41, 41];                                         // bay centres
+cslot = [-77, -26];  cslot_sz = [8, 16];                   // wire slot, clock floor and plate (x, y centre; w, l)
+bb_boards = [   // name, centre x, y, size x, y  (front strip; pockets with 1.2 mm walls)
+  ["charger", -52, -42, 38.6, 33.6],   // Adafruit bq24074 (4755), 38 x 33
+  ["gauge",   -14, -42, 26, 18.4],     // Adafruit MAX17048 (5580), 25.4 x 17.8
+  ["boost",    14, -42, 15.8, 15.8]];  // Pololu U3V40F5, 15.2 x 15.2
+module bb_slot(h) translate([cslot[0], cslot[1], 0]) hull() for (s = [-1, 1])
+  translate([0, s * (cslot_sz[1] - cslot_sz[0]) / 2, 0]) cylinder(d = cslot_sz[0], h = h, $fn = 32);
+module batt_base() translate([0, 0, -bb_h]) {
+  in_w = box_w - 2*bb_wall;  in_d = box_d - 2*bb_wall;
+  difference() {
+    union() {
+      difference() {
+        rrect(box_w, box_d, bb_h, corner_r);
+        translate([0, 0, bb_floor]) rrect(in_w, in_d, bb_h, corner_r - bb_wall);
+      }
+      // bay walls: a divider between the bays and a front rail, both up to the plate
+      translate([-1, bay_y0, 0]) cube([2, box_d/2 - bb_wall - bay_y0, bb_h - bbp_t]);
+      translate([-in_w/2, bay_y0 - 2, 0]) difference() {
+        cube([in_w, 2, bb_h - bbp_t]);
+        for (bx = bay_x) translate([in_w/2 + bx - 12, -1, bb_floor + 4]) cube([24, 4, bb_h]);   // lead notches
+      }
+      // plate supports in the front strip
+      for (x = [-30, 30, 62]) translate([x - 3, -box_d/2 + bb_wall - eps, 0]) cube([6, 3, bb_h - bbp_t]);
+      // board pockets
+      for (b = bb_boards) translate([b[1], b[2], 0]) difference() {
+        translate([-b[3]/2 - 1.2, -b[4]/2 - 1.2, 0]) cube([b[3] + 2.4, b[4] + 2.4, bb_floor + 3]);
+        translate([-b[3]/2, -b[4]/2, bb_floor]) cube([b[3], b[4], 10]);
+        translate([-b[3]/2 - 2, -4, bb_floor + 1]) cube([b[3] + 4, 8, 10]);   // gaps for the wires
+      }
+    }
+    // rebate for the top plate
+    translate([0, 0, bb_h - bbp_t]) rrect(in_w + 2*bbp_reb, in_d + 2*bbp_reb, bbp_t + 1, corner_r - bb_wall + bbp_reb);
+    // finger notches to lift the plate (front and back)
+    for (sy = [-1, 1]) translate([0, sy * (box_d/2 - bb_wall/2), bb_h]) rotate([0, 90, 0]) cylinder(r = 4, h = 24, center = true);
+    // vents in the back wall
+    for (x = [-60 : 12 : 60]) translate([x - 2, box_d/2 - bb_wall - 1, 8]) cube([4, bb_wall + 2, 10]);
+  }
+}
+module batt_plate() translate([0, 0, -bbp_t]) {
+  in_w = box_w - 2*bb_wall + 2*bbp_reb - 2*bbp_gap;  in_d = box_d - 2*bb_wall + 2*bbp_reb - 2*bbp_gap;
+  difference() {
+    union() {
+      rrect(in_w, in_d, bbp_t, corner_r - bb_wall + bbp_reb - bbp_gap);
+      // rings that locate the clock's feet
+      for (sx = [-1, 1], sy = [-1, 1]) translate([sx * (box_w/2 - 14), sy * (box_d/2 - 14), bbp_t - eps])
+        difference() { cylinder(d = 19, h = 2); translate([0, 0, -1]) cylinder(d = 14.8, h = 4); }
+    }
+    translate([0, 0, -1]) bb_slot(bbp_t + 2);
+  }
+}
+module ref_packs() for (bx = bay_x) translate([bx, bay_y0 + bay[1]/2, -bb_h + bb_floor]) {   // 4 x 18650 in parallel
+  M("cap_blue") for (i = [0:3]) translate([-37 + 9.25 + i * 18.5, 0, 9.25]) rotate([90, 0, 0]) cylinder(d = 18.4, h = 65, center = true, $fn = 32);
+  M("black") translate([-37, -33.5, 0]) cube([74, 1, 18.5]);
+  M("black") translate([-37, 32.5, 0]) cube([74, 1, 18.5]);
+}
+module ref_bb_boards() for (b = bb_boards) translate([b[1] - b[3]/2 + 0.3, b[2] - b[4]/2 + 0.3, -bb_h + bb_floor]) {
+  M(b[0] == "boost" ? "pcb_green" : "pcb_black") pcb(b[3] - 0.6, b[4] - 0.6);
+  M("black") translate([b[3]/2 - 3, b[4]/2 - 3, 1.6]) cube([5, 5, 1]);
+}
+
 // ---------------------------------------------------------------- bought components (viewer only, not printed)
 include <components.scad>
 
@@ -405,6 +478,10 @@ include <components.scad>
 // Parts that ride in the barrel are drawn at the current tilt.
 module show(p) {
   if (p == "base") base();
+  else if (p == "batt_base") batt_base();
+  else if (p == "batt_plate") batt_plate();
+  else if (p == "ref_packs") ref_packs();
+  else if (p == "ref_bb_boards") ref_bb_boards();
   else if (p == "lid") lid();
   else if (p == "barrel") tilted() barrel();
   else if (p == "disp_holder") tilted() disp_holder();
@@ -436,7 +513,9 @@ module show(p) {
 
 // Printing orientation: lay each part on the bed at z = 0.
 module print_pose(p) {
-  if (p == "lid")              translate([0, 0, lid_top]) mirror([0, 0, 1]) children();   // upside down: the pin ramps are on its underside
+  if (p == "batt_base")        translate([0, 0, bb_h]) children();
+  else if (p == "batt_plate")  translate([0, 0, bbp_t]) children();
+  else if (p == "lid")              translate([0, 0, lid_top]) mirror([0, 0, 1]) children();   // upside down: the pin ramps are on its underside
   // barrel stands on its open left end; the mirror ramp is then a 45 degree slope, no supports
   else if (p == "barrel")      rotate([0, -90, 0]) translate([-br_x0, -ax_y, -z_ax]) children();
   else if (p == "disp_holder") rotate([0, -90, 0]) translate([-br_x0, -ax_y, -z_ax]) children();
@@ -459,6 +538,8 @@ module assembled_pins() lid_pins() lp_place($grip);   // lid corners, end cap ta
 
 if (part == "assembly") {
   color("#3a3f47") base();
+  color("#2f343b") batt_base();
+  color("#4a505a") batt_plate();
   color("#4a505a") lid();
   color("#2b2f36") tilted() barrel();
   color("#e8743b") tilted() disp_holder();

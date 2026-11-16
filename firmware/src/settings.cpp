@@ -33,6 +33,7 @@ void configToJson(const Config& c, JsonDocument& doc) {
   doc["projUpsideDown"] = c.projUpsideDown;
   doc["showOnAlarm"] = c.showOnAlarm;
   doc["webPassword"] = c.webPassword;
+  doc["chargeLimit"] = c.chargeLimit;
   JsonArray tr = doc["trusted"].to<JsonArray>();
   for (int i = 0; i < c.trustedCount; i++) tr.add(c.trusted[i]);
   JsonArray arr = doc["alarms"].to<JsonArray>();
@@ -70,6 +71,7 @@ bool configFromJson(Config& c, JsonVariantConst v) {
   c.projUpsideDown = v["projUpsideDown"] | c.projUpsideDown;
   c.showOnAlarm = v["showOnAlarm"] | c.showOnAlarm;
   c.webPassword = v["webPassword"] | c.webPassword;
+  c.chargeLimit = constrain((int)(v["chargeLimit"] | (int)c.chargeLimit), 50, 100);
   JsonArrayConst tr = v["trusted"];
   if (!tr.isNull()) {
     c.trustedCount = 0;

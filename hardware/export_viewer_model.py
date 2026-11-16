@@ -14,9 +14,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SCAD = os.path.join(HERE, 'enclosure.scad')
 OUT = os.path.join(HERE, '..', 'docs', 'models', 'clock.glb')
 
-PRINTED = ['base', 'lid', 'barrel', 'disp_holder', 'end_cap', 'lens_mount', 'sleeve', 'lens_cap', 'pins_asm', 'pins_barrel']
+PRINTED = ['base', 'batt_base', 'batt_plate', 'lid', 'barrel', 'disp_holder', 'end_cap', 'lens_mount', 'sleeve', 'lens_cap', 'pins_asm', 'pins_barrel']
 COMPONENTS = ['ref_tm1637', 'ref_window', 'ref_button', 'ref_alarmbtns', 'ref_buttonB', 'ref_ldr', 'ref_perfboard', 'ref_esp32',
-              'ref_amp', 'ref_rtc', 'ref_speaker', 'ref_usbc', 'ref_projdisp', 'ref_mirror', 'ref_lens', 'ref_wires']
+              'ref_amp', 'ref_rtc', 'ref_speaker', 'ref_usbc', 'ref_projdisp', 'ref_mirror', 'ref_lens', 'ref_wires', 'ref_packs', 'ref_bb_boards']
 MATERIALS = ['pcb_blue', 'pcb_green', 'pcb_red', 'pcb_purple', 'pcb_black', 'black', 'metal', 'metal_dark', 'alu',
              'gold', 'copper', 'white', 'mirror', 'led_red', 'led_green', 'seg_off', 'glass', 'acrylic_red', 'screw_green', 'resistor', 'cap_blue', 'cone', 'wire_red', 'wire_black', 'wire_yellow',
              'wire_white', 'wire_blue', 'wire_green']

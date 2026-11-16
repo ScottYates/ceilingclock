@@ -17,17 +17,32 @@
 
 <h2>Power</h2>
 <table><thead><tr><th>From</th><th>To</th><th>Notes</th></tr></thead><tbody>
-<tr><td>USB-C breakout VBUS (5 V)</td><td>5 V rail on the perfboard</td><td>Use 22 AWG or thicker; peak draw is about 1 A, with the speaker loud</td></tr>
+<tr><td>USB-C breakout VBUS (5 V)</td><td>Charger <b>VBUS</b> in the battery base</td><td>Down through the slot in the floor. Use 22 AWG or thicker; peak draw is about 1 A, with the speaker loud</td></tr>
+<tr><td>Charger <b>OUT</b></td><td>Boost <b>VIN</b></td><td>OUT is USB power when it's there, the battery when it isn't</td></tr>
+<tr><td>Boost <b>VOUT</b> (5 V)</td><td>5 V rail on the perfboard</td><td>Back up through the slot. Without the battery base, VBUS goes straight here instead</td></tr>
 <tr><td>5 V rail</td><td>ESP32 <b>5V</b> pin, MAX98357A VIN</td><td>Put the 100 µF capacitor across 5 V/GND at the amplifier</td></tr>
 <tr><td>ESP32 <b>3V3</b> pin</td><td>Both TM1637 displays' VCC, DS3231 VCC, LDR</td><td>Light loads only</td></tr>
 <tr><td>GND</td><td>Every module</td><td>Join all grounds at one point on the board</td></tr>
 </tbody></table>
 
+<h3 id="battery">Battery base</h3>
+<p>The battery base is a printed tray the clock stands on. It holds the pack (one, or two side by side) and three small boards. The wires between it and the clock go through matching slots in the clock's floor and the base's top plate:</p>
+<table><thead><tr><th>Wire</th><th>From</th><th>To</th></tr></thead><tbody>
+<tr><td>USB 5 V in</td><td>USB-C breakout VBUS</td><td>BQ24074 <b>VBUS</b> (the pin, not its own USB socket)</td></tr>
+<tr><td>5 V out</td><td>Boost <b>VOUT</b></td><td>Perfboard 5 V rail</td></tr>
+<tr><td>GND</td><td>Perfboard GND</td><td>Charger, gauge and boost GND</td></tr>
+<tr><td>3.3 V</td><td>ESP32 <b>3V3</b></td><td>Gauge <b>VIN</b></td></tr>
+<tr><td>SDA, SCL</td><td>ESP32 pins 1, 2 (with the DS3231)</td><td>Gauge SDA, SCL</td></tr>
+<tr><td>CE</td><td>ESP32 pin 10</td><td>Charger <b>CE</b>. High stops charging; this is how the clock holds the pack at its charge limit</td></tr>
+<tr><td>PGOOD</td><td>ESP32 pin 13</td><td>Charger <b>PGOOD</b>. Low while USB power is present</td></tr>
+</tbody></table>
+<p>Inside the base: charger <b>OUT</b> to boost <b>VIN</b> and GND to GND; the pack plugs into the gauge's JST socket, and the gauge's JST lead into the charger's <b>BAT</b> socket. With two packs, join their leads with a JST-PH Y-cable only if both are at the same charge when you connect them. Eight wires go down the slot: an 8-way ribbon or a bundle of 26 AWG wires (22 AWG for the two 5 V wires and one GND) is enough. Leave 10 cm of slack so you can lift the clock off the base.</p>
+
 <h3>The two displays</h3>
 <p>The front display and the ceiling projector are the same kind of TM1637 four-digit module. Each has its own CLK and DIO pins; power both from 3.3 V. (At 5 V they're a little brighter, but most of these modules pull CLK and DIO up to their own VCC, which would put 5 V on the ESP32's pins.) The projector's digits are sent mirrored, so set the flips on the clock's web page until the ceiling reads right.</p>
 
 <h3>Alarm buttons</h3>
-<p>Two 16 mm momentary buttons with a light inside switch alarms 1 and 2. Each has two switch contacts and two LED contacts (+ and −). Switch: one contact to its GPIO (8 or 9), the other to GND; the internal pull-up does the rest. Light: GPIO 10 or 13 → 220 Ω resistor → LED + ; LED − → GND. That gives about 5 mA from the 3.3 V pin, plenty for a glow by a bed. Use red or green LEDs: blue and white ones need more than 3.3 V. Buttons sold with a built-in resistor for 3–6 V also work without the 220 Ω, a little dimmer.</p>
+<p>Two 16 mm momentary buttons with a light inside switch alarms 1 and 2. Each has two switch contacts and two LED contacts (+ and −). Switch: one contact to its GPIO (8 or 9), the other to GND; the internal pull-up does the rest. Light: GPIO 41 or 42 → 220 Ω resistor → LED + ; LED − → GND. That gives about 5 mA from the 3.3 V pin, plenty for a glow by a bed. Use red or green LEDs: blue and white ones need more than 3.3 V. Buttons sold with a built-in resistor for 3–6 V also work without the 220 Ω, a little dimmer.</p>
 
 <div class="note"><b>Flashing while powered:</b> don't plug a computer into the ESP32's USB port while the 5 V supply is connected, unless your board has a protection diode on its 5V pin. Unplug the supply first, or after the first flash use the web page's firmware update instead.</div>
 

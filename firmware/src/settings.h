@@ -39,6 +39,7 @@ struct Config {
   bool projMirrorY = false;
   bool projUpsideDown = false;    // turn the projected picture 180 degrees
   bool showOnAlarm = true;        // displays turn on while ringing even if set to off
+  uint8_t chargeLimit = 80;       // battery base: stop charging at this charge (%), 50-100
   String webPassword = "";        // empty = no login (user name is "admin")
   // Computers (by their address on the home network) that don't need the password: see authed() in main.cpp
   static const int MAX_TRUSTED = 4;

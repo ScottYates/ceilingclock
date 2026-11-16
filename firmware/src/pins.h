@@ -35,8 +35,14 @@
 // briefly: after a press, when you press snooze to check, and while that alarm rings.
 #define PIN_BTN_AL1    8   // alarm 1 on/off
 #define PIN_BTN_AL2    9   // alarm 2 on/off
-#define PIN_LED_AL1   10
-#define PIN_LED_AL2   13
+#define PIN_LED_AL1   41   // on the ESP32's back edge: the lights need the perfboard (the one-breadboard test leaves them out)
+#define PIN_LED_AL2   42
+
+// Battery base (optional): Adafruit BQ24074 charger and MAX17048 fuel gauge (I2C 0x36, on the DS3231's bus).
+// The charger's CE input stops charging when high; its PGOOD output is pulled low while USB power is present.
+// Both on the front edge, so the one-breadboard test can reach them.
+#define PIN_CHG_CE    10
+#define PIN_PGOOD     13
 
 // Light sensor: LDR from 3.3V to this pin, 10k from this pin to GND
 #define PIN_LDR        7

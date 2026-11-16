@@ -46,7 +46,20 @@ struct UpdateClass {
   bool hasError() { return false; }
 };
 extern UpdateClass Update;
-struct TwoWire { bool begin(int, int) { return true; } bool end() { return true; } };
+// I2C: answers for the DS3231 (0x68, when fitted) and the battery base's MAX17048 fuel gauge (0x36), whose
+// registers come from the simulated battery (sim_hw.cpp)
+struct TwoWire {
+  bool begin(int, int) { return true; }
+  bool end() { return true; }
+  void beginTransmission(uint8_t a) { addr_ = a; n_ = 0; }
+  size_t write(uint8_t b) { if (n_++ == 0) reg_ = b; return 1; }
+  uint8_t endTransmission(bool stop = true);
+  uint8_t requestFrom(uint8_t a, uint8_t n);
+  int read() { return pos_ < len_ ? buf_[pos_++] : -1; }
+  int available() { return len_ - pos_; }
+ private:
+  uint8_t addr_ = 0, reg_ = 0, n_ = 0, buf_[2] = {0, 0}, len_ = 0, pos_ = 0;
+};
 extern TwoWire Wire;
 
 // ---------------------------------------------------------------- RTC (absent in the simulator; time comes from "NTP")

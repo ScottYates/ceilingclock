@@ -5,6 +5,10 @@
 export const AXIS = { y: 30.5, z: 44.5 };
 export const PARTS = {
   base:          { label: 'Base',                   kind: 'print', color: 0x39404a, explode: [0, 0, 0] },
+  batt_base:     { label: 'Battery base',           kind: 'print', color: 0x30353d, explode: [0, 0, -70] },
+  batt_plate:    { label: 'Battery base top plate', kind: 'print', color: 0x4a525d, explode: [0, 0, -30] },
+  ref_packs:     { label: 'Battery pack, 4 × 18650 (2nd optional)', kind: 'part', color: 0x2c6fd6, explode: [0, 0, -50] },
+  ref_bb_boards: { label: 'Charger, fuel gauge, 5 V boost', kind: 'part', color: 0x222222, explode: [0, 0, -50] },
   end_cap:       { label: 'End cap',                kind: 'print', color: 0x2d323a, explode: [-45, 0, 0] },
   barrel:        { label: 'Barrel',                 kind: 'print', color: 0x2d323a, explode: [0, 0, 70], tilts: true },
   disp_holder:   { label: 'Display holder',         kind: 'print', color: 0xe8743b, explode: [-25, 0, 70], tilts: true },

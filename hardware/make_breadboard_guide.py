@@ -124,6 +124,10 @@ MODS = {
   'amp':    (30, 250, 200, 370, 'right', ['LRC', 'BCLK', 'DIN', 'GAIN', 'SD', 'GND', 'VIN'], '#7b3fa0', 'MAX98357A amp', ''),
   'usbc':   (30, 560, 170, 625, 'right', ['VBUS', 'GND'], '#2a6f9e', 'USB-C breakout', '5 V 3 A supply'),
   'proj':   (800, 150, 980, 225, 'left', ['CLK', 'DIO', 'VCC', 'GND'], '#c0392b', 'Projector display', ''),
+  # battery base parts (one-breadboard test)
+  'charger': (30, 385, 200, 495, 'right', ['VBUS', 'GND', 'OUT', 'CE', 'PGOOD'], '#1d1d1d', 'BQ24074 charger', 'battery on its JST'),
+  'gauge':   (800, 255, 980, 345, 'left', ['VIN', 'GND', 'SCL', 'SDA'], '#1d1d1d', 'MAX17048 gauge', 'battery: in / out JST'),
+  'boost':   (800, 370, 980, 445, 'left', ['VIN', 'GND', 'VOUT'], '#2a6f9e', '5 V boost', 'Pololu U3V40F5'),
 }
 def mod_box(mod):
     x0, y0, x1, y1, side, *rest = MODS[mod]
@@ -242,11 +246,13 @@ def place_lines(parts):
 def build_steps():
     S = []
     def step(**k):
+        k.setdefault('drops', [])   # (step id, wire index) of earlier wires this step takes out or moves
         k['need'] = k['need'] + jumper_need(k['wires'])
         if k['id'] == 'power': k['debug'] = power_debug()
         k['place'] = place_lines(k['parts'])
         S.append(k)
     plug, one = LAY == 'plug', LAY == 'one'
+    I2C_ROWS = (26, 28)                            # one board: SDA / SCL junction rows (DS3231 + battery gauge)
     A, B_ = str(G('PIN_BTN_A')), str(G('PIN_BTN_B'))
     sb = 'U' if plug else None                     # board for the light sensor
 
@@ -347,18 +353,28 @@ def build_steps():
         aw, ap = [], []
         for k, (r, pin, led, col) in enumerate(((r1, 'PIN_BTN_AL1', 'PIN_LED_AL1', 'purple'), (r2, 'PIN_BTN_AL2', 'PIN_LED_AL2', 'cyan'))):
             n = k + 1
-            ap += [('button', r, str(n), None), ('led', r + 3, r + 4, 'h', None, str(n)), ('res_led', r + 4, 'b-', '220 Ω', None, 'j')]
+            ap += [('button', r, str(n), None)]
             aw += [W_(col, esp(str(G(pin))), hl(r, 'a', note=f'alarm button {n}, top-left leg')),
-                   W_('gnd', hl(r + 2, 'j', note=f'alarm button {n}, bottom-right leg'), rl('b-', r + 2)),
-                   W_('brown' if k == 0 else 'grey', esp(str(G(led))), hl(r + 3, 'g', note=f'LED {n}\'s long leg'))]
-        step(id='alarmbtn', title='Alarm buttons and their lights', time='15 min', mods=[],
-             need=['2 more small push buttons', '2 LEDs, any colour', '2 × 220 Ω resistors'],
-             intro='In the finished clock these are two 16 mm buttons with a light inside: one switches alarm 1 on and off, the other alarm 2. On the breadboard a small push button and an ordinary LED stand in for each. The LED\'s <b>long leg is +</b>. The 220 Ω resistor limits its current; without it the LED and the ESP32 pin are overloaded.',
-             parts=ap, wires=aw,
-             test='Press alarm button <b>1</b>: the front display shows <b>1 on</b> and then alarm 1\'s time, LED 1 lights for 3 seconds, and on the clock\'s page alarm 1\'s switch turns on. Press it again: the display shows <b>1 oF</b> and LED 1 blinks twice. Do the same with button 2. Then press button <b>A</b> (snooze): the LEDs of the alarms that are on light up for 3 seconds.',
-             fix=[('Button does nothing', f'Check the wires go to diagonally opposite legs (rows {r1} and {r1 + 2}, {r2} and {r2 + 2}) and that the button straddles the gap.'),
-                  ('The page changes but the LED never lights', 'The LED is the wrong way round (long leg goes in the row with the wire from the ESP32), or the resistor isn\'t reaching the − rail.'),
-                  ('The LED is very bright, or the ESP32 resets', 'The resistor is missing or isn\'t 220 Ω. Check the bands.')])
+                   W_('gnd', hl(r + 2, 'j', note=f'alarm button {n}, bottom-right leg'), rl('b-', r + 2))]
+            if not one:   # the lights' pins are on the ESP32's back edge, covered on one breadboard
+                ap += [('led', r + 3, r + 4, 'h', None, str(n)), ('res_led', r + 4, 'b-', '220 Ω', None, 'j')]
+                aw += [W_('brown' if k == 0 else 'grey', esp(str(G(led))), hl(r + 3, 'g', note=f'LED {n}\'s long leg'))]
+        if one:
+          step(id='alarmbtn', title='Alarm buttons', time='10 min', mods=[],
+               need=['2 more small push buttons'],
+               intro='In the finished clock these are two 16 mm buttons with a light inside: one switches alarm 1 on and off, the other alarm 2. On the breadboard a small push button stands in for each. Their lights use ESP32 pins 41 and 42, on the edge the ESP32 covers on one breadboard, so they come with the perfboard; the clock works the same without them.',
+               parts=ap, wires=aw,
+               test='Press alarm button <b>1</b>: the front display shows <b>1 on</b> and then alarm 1\'s time, and on the clock\'s page alarm 1\'s switch turns on. Press it again: the display shows <b>1 oF</b>. Do the same with button 2. Hold an alarm button for 2 seconds to set its time from the clock (see the <a href="firmware.html">firmware page</a>).',
+               fix=[('Button does nothing', f'Check the wires go to diagonally opposite legs (rows {r1} and {r1 + 2}, {r2} and {r2 + 2}) and that the button straddles the gap.')])
+        else:
+            step(id='alarmbtn', title='Alarm buttons and their lights', time='15 min', mods=[],
+                 need=['2 more small push buttons', '2 LEDs, any colour', '2 × 220 Ω resistors'],
+                 intro='In the finished clock these are two 16 mm buttons with a light inside: one switches alarm 1 on and off, the other alarm 2. On the breadboard a small push button and an ordinary LED stand in for each. The LED\'s <b>long leg is +</b>. The 220 Ω resistor limits its current; without it the LED and the ESP32 pin are overloaded.',
+                 parts=ap, wires=aw,
+                 test='Press alarm button <b>1</b>: the front display shows <b>1 on</b> and then alarm 1\'s time, LED 1 lights for 3 seconds, and on the clock\'s page alarm 1\'s switch turns on. Press it again: the display shows <b>1 oF</b> and LED 1 blinks twice. Do the same with button 2. Then press button <b>A</b> (snooze): the LEDs of the alarms that are on light up for 3 seconds.',
+                 fix=[('Button does nothing', f'Check the wires go to diagonally opposite legs (rows {r1} and {r1 + 2}, {r2} and {r2 + 2}) and that the button straddles the gap.'),
+                      ('The page changes but the LED never lights', 'The LED is the wrong way round (long leg goes in the row with the wire from the ESP32), or the resistor isn\'t reaching the − rail.'),
+                      ('The LED is very bright, or the ESP32 resets', 'The resistor is missing or isn\'t 220 Ω. Check the bands.')])
 
     step(id='tm1637', title='Front display (TM1637)', time='5 min', mods=['tm1637'], parts=[],
          need=['TM1637 display'],
@@ -400,9 +416,12 @@ def build_steps():
         step(id='ds3231', title='Clock module (DS3231)', time='5 min', mods=['ds3231'], parts=[],
              need=['DS3231 module (with its coin cell)'],
              intro='The battery-backed clock that keeps time when Wi-Fi or power drops. In the finished clock it uses ESP32 pins 1 and 2, but on one breadboard those are on the covered side. '
-                   f'So here it goes on pins <b>{G("PIN_SDA_ALT")}</b> and <b>{G("PIN_SCL_ALT")}</b>, on the front edge: the firmware (2.3.1 or later) looks there when the module isn\'t on 1 and 2.',
-             wires=[W_('blue', esp(str(G('PIN_SDA_ALT'))), md('ds3231', 'SDA (D)', 'module SDA (marked D on mini boards)')),
-                    W_('yellow', esp(str(G('PIN_SCL_ALT'))), md('ds3231', 'SCL (C)', 'module SCL (marked C)')),
+                   f'So here it goes on pins <b>{G("PIN_SDA_ALT")}</b> and <b>{G("PIN_SCL_ALT")}</b>, on the front edge: the firmware (2.3.1 or later) looks there when the module isn\'t on 1 and 2. '
+                   f'Each pin has only one free hole, and the battery base\'s fuel gauge shares these two wires, so they go to two free rows first: <b>{I2C_ROWS[0]}</b> for SDA and <b>{I2C_ROWS[1]}</b> for SCL.',
+             wires=[W_('blue', esp(str(G('PIN_SDA_ALT'))), hl(I2C_ROWS[0], 'e', note='SDA row')),
+                    W_('yellow', esp(str(G('PIN_SCL_ALT'))), hl(I2C_ROWS[1], 'e', note='SCL row')),
+                    W_('blue', md('ds3231', 'SDA (D)', 'module SDA (marked D on mini boards)'), hl(I2C_ROWS[0], 'd')),
+                    W_('yellow', md('ds3231', 'SCL (C)', 'module SCL (marked C)'), hl(I2C_ROWS[1], 'd')),
                     W_('3v3', md('ds3231', 'VCC (+)', 'module VCC (+)'), rl('t+', 9)),
                     W_('gnd', md('ds3231', 'GND (−)', 'module GND (−)'), rl('t-', 10))],
              test='Press RST on the ESP32. The clock\'s page shows <b>RTC backup ok</b>, and the serial log says <b>DS3231 on pins 18 and 3</b>. Turn your router\'s Wi-Fi off and press RST again: the time is still right.',
@@ -451,12 +470,48 @@ def build_steps():
               ('Silent', 'Is the 5 V adapter plugged in? Check BCLK, LRC and DIN aren\'t swapped. Leave GAIN and SD unconnected.'),
               ('Crackles', 'Push the capacitor\'s legs fully into the rails (long leg to +).')])
 
+    if one:
+        sup = next(i for i, w in enumerate(next(st for st in S if st['id'] == 'supply')['wires']) if w['col'] == '5v')
+        step(id='battery', title='Battery base: charger, gauge and boost', time='25 min', mods=['charger', 'gauge', 'boost'], parts=[],
+             drops=[('supply', sup)],
+             need=['BQ24074 charger board', 'MAX17048 fuel gauge board (with its JST cable)', 'Pololu U3V40F5 5 V boost', 'The battery pack (JST-PH plug)', 'Header pins soldered to the three boards'],
+             intro='In the finished clock these three boards sit in the battery base under the clock. Here they hang off the breadboard the same way the other modules do. '
+                   'The USB-C breakout\'s <b>VBUS</b> wire moves from the bottom + rail to the charger. The charger runs the clock from USB when it\'s there and from the battery when it isn\'t; '
+                   'the boost turns the battery\'s 3.0–4.2 V into a steady 5 V for the bottom rail. The gauge sits between the pack and the charger and tells the ESP32 how full the pack is. '
+                   f'Its SDA and SCL go to the same rows as the clock module\'s (<b>{I2C_ROWS[0]}</b> and <b>{I2C_ROWS[1]}</b>).',
+             wires=[W_('5v', md('usbc', 'VBUS', 'breakout VBUS (moved)', None), md('charger', 'VBUS', 'charger VBUS'), 'soldered lead'),
+                    W_('gnd', md('charger', 'GND', 'charger GND'), rl('b-', 8)),
+                    W_('5v', md('charger', 'OUT', 'charger OUT'), md('boost', 'VIN', 'boost VIN')),
+                    W_('gnd', md('boost', 'GND', 'boost GND'), rl('b-', 12)),
+                    W_('5v', md('boost', 'VOUT', 'boost VOUT'), rl('b+', 3, '(where VBUS was)')),
+                    W_('pink', esp(str(G('PIN_CHG_CE'))), md('charger', 'CE', 'charger CE')),
+                    W_('green', esp(str(G('PIN_PGOOD'))), md('charger', 'PGOOD', 'charger PGOOD')),
+                    W_('blue', md('gauge', 'SDA', 'gauge SDA'), hl(I2C_ROWS[0], 'c')),
+                    W_('yellow', md('gauge', 'SCL', 'gauge SCL'), hl(I2C_ROWS[1], 'c')),
+                    W_('3v3', md('gauge', 'VIN', 'gauge VIN'), rl('t+', 14)),
+                    W_('gnd', md('gauge', 'GND', 'gauge GND'), rl('t-', 15))],
+             test='Plug the pack into the gauge\'s JST socket and the gauge\'s JST lead into the charger\'s BAT socket. Press RST on the ESP32. On the clock\'s page a <b>Battery</b> line appears with the charge in %. '
+                  'Unplug the 5 V adapter: the front display shows <b>bAtt</b>, everything keeps running, and both displays drop to their night brightness. Plug it back in: <b>PLug</b>. '
+                  'Under <b>Settings › Battery</b>, the charge limit is 80%; with the pack above that, the page says <b>held</b> and the charger\'s CHG light is off.',
+             fix=[('No Battery line on the page', f'The gauge isn\'t answering: SDA and SCL swapped, or VIN on 5 V. It shares rows {I2C_ROWS[0]}/{I2C_ROWS[1]} with the clock module, so check both still work.'),
+                  ('Everything goes off when the adapter is unplugged', 'Check the boost VOUT goes to the bottom + rail and its GND to the − rail, and that the pack is charged (the gauge shows it).'),
+                  ('Always charging past the limit', f'CE wire isn\'t on pin {G("PIN_CHG_CE")}, or the firmware is older than 2.6.0. CE high stops charging.')],
+             warn='The ESP32 itself still runs from your computer\'s USB here, so unplugging the adapter only tests the rest. To see the whole clock run on the battery, unplug the computer first and then add a red wire from the bottom + rail to the ESP32\'s <b>5V</b> pin. Never have both plugged in at once.')
+    else:
+        step(id='battery', title='Battery base: wire it on the perfboard', time='0 min', mods=[], parts=[], wires=[],
+             need=['Nothing for now'],
+             intro='The charger, fuel gauge and boost go in the battery base under the clock. On this layout there are no free rows for the gauge\'s I2C junction, so wire them as the <a href="wiring.html#battery">wiring page</a> shows, or switch to the one-board layout at the top of this page to try them on the breadboard first.',
+             test='', fix=[], todo=['Wire the battery base (<a href="wiring.html#battery">wiring page</a>), or use the one-board layout.'])
     return S
 
 def check_holes(S):
     """No breadboard hole or rail hole gets two things."""
     used = {}
+    by = {st['id']: st for st in S}
     for st in S:
+        for sid, i in st.get('drops', []):
+            w = by[sid]['wires'][i]
+            for e in (w['a'], w['b']): used.pop(tuple(round(v) for v in e['pt']), None)
         for w in st['wires']:
             for e in (w['a'], w['b']):
                 if e['end'] == 'male' or (e['dir'] == 'auto'):
@@ -626,9 +681,11 @@ def draw_step(S, k):
             p = at(0.5)
         badges.append(p)
         return p
+    dropped = {d for st in S[:k + 1] for d in st.get('drops', [])}
     for idx, st in enumerate(S[:k + 1]):
         cur = idx == k
-        for w in st['wires']:
+        for wi, w in enumerate(st['wires']):
+            if (st['id'], wi) in dropped: continue
             path, at = bez(w['a'], w['b'])
             col = COL[w['col']]
             if cur:
