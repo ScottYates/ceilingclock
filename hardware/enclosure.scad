@@ -250,8 +250,13 @@ module barrel() {
       // axle stub on the right end
       translate([br_x1 - eps, ax_y, z_ax]) rotate([0, 90, 0]) cylinder(d = axle_d, h = axle_l, $fn = 40);
     }
-    // light hole in the top, under the lens
-    translate([mx, ax_y, z_ax]) cylinder(d = br_hole, h = br_R + 5);
+    // light hole in the top, under the lens. It stops at the ramp's surface: cutting into the solid ramp
+    // past the mirror's top edge would leave a wall that faces straight down when the barrel is printed
+    // standing on its end. The light never goes below the ramp's surface, so nothing is lost.
+    intersection() {
+      translate([mx, ax_y, z_ax]) cylinder(d = br_hole, h = br_R + 5);
+      mirror_frame() translate([-200, -100, -mirror_t]) cube([400, 200, 200]);
+    }
     // lens mount pins (the one at the right end turns in a pocket in the solid ramp)
     barrel_pin_frames() lp_bore(GRIP_LONG);
     // key slot for the display holder (bottom of the left end)
