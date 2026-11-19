@@ -52,7 +52,7 @@ br_R = 34;  br_ri = 32;
 z_ax = floor_top + 2 + br_R;                               // 44.5: the axis sits at lid level
 ax_y = box_d/2 - wall - 0.5 - br_R;                        // 30.5
 lens_v = 106;                    // lens-to-display distance for a 100 mm lens and ~1.8 m throw
-mirror_L = 50;  mirror_W = 50;  mirror_t = 1.1;            // 50 x 50 x 1.1 mm front-surface mirror
+mirror_L = 50.4;  mirror_W = 50.4;  mirror_t = 2;          // 50 x 50 x 2 mm front-surface mirror (Scott's measures 50.1 x 50.2 x 2.0), 0.2 mm clearance
 mx = 34;                                                   // mirror centre x = lens x
 rL = 54;                                                   // lens centre, radial distance above the axis (focus +/-5)
 disp_x = mx - (lens_v - rL);                               // -18: the display's glowing face
