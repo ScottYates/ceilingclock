@@ -931,7 +931,7 @@ def svg_optics():
         s.text(370, y + h / 2 + 4, lab, 12, '#e8e8e8', 'start', 700)
         s.text(370 + 7.2 * len(lab) + 8, y + h / 2 + 4, sub, 10.5, '#aab0b8')
     s.add('<ellipse cx="290" cy="110" rx="34" ry="5" fill="#9fd3ff" opacity="0.8"/>')
-    s.text(370, 106, 'lens (50 mm, f = 100)', 12, '#e8e8e8', 'start', 700); s.text(370, 122, 'move it up and down to focus', 10.5, '#aab0b8')
+    s.text(370, 106, 'lens (48 mm, f ≈ 120)', 12, '#e8e8e8', 'start', 700); s.text(370, 122, 'move it up and down to focus', 10.5, '#aab0b8')
     s.rect(262, 282, 56, 14, '#20242b', '#5b6068', 2)
     for i, x in enumerate((268, 280, 296, 308)): s.rect(x, 285, 6, 8, '#ff4a35', rx=1)
     s.line(324, 289, 362, 289, '#5b6068', 1); s.text(370, 293, 'projector display, digits up', 12, '#e8e8e8', 'start', 700)

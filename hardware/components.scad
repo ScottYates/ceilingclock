@@ -187,13 +187,13 @@ module ref_mirror() mirror_frame() {                    // 50 x 50 mm front-surf
   M("mirror") translate([-mirror_L/2, -mirror_W/2, -0.05]) cube([mirror_L, mirror_W, 0.05]);
   M("glass") translate([-mirror_L/2, -mirror_W/2, -mirror_t]) cube([mirror_L, mirror_W, mirror_t - 0.05]);
 }
-// 50 mm biconvex lens, f = 100 (R about 100 mm, 1.5 mm edge), resting on the seat ledge
-module ref_lens() M("glass") translate([mx, ax_y, lens_z - lens_seat + 0.5]) {
-  R = 100; c = sqrt(R * R - 25 * 25);
+// 47.7 mm biconvex lens, f = 121 (R about 120 mm, 2.8 mm edge, 7.6 mm centre), resting on the seat ledge's inner corner
+module ref_lens() M("glass") translate([mx, ax_y, lens_z - lens_seat + 0.27]) {
+  R = 120; c = sqrt(R * R - 23.85 * 23.85);
   intersection() {
-    translate([0, 0, 1.5 - c]) sphere(r = R, $fn = 160);
+    translate([0, 0, 2.8 - c]) sphere(r = R, $fn = 160);
     translate([0, 0, c]) sphere(r = R, $fn = 160);
-    translate([0, 0, -5]) cylinder(d = 50, h = 12, $fn = 96);
+    translate([0, 0, -5]) cylinder(d = 47.7, h = 14, $fn = 96);
   }
 }
 // ---------------------------------------------------------------- main wiring runs

@@ -51,10 +51,10 @@ tab_t = 4;               // pinned tabs: tab + 3 mm below = GRIP_LONG
 br_R = 34;  br_ri = 32;
 z_ax = floor_top + 2 + br_R;                               // 44.5: the axis sits at lid level
 ax_y = box_d/2 - wall - 0.5 - br_R;                        // 30.5
-lens_v = 106;                    // lens-to-display distance for a 100 mm lens and ~1.8 m throw
+lens_v = 130;                    // lens-to-display distance: Scott's lens measures f = 121 mm; 130 focuses ~1.6 m (focus +/-5 covers ~1.2 to 3 m)
 mirror_L = 50.4;  mirror_W = 50.4;  mirror_t = 2;          // 50 x 50 x 2 mm front-surface mirror (Scott's measures 50.1 x 50.2 x 2.0), 0.2 mm clearance
 mx = 34;                                                   // mirror centre x = lens x
-rL = 54;                                                   // lens centre, radial distance above the axis (focus +/-5)
+rL = 78;                                                   // lens centre, radial distance above the axis (focus +/-5); was 54 for f = 100
 disp_x = mx - (lens_v - rL);                               // -18: the display's glowing face
 mh = mirror_L / 2 / sqrt(2);
 br_x0 = disp_x - 12;                                       // -33: open left end (the display holder plugs in here)
@@ -72,7 +72,8 @@ cap_tab_x = cap_x0 - 6;  cap_tab_dy = 18;                  // two pinned tabs re
 // focusing: the lens sits in a sleeve with a coarse thread, screwed into a threaded collar (the lens mount)
 // that is pinned to the barrel. A knurled grip on top of the sleeve stands clear of the collar, so you turn
 // it with your fingers: one turn = 3 mm. A springy tongue in the collar presses on the thread so it stays put.
-lens_d = 50.5;  lens_seat = 3;  lens_clear = 46;
+lens_d = 48;  lens_seat = 3.45;  lens_clear = 45;            // Scott's lens: 47.7 mm across, 2.8 mm edge, 7.6 mm centre (R ~120, f = 121 measured).
+                                                           // It rests on the ledge's inner corner, rim ~0.27 mm up; the cap clears it by ~0.1 mm
 thr_P = 3;  thr_e = 0.8;  thr_R = 27.5;  thr_clr = 0.35;  // thread: pitch, depth/2, major radius, clearance
 focus_mm = 0;                                              // focus position for the assembled model (-5 .. +5)
 grip_h = 6;  grip_od = 61;  sl_thr = 17;                   // knurled grip, thread length below it

@@ -33,7 +33,7 @@ export const PARTS = {
   ref_wires:     { label: 'Wiring',                 kind: 'part',  color: 0xd03030, explode: [0, 0, 0], hideExploded: true },
   ref_button:    { label: 'Snooze button',          kind: 'part',  color: 0xb8bec6, explode: [0, 0, 60] },
   ref_alarmbtns: { label: 'Alarm buttons (lit)',    kind: 'part',  color: 0x2b2f36, explode: [0, 0, 60] },
-  ref_lens:      { label: '50 mm lens (f = 100)',   kind: 'part',  color: 0x9fd3ff, explode: [0, 0, 155], opacity: 0.55, tilts: true, focuses: true },
+  ref_lens:      { label: '48 mm lens (f ≈ 120)',   kind: 'part',  color: 0x9fd3ff, explode: [0, 0, 155], opacity: 0.55, tilts: true, focuses: true },
 };
 
 export const ALL = Object.keys(PARTS);
