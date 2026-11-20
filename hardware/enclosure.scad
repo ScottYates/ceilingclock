@@ -51,7 +51,7 @@ tab_t = 4;               // pinned tabs: tab + 3 mm below = GRIP_LONG
 br_R = 34;  br_ri = 32;
 z_ax = floor_top + 2 + br_R;                               // 44.5: the axis sits at lid level
 ax_y = box_d/2 - wall - 0.5 - br_R;                        // 30.5
-lens_v = 130;                    // lens-to-display distance: Scott's lens measures f = 121 mm; 130 focuses ~1.6 m (focus +/-5 covers ~1.2 to 3 m)
+lens_v = 130;                    // lens-to-display distance for a lens at the top of the sleeve; the real lens sits lens_drop lower (120 mm)
 mirror_L = 50.4;  mirror_W = 50.4;  mirror_t = 2;          // 50 x 50 x 2 mm front-surface mirror (Scott's measures 50.1 x 50.2 x 2.0), 0.2 mm clearance
 mx = 34;                                                   // mirror centre x = lens x
 rL = 78;                                                   // lens centre, radial distance above the axis (focus +/-5); was 54 for f = 100
@@ -76,6 +76,8 @@ lens_d = 48;  lens_seat = 3.45;  lens_clear = 45;            // Scott's lens: 47
                                                            // It rests on the ledge's inner corner, rim ~0.27 mm up; the cap clears it by ~0.1 mm
 thr_P = 3;  thr_e = 0.8;  thr_R = 27.5;  thr_clr = 0.35;  // thread: pitch, depth/2, major radius, clearance
 focus_mm = 0;                                              // focus position for the assembled model (-5 .. +5)
+lens_drop = 10;                  // the lens sits this far down inside the sleeve (bench test 2026-11-20: the lens focuses
+                                 // nearer than f = 121, so it must sit closer to the display; the lens mount is unchanged)
 grip_h = 6;  grip_od = 61;  sl_thr = 17;                   // knurled grip, thread length below it
 lens_z = z_ax + rL + 1.75 + focus_mm;                      // top of the sleeve (lens seat)
 lm_od = 62;  lm_tab = lm_od/2 + PIN_HEAD_L/2 + 0.5;  lm_wall = lm_od/2 - thr_R - thr_clr;
@@ -350,7 +352,7 @@ module sleeve() {
       helix(thr_R, lens_z - grip_h - sl_thr, lens_z - grip_h + 0.01);              // external thread
     }
     translate([0, 0, lens_z - grip_h - sl_thr - 1]) cylinder(d = lens_clear, h = 100, $fn = 96);   // light path
-    translate([0, 0, lens_z - lens_seat]) cylinder(d = lens_d, h = 10, $fn = 96);                  // lens seat
+    translate([0, 0, lens_z - lens_drop - lens_seat]) cylinder(d = lens_d, h = lens_drop + 10, $fn = 96);   // lens seat, lens_drop down a bore
     // arrows on the top face: turn clockwise (seen from above) to focus further, anticlockwise to focus closer
     for (k = [0, 1]) rotate(k * 180 + 60) translate([0, 0, lens_z - 0.6]) {
       rotate_extrude(angle = 40, $fn = 60) translate([27.2, 0]) square([1.2, 1]);
@@ -359,10 +361,13 @@ module sleeve() {
   }
 }
 
-module lens_cap() {
+module lens_cap() {   // a ring on the sleeve's top face, with a tube down the bore that holds the lens on its ledge
   translate([mx, ax_y, lens_z]) difference() {
-    cylinder(d = lens_d + 4, h = 2, $fn = 96);
-    translate([0, 0, -1]) cylinder(d = lens_clear, h = 10, $fn = 96);
+    union() {
+      cylinder(d = lens_d + 4, h = 2, $fn = 96);
+      if (lens_drop > 0) translate([0, 0, -lens_drop]) cylinder(d = lens_d - 0.4, h = lens_drop + 1, $fn = 96);
+    }
+    translate([0, 0, -lens_drop - 2]) cylinder(d = lens_clear, h = lens_drop + 10, $fn = 96);
   }
 }
 
@@ -523,16 +528,18 @@ module show(p) {
 module print_pose(p) {
   if (p == "batt_base")        translate([0, 0, bb_h]) children();
   else if (p == "batt_plate")  translate([0, 0, bbp_t]) children();
-  else if (p == "lid")              translate([0, 0, lid_top]) mirror([0, 0, 1]) children();   // upside down: the pin ramps are on its underside
+  else if (p == "lid")              translate([0, 0, lid_top]) rotate([180, 0, 0]) children();   // upside down (turned over, not mirrored): the pin ramps are on its underside
   // barrel stands on its open left end; the mirror ramp is then a 45 degree slope, no supports
   else if (p == "barrel")      rotate([0, -90, 0]) translate([-br_x0, -ax_y, -z_ax]) children();
   else if (p == "disp_holder") rotate([0, -90, 0]) translate([-br_x0, -ax_y, -z_ax]) children();
   // end cap stands on its collar; the tabs then rise as upright walls
   else if (p == "end_cap")     rotate([0, 90, 0]) translate([-(br_x0 + 1.8), -ax_y, -z_ax]) children();
-  // lens mount prints upside down, top ring on the bed
+  // lens mount prints upside down, top ring on the bed. NOTE: these two poses are mirror images, so the printed
+  // collar and sleeve have a left-hand thread (anticlockwise from above lowers the lens). Both are mirrored, so they
+  // mate, and the sleeve's arrows are mirrored with them. Scott has printed sleeves this way: keep both as they are.
   else if (p == "lens_mount")  translate([0, 0, z_ax + lm_top]) mirror([0, 0, 1]) translate([-mx, -ax_y, 0]) children();
   else if (p == "sleeve")      translate([-mx, -ax_y, lens_z]) mirror([0, 0, 1]) children();  // seat face down
-  else if (p == "lens_cap")    translate([-mx, -ax_y, -lens_z]) children();
+  else if (p == "lens_cap")    translate([0, 0, 2]) rotate([180, 0, 0]) translate([-mx, -ax_y, -lens_z]) children();   // ring on the bed, tube up
   else children();
 }
 module show_print(p) {   // as show(), but untilted

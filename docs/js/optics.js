@@ -1,7 +1,7 @@
 // Projector optics for the 3D view (the live demo has the same numbers in demo/sim.js).
-// 121 mm lens (Scott's measured), 130 mm from the projector display at nominal focus; focusMm moves the lens away from it.
+// ~110 mm lens (Scott's bench test), 120 mm from the projector display at nominal focus; focusMm moves the lens away from it.
 // stroke: width of one lit segment (mm), the detail that has to stay sharp. dispW x dispH: the display's face.
-export const LENS = { f: 121, nominal: 130, aperture: 45, rL: 78, stroke: 1.0, dispW: 30.2, dispH: 14.2, x: 34, pitch: 3 };
+export const LENS = { f: 110, nominal: 120, aperture: 45, rL: 68, stroke: 1.0, dispW: 30.2, dispH: 14.2, x: 34, pitch: 3 };
 export const CEILING = 1800;   // lens to ceiling, mm (8 ft ceiling, clock on a nightstand)
 
 export function optics(focusMm, tiltDeg, ceiling = CEILING) {
