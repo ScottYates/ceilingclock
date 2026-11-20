@@ -289,6 +289,8 @@ module disp_holder() {
       translate([lh_x1 + 0.01, ax_y - (pj_disp[1] + 3)/2, z_ax - (pj_disp[0] + 3)/2]) cube([0.01, pj_disp[1] + 3, pj_disp[0] + 3]);
     }
     translate([lh_x1 - 0.5, ax_y - (pj_disp[1] + 3)/2, z_ax - (pj_disp[0] + 3)/2]) cube([1, pj_disp[1] + 3, pj_disp[0] + 3]);
+    // channel from the window up to the rim, so the display body can slide down with the board
+    translate([pj_pcb_x - 0.2, ax_y - (pj_disp[1] + 0.8)/2, z_ax]) cube([pj_disp[2] + 0.3, pj_disp[1] + 0.8, 60]);
     // behind the board: room for the chip and the header, open at the top, a 2 mm lip down each long edge
     translate([br_x0 - 1, ax_y - 10, z_ax - pj_board[0]/2 + 2]) cube([pj_pcb_x - bt - br_x0 + 1.01, 20, 60]);
   }
