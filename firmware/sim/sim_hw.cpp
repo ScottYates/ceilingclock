@@ -798,3 +798,20 @@ bool WebServer::simRoute(const std::string& path) {
   }
   return false;
 }
+
+// ---- System section (sys_info.h): typical readings from the real clock, with a little movement
+#include "sys_info.h"
+void sysInfoRead(SysInfo& s) {
+  static uint32_t calls = 0;
+  calls++;
+  uint32_t ms = millis();
+  s.upSec = ms / 1000;
+  s.reset = "power on";
+  if (calls > 1) { s.cpu[0] = 5 + (ms / 2000) % 4; s.cpu[1] = 16 + (ms / 3000) % 6; }
+  s.mhz = 240;
+  s.tempC = 38.1f;
+  s.tasks = 15;
+  s.heapTotal = 328872; s.heapFree = 161804 - (ms / 2000 % 9) * 512; s.heapMin = 110460; s.heapBig = 73716;
+  s.psTotal = 8388608; s.psFree = 7885400; s.psMin = 7873272;
+  s.appUsed = 2486992; s.appSlot = 3145728;
+}

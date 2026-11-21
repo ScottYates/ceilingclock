@@ -25,10 +25,11 @@
 #include "feed_scan.h"
 #include "net_fetch.h"
 #include "persist.h"
+#include "sys_info.h"
 #include <esp_task_wdt.h>
 #include <atomic>
 
-#define FW_VERSION "2.7.3"   // bump on every release
+#define FW_VERSION "2.8.0"   // bump on every release
 #ifndef FW_BUILD
 #define FW_BUILD __DATE__ " " __TIME__   // set by build_stamp.py in PlatformIO builds
 #endif
@@ -1013,6 +1014,25 @@ void sendJson(JsonDocument& doc, int code = 200) {
   server.send(code, "application/json", s);
 }
 
+// The System section of the settings page, asked for every 2 s while it's showing.
+void apiSys() {
+  if (!authed()) return;
+  SysInfo y;
+  sysInfoRead(y);
+  JsonDocument d;
+  d["up"] = y.upSec; d["reset"] = y.reset;
+  JsonArray cpu = d["cpu"].to<JsonArray>();
+  for (int c = 0; c < 2; c++) { if (y.cpu[c] < 0) cpu.add(nullptr); else cpu.add(y.cpu[c]); }
+  d["mhz"] = y.mhz; d["temp"] = round(y.tempC * 10) / 10; d["tasks"] = y.tasks;
+  d["heapFree"] = y.heapFree; d["heapTotal"] = y.heapTotal; d["heapMin"] = y.heapMin; d["heapBig"] = y.heapBig;
+  d["psFree"] = y.psFree; d["psTotal"] = y.psTotal; d["psMin"] = y.psMin;
+  d["fsUsed"] = LittleFS.usedBytes(); d["fsTotal"] = LittleFS.totalBytes();
+  d["appUsed"] = y.appUsed; d["appSlot"] = y.appSlot;
+  d["rssi"] = WiFi.RSSI();
+  String out; serializeJson(d, out);
+  server.send(200, "application/json", out);
+}
+
 void apiState() {
   if (!authed()) return;
   JsonDocument d;
@@ -1198,6 +1218,7 @@ void apiAction() {
 void setupServer() {
   server.on("/", HTTP_GET, [] { if (authed()) server.send_P(200, "text/html", INDEX_HTML); });
   server.on("/api/state", HTTP_GET, apiState);
+  server.on("/api/sys", HTTP_GET, apiSys);
   server.on("/api/audiodiag", HTTP_GET, [] {
     JsonDocument d;
     d["peakRaw"] = peakRaw; d["peakOut"] = peakOut; d["samplesOut"] = samplesOut;

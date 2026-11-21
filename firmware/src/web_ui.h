@@ -212,6 +212,16 @@ details[open]>summary{border-bottom:1px solid var(--line)}
   <label class="row tap" style="color:var(--on);cursor:pointer">Update firmware (.bin file)<input type="file" id="fwfile" accept=".bin" hidden onchange="fwUpdate()"></label>
  </div>
  <p class="note">With a password set, the page asks for user name admin and that password, except on a trusted computer.</p>
+ <h2>System</h2>
+ <div class="grp">
+  <div class="row"><div class="grow">Processor<small id="yCpuS">&nbsp;</small></div><span class="val" id="yCpu">…</span></div>
+  <div class="row"><div class="grow">Memory<small id="yMemS">&nbsp;</small></div><span class="val" id="yMem">…</span></div>
+  <div class="row"><div class="grow">Extra memory (PSRAM)<small id="yPsS">&nbsp;</small></div><span class="val" id="yPs">…</span></div>
+  <div class="row"><div class="grow">Storage<small>Sounds and settings</small></div><span class="val" id="yFs">…</span></div>
+  <div class="row"><div class="grow">Firmware<small id="yAppS">&nbsp;</small></div><span class="val" id="yApp">…</span></div>
+  <div class="row"><div class="grow">Running for<small id="yUpS">&nbsp;</small></div><span class="val" id="yUp">…</span></div>
+ </div>
+ <p class="note">Updates every 2 seconds while this page is open.</p>
  <p class="note" id="sys"></p>
 </section>
 </main><div id="toast" role="status"></div>
@@ -255,6 +265,29 @@ function route(){const h=location.hash.slice(1);const m=h.match(/^alarm\/(\d+)$/
  if(m&&C&&C.alarms[+m[1]]){cur=+m[1];fillEditor()}else{cur=-1;if(m)go('')}
  if(h=='settings'&&C)fillSettings();if(!h&&C)renderHome();window.scrollTo(0,0)}
 window.addEventListener('hashchange',route);
+
+// ---- System section: asked for every 2 s, only while Settings is showing and the tab is visible
+let sysT=null;
+const kb=b=>b>=1048576?(b/1048576).toFixed(1)+' MB':Math.round(b/1024)+' KB';
+function upText(t){const d=Math.floor(t/86400),h=Math.floor(t%86400/3600),m=Math.floor(t%3600/60);
+ return d?d+' d '+h+' h':h?h+' h '+m+' min':m?m+' min':t+' s'}
+async function sysPoll(){if($('vSettings').hidden||document.hidden)return;
+ try{const y=await(await fetch('/api/sys')).json();
+  $('yCpu').textContent=y.cpu[0]==null?'measuring':y.cpu[0]+'% and '+y.cpu[1]+'%';
+  $('yCpuS').textContent='Two cores at '+y.mhz+' MHz, chip at '+Math.round(y.temp)+' °C, '+y.tasks+' tasks';
+  $('yMem').textContent=kb(y.heapFree)+' free';
+  $('yMemS').textContent='Of '+kb(y.heapTotal)+'. Lowest since restart '+kb(y.heapMin)+', largest free block '+kb(y.heapBig);
+  $('yPs').textContent=kb(y.psFree)+' free';
+  $('yPsS').textContent='Of '+kb(y.psTotal)+'. Lowest since restart '+kb(y.psMin);
+  $('yFs').textContent=kb(y.fsTotal-y.fsUsed)+' free of '+kb(y.fsTotal);
+  $('yApp').textContent=(y.appSlot?Math.round(y.appUsed*100/y.appSlot):0)+'% full';
+  $('yAppS').textContent=kb(y.appUsed)+' of the '+kb(y.appSlot)+' space an update has to fit in';
+  $('yUp').textContent=upText(y.up);
+  $('yUpS').textContent='Last restart: '+y.reset+'. Wi-Fi '+y.rssi+' dBm';
+ }catch(e){}}
+function sysTimer(){const on=!$('vSettings').hidden&&!document.hidden;
+ if(on&&!sysT){sysPoll();sysT=setInterval(sysPoll,2000)}else if(!on&&sysT){clearInterval(sysT);sysT=null}}
+window.addEventListener('hashchange',sysTimer);document.addEventListener('visibilitychange',sysTimer);
 
 // ---- saving: every change goes to the clock a moment later
 let saveT=null,busy=0;
@@ -389,5 +422,5 @@ async function poll(){try{const s=await(await fetch('/api/state')).json();ST=s;f
   $('sys').textContent='Firmware '+s.fw+(s.fwBuild?', built '+s.fwBuild:'')+'. IP '+s.ip+', Wi-Fi '+s.rssi+' dBm. Time '+(ago2===null?'not synced yet':'synced '+(ago2<1?'just now':ago2+' min ago'))+(s.rtc?', backup clock fitted.':', no backup clock.')}
 }catch(e){}}
 async function load(){C=await(await fetch('/api/config')).json();await loadSounds();route()}
-load().then(poll);setInterval(poll,1000);
+load().then(()=>{poll();sysTimer()});setInterval(poll,1000);
 </script></body></html>)rawliteral";
