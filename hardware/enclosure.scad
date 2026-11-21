@@ -76,7 +76,9 @@ lens_d = 48;  lens_seat = 3.45;  lens_clear = 45;            // Scott's lens: 47
                                                            // It rests on the ledge's inner corner, rim ~0.27 mm up; the cap clears it by ~0.1 mm
 thr_P = 3;  thr_e = 0.8;  thr_R = 27.5;  thr_clr = 0.35;  // thread: pitch, depth/2, major radius, clearance
 focus_mm = 0;                                              // focus position for the assembled model (-5 .. +5)
-lens_drop = 10;                  // the lens sits this far down inside the sleeve (bench test 2026-11-20: the lens focuses
+lens_drop = 12;                  // sleeve_44in: 8, sleeve_61in: 12 (exported with -D lens_drop=.. -D lens_label=..)
+lens_label = "";                // engraved on the sleeve's top face (outside the cap) and the cap's ring
+lens_drop_ = lens_drop;                  // the lens sits this far down inside the sleeve (bench test 2026-11-20: the lens focuses
                                  // nearer than f = 121, so it must sit closer to the display; the lens mount is unchanged)
 grip_h = 6;  grip_od = 61;  sl_thr = 17;                   // knurled grip, thread length below it
 lens_z = z_ax + rL + 1.75 + focus_mm;                      // top of the sleeve (lens seat)
@@ -353,6 +355,8 @@ module sleeve() {
     }
     translate([0, 0, lens_z - grip_h - sl_thr - 1]) cylinder(d = lens_clear, h = 100, $fn = 96);   // light path
     translate([0, 0, lens_z - lens_drop - lens_seat]) cylinder(d = lens_d, h = lens_drop + 10, $fn = 96);   // lens seat, lens_drop down a bore
+    if (lens_label != "") for (k = [0, 1]) rotate(k * 180) translate([26.8, 0, lens_z - 0.6]) rotate(90)   // label on the top face, twice,
+      linear_extrude(1) text(lens_label, size = 2.8, halign = "center", valign = "center", font = "Liberation Sans:style=Bold");   // clear of the arrows
     // arrows on the top face: turn clockwise (seen from above) to focus further, anticlockwise to focus closer
     for (k = [0, 1]) rotate(k * 180 + 60) translate([0, 0, lens_z - 0.6]) {
       rotate_extrude(angle = 40, $fn = 60) translate([27.2, 0]) square([1.2, 1]);
@@ -368,6 +372,7 @@ module lens_cap() {   // a ring on the sleeve's top face, with a tube down the b
       if (lens_drop > 0) translate([0, 0, -lens_drop]) cylinder(d = lens_d - 0.4, h = lens_drop + 1, $fn = 96);
     }
     translate([0, 0, -lens_drop - 2]) cylinder(d = lens_clear, h = lens_drop + 10, $fn = 96);
+    if (lens_label != "") translate([0, 24.25, 1.5]) linear_extrude(1) text(lens_label, size = 2.1, halign = "center", valign = "center", font = "Liberation Sans:style=Bold");
   }
 }
 

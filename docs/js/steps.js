@@ -29,8 +29,8 @@ export const STEPS = [
 <tr><td>disp_holder.stl</td><td>Black</td><td>Prints flat.</td></tr>
 <tr><td>end_cap.stl</td><td>Black</td><td>Stands on its collar.</td></tr>
 <tr><td>lens_mount.stl</td><td>Black</td><td>The threaded collar. Prints upside down, no supports; 0.16 mm layers.</td></tr>
-<tr><td>sleeve.stl</td><td>Black</td><td>The threaded focus ring. Prints grip-down, no supports. Use 0.16 mm layers so the thread comes out smooth.</td></tr>
-<tr><td>lens_cap.stl</td><td>Any</td><td>Ring with a 10 mm tube that holds the lens down inside the focus ring. Ring on the bed.</td></tr>
+<tr><td>sleeve_61in.stl or sleeve_44in.stl</td><td>Black</td><td>The threaded focus ring. Pick the one for the distance from the lens to your ceiling: 61in for about 50–75 in, 44in for about 36–55 in. The number is engraved on its top face. Prints grip-down, no supports; 0.16 mm layers.</td></tr>
+<tr><td>lens_cap_61in.stl or lens_cap_44in.stl</td><td>Any</td><td>Ring with a tube that holds the lens down inside the focus ring. Use the one with the same number as the sleeve. Ring on the bed.</td></tr>
 <tr><td>pins.stl</td><td><b>PETG</b> (or PLA)</td><td>Quarter-turn lock pins, heads down: 4 short (3 needed, for the lid corners) and 5 long (4 needed). Use <b>100% infill</b>, in PETG if you have it (it's tougher for the click). The small lug near each head is a 1.4 mm overhang, which prints fine.</td></tr>
 </tbody></table>
 <p>Total print time is about 11–13 hours. The base needs a bed of at least 180 × 145 mm; everything else is smaller.</p>`,
