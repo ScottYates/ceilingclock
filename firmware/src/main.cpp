@@ -28,7 +28,7 @@
 #include <esp_task_wdt.h>
 #include <atomic>
 
-#define FW_VERSION "2.7.1"   // bump on every release
+#define FW_VERSION "2.7.2"   // bump on every release
 #ifndef FW_BUILD
 #define FW_BUILD __DATE__ " " __TIME__   // set by build_stamp.py in PlatformIO builds
 #endif
@@ -257,6 +257,9 @@ void audioInit() {
   // A gentle curve: every step is audible (step 1 is -34 dB, 21 is 0 dB). The library's default made
   // anything under about a third of the slider practically silent.
   audioPlayer->setVolumeCurve([](float t) { return -36.0f * (1.0f - t); });
+  // Streams and podcast episodes start once about 8 s of audio has arrived (10 s at most), so a weak
+  // Wi-Fi link doesn't run the buffer dry in the first few seconds. Added to the library by patch_audio.py.
+  audioPlayer->setStartBuffer(8000, 10000);
   Audio::audio_info_callback = [](Audio::msg_t m) {
     if (!m.msg || !*m.msg) return;
     audioLogAdd(m.msg);
@@ -519,7 +522,7 @@ void serviceRing(time_t now) {
         ringSound(v);
       } else if (slow || streamState == SS_FAILED || streamState == SS_ENDED) {
         soundFailed(slow ? "stream too slow to start" : streamNote);
-      } else if (streamState == SS_PLAYING && quietMs > SOUND_SILENT_MS + 5000) {
+      } else if (streamState == SS_PLAYING && quietMs > SOUND_SILENT_MS + 10000) {   // allows for the start buffer
         soundFailed("stream connected but no sound");
       }
     } else {

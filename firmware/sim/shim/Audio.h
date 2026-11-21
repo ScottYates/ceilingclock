@@ -25,6 +25,7 @@ class Audio {
   void setVolume(uint8_t v);
   using VolumeCurveFn = std::function<float(float t)>;
   void setVolumeCurve(VolumeCurveFn) {}
+  void setStartBuffer(uint32_t, uint32_t) {}
   uint8_t getVolume() { return 0; }
   bool connecttoFS(fs::FS& fs, const char* path);
   bool connecttohost(const char* url, const char* user = nullptr, const char* pwd = nullptr);
