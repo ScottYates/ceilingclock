@@ -50,7 +50,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </head><body>
 <header class="site"><div class="in">
 <a class="brand" href="index.html"><span class="dot"></span>Ceiling Clock</a>
-<nav><a href="index.html">3D model</a><a href="assembly.html">Assembly</a><a href="wiring.html">Wiring</a><a href="breadboard.html" class="on">Breadboard test</a><a href="parts.html">Parts</a><a href="demo/">Live demo</a><a href="firmware.html">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
+<nav><a href="index.html">3D model</a><a href="printing.html">Printing</a><a href="assembly.html">Assembly</a><a href="wiring.html">Wiring</a><a href="breadboard.html" class="on">Breadboard test</a><a href="perfboard.html">Perfboard</a><a href="parts.html">Parts</a><a href="demo/">Live demo</a><a href="firmware.html">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
 </div></header>
 <main>
 <h1>Update an older breadboard</h1>
@@ -949,7 +949,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <line x1="243.0" y1="324.0" x2="261.0" y2="324.0" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round" />
 <line x1="243.0" y1="336.0" x2="261.0" y2="336.0" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round" />
 <line x1="243.0" y1="348.0" x2="261.0" y2="348.0" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round" />
-<text x="274.2" y="334.0" font-size="8.5" fill="#5b6068" text-anchor="middle" font-weight="700" >ESP32-S3</text>
+<text x="274.2" y="334.0" font-size="8.5" fill="#5b6068" text-anchor="middle" font-weight="700" class="silk">ESP32-S3</text>
 <rect x="328.2" y="306.6" width="14.0" height="12.0" rx="1.5" fill="#d9dde2" stroke="#8a9099" stroke-width="1" />
 <circle cx="335.2" cy="312.6" r="3.6" fill="#2b2f36" stroke="none" stroke-width="1" />
 <text x="335.2" y="329.6" font-size="6.5" fill="#ffffff" text-anchor="middle" font-weight="700" >RST</text>
@@ -958,9 +958,9 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <text x="357.5" y="329.6" font-size="6.5" fill="#ffffff" text-anchor="middle" font-weight="700" >BOOT</text>
 <rect x="477.0" y="296.0" width="16.0" height="20.0" rx="2" fill="#9aa0a8" stroke="none" stroke-width="1" />
 <rect x="477.0" y="336.0" width="16.0" height="20.0" rx="2" fill="#9aa0a8" stroke="none" stroke-width="1" />
-<text x="497.0" y="310.0" font-size="8.5" fill="#6b7280" text-anchor="start" font-weight="400" stroke="#fbfaf6" stroke-width="3" paint-order="stroke">UART</text>
+<text x="497.0" y="310.0" font-size="8.5" fill="#6b7280" text-anchor="start" font-weight="400" stroke="#fbfaf6" stroke-width="3" paint-order="stroke" class="silk">UART</text>
 <text x="497.0" y="350.0" font-size="8.5" fill="#2b5fd9" text-anchor="start" font-weight="700" stroke="#fbfaf6" stroke-width="3" paint-order="stroke">USB → computer</text>
-<text x="419.5" y="334.0" font-size="9" fill="#cfd3da" text-anchor="middle" font-weight="700" >DevKitC-1</text>
+<text x="419.5" y="334.0" font-size="9" fill="#cfd3da" text-anchor="middle" font-weight="700" class="silk">DevKitC-1</text>
 <circle cx="255.0" cy="380.0" r="2.6" fill="#d8ad45" stroke="none" stroke-width="1" />
 <text x="255.0" y="371.0" font-size="6" fill="#e7e9ec" text-anchor="middle" font-weight="400" >3V3</text>
 <circle cx="255.0" cy="380.0" r="2.6" fill="#d8ad45" stroke="none" stroke-width="1" />
@@ -2044,13 +2044,13 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <line x1="725.0" y1="300.0" x2="718.0" y2="286.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
 <circle cx="710.0" cy="282.0" r="9" fill="#f4e2c0" stroke="#b98a3a" stroke-width="1.5" />
 <path d="M704.0,282 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
-<text x="710.0" y="269.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
+<text x="710.0" y="269.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" class="silk">light sensor</text>
 <line x1="725.0" y1="280.0" x2="735.0" y2="262.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
 <rect x="725.0" y="261.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
 <rect x="725.0" y="265.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
 <rect x="725.0" y="269.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
 <rect x="725.0" y="274.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
-<text x="740.0" y="275.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
+<text x="740.0" y="275.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke" class="silk">10 kΩ resistor</text>
 <line x1="435.0" y1="408.0" x2="442.0" y2="438.0" stroke="#888" stroke-width="1.4" stroke-linecap="round" />
 <line x1="455.0" y1="420.0" x2="448.0" y2="438.0" stroke="#888" stroke-width="1.4" stroke-linecap="round" />
 <rect x="439.0" y="438.0" width="12.0" height="14.0" rx="3" fill="#2140a0" stroke="none" stroke-width="1" />
@@ -2066,7 +2066,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <line x1="243.0" y1="324.0" x2="261.0" y2="324.0" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round" />
 <line x1="243.0" y1="336.0" x2="261.0" y2="336.0" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round" />
 <line x1="243.0" y1="348.0" x2="261.0" y2="348.0" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round" />
-<text x="274.2" y="334.0" font-size="8.5" fill="#5b6068" text-anchor="middle" font-weight="700" >ESP32-S3</text>
+<text x="274.2" y="334.0" font-size="8.5" fill="#5b6068" text-anchor="middle" font-weight="700" class="silk">ESP32-S3</text>
 <rect x="328.2" y="306.6" width="14.0" height="12.0" rx="1.5" fill="#d9dde2" stroke="#8a9099" stroke-width="1" />
 <circle cx="335.2" cy="312.6" r="3.6" fill="#2b2f36" stroke="none" stroke-width="1" />
 <text x="335.2" y="329.6" font-size="6.5" fill="#ffffff" text-anchor="middle" font-weight="700" >RST</text>
@@ -2075,9 +2075,9 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <text x="357.5" y="329.6" font-size="6.5" fill="#ffffff" text-anchor="middle" font-weight="700" >BOOT</text>
 <rect x="477.0" y="296.0" width="16.0" height="20.0" rx="2" fill="#9aa0a8" stroke="none" stroke-width="1" />
 <rect x="477.0" y="336.0" width="16.0" height="20.0" rx="2" fill="#9aa0a8" stroke="none" stroke-width="1" />
-<text x="497.0" y="310.0" font-size="8.5" fill="#6b7280" text-anchor="start" font-weight="400" stroke="#fbfaf6" stroke-width="3" paint-order="stroke">UART</text>
+<text x="497.0" y="310.0" font-size="8.5" fill="#6b7280" text-anchor="start" font-weight="400" stroke="#fbfaf6" stroke-width="3" paint-order="stroke" class="silk">UART</text>
 <text x="497.0" y="350.0" font-size="8.5" fill="#2b5fd9" text-anchor="start" font-weight="700" stroke="#fbfaf6" stroke-width="3" paint-order="stroke">USB → computer</text>
-<text x="419.5" y="334.0" font-size="9" fill="#cfd3da" text-anchor="middle" font-weight="700" >DevKitC-1</text>
+<text x="419.5" y="334.0" font-size="9" fill="#cfd3da" text-anchor="middle" font-weight="700" class="silk">DevKitC-1</text>
 <circle cx="255.0" cy="380.0" r="2.6" fill="#d8ad45" stroke="none" stroke-width="1" />
 <text x="255.0" y="371.0" font-size="6" fill="#e7e9ec" text-anchor="middle" font-weight="400" >3V3</text>
 <circle cx="255.0" cy="380.0" r="2.6" fill="#d8ad45" stroke="none" stroke-width="1" />
@@ -3147,13 +3147,13 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <line x1="725.0" y1="300.0" x2="718.0" y2="286.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
 <circle cx="710.0" cy="282.0" r="9" fill="#f4e2c0" stroke="#b98a3a" stroke-width="1.5" />
 <path d="M704.0,282 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
-<text x="710.0" y="269.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
+<text x="710.0" y="269.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" class="silk">light sensor</text>
 <line x1="725.0" y1="280.0" x2="735.0" y2="262.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
 <rect x="725.0" y="261.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
 <rect x="725.0" y="265.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
 <rect x="725.0" y="269.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
 <rect x="725.0" y="274.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
-<text x="740.0" y="275.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
+<text x="740.0" y="275.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke" class="silk">10 kΩ resistor</text>
 <line x1="435.0" y1="408.0" x2="442.0" y2="438.0" stroke="#888" stroke-width="1.4" stroke-linecap="round" />
 <line x1="455.0" y1="420.0" x2="448.0" y2="438.0" stroke="#888" stroke-width="1.4" stroke-linecap="round" />
 <rect x="439.0" y="438.0" width="12.0" height="14.0" rx="3" fill="#2140a0" stroke="none" stroke-width="1" />
@@ -3183,7 +3183,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <line x1="243.0" y1="324.0" x2="261.0" y2="324.0" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round" />
 <line x1="243.0" y1="336.0" x2="261.0" y2="336.0" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round" />
 <line x1="243.0" y1="348.0" x2="261.0" y2="348.0" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round" />
-<text x="274.2" y="334.0" font-size="8.5" fill="#5b6068" text-anchor="middle" font-weight="700" >ESP32-S3</text>
+<text x="274.2" y="334.0" font-size="8.5" fill="#5b6068" text-anchor="middle" font-weight="700" class="silk">ESP32-S3</text>
 <rect x="328.2" y="306.6" width="14.0" height="12.0" rx="1.5" fill="#d9dde2" stroke="#8a9099" stroke-width="1" />
 <circle cx="335.2" cy="312.6" r="3.6" fill="#2b2f36" stroke="none" stroke-width="1" />
 <text x="335.2" y="329.6" font-size="6.5" fill="#ffffff" text-anchor="middle" font-weight="700" >RST</text>
@@ -3192,9 +3192,9 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <text x="357.5" y="329.6" font-size="6.5" fill="#ffffff" text-anchor="middle" font-weight="700" >BOOT</text>
 <rect x="477.0" y="296.0" width="16.0" height="20.0" rx="2" fill="#9aa0a8" stroke="none" stroke-width="1" />
 <rect x="477.0" y="336.0" width="16.0" height="20.0" rx="2" fill="#9aa0a8" stroke="none" stroke-width="1" />
-<text x="497.0" y="310.0" font-size="8.5" fill="#6b7280" text-anchor="start" font-weight="400" stroke="#fbfaf6" stroke-width="3" paint-order="stroke">UART</text>
+<text x="497.0" y="310.0" font-size="8.5" fill="#6b7280" text-anchor="start" font-weight="400" stroke="#fbfaf6" stroke-width="3" paint-order="stroke" class="silk">UART</text>
 <text x="497.0" y="350.0" font-size="8.5" fill="#2b5fd9" text-anchor="start" font-weight="700" stroke="#fbfaf6" stroke-width="3" paint-order="stroke">USB → computer</text>
-<text x="419.5" y="334.0" font-size="9" fill="#cfd3da" text-anchor="middle" font-weight="700" >DevKitC-1</text>
+<text x="419.5" y="334.0" font-size="9" fill="#cfd3da" text-anchor="middle" font-weight="700" class="silk">DevKitC-1</text>
 <circle cx="255.0" cy="380.0" r="2.6" fill="#d8ad45" stroke="none" stroke-width="1" />
 <text x="255.0" y="371.0" font-size="6" fill="#e7e9ec" text-anchor="middle" font-weight="400" >3V3</text>
 <circle cx="255.0" cy="380.0" r="2.6" fill="#d8ad45" stroke="none" stroke-width="1" />
@@ -4268,13 +4268,13 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <line x1="725.0" y1="300.0" x2="718.0" y2="286.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
 <circle cx="710.0" cy="282.0" r="9" fill="#f4e2c0" stroke="#b98a3a" stroke-width="1.5" />
 <path d="M704.0,282 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
-<text x="710.0" y="269.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
+<text x="710.0" y="269.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" class="silk">light sensor</text>
 <line x1="725.0" y1="280.0" x2="735.0" y2="262.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
 <rect x="725.0" y="261.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
 <rect x="725.0" y="265.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
 <rect x="725.0" y="269.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
 <rect x="725.0" y="274.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
-<text x="740.0" y="275.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
+<text x="740.0" y="275.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke" class="silk">10 kΩ resistor</text>
 <line x1="435.0" y1="408.0" x2="442.0" y2="438.0" stroke="#888" stroke-width="1.4" stroke-linecap="round" />
 <line x1="455.0" y1="420.0" x2="448.0" y2="438.0" stroke="#888" stroke-width="1.4" stroke-linecap="round" />
 <rect x="439.0" y="438.0" width="12.0" height="14.0" rx="3" fill="#2140a0" stroke="none" stroke-width="1" />
@@ -4304,7 +4304,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <line x1="243.0" y1="324.0" x2="261.0" y2="324.0" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round" />
 <line x1="243.0" y1="336.0" x2="261.0" y2="336.0" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round" />
 <line x1="243.0" y1="348.0" x2="261.0" y2="348.0" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round" />
-<text x="274.2" y="334.0" font-size="8.5" fill="#5b6068" text-anchor="middle" font-weight="700" >ESP32-S3</text>
+<text x="274.2" y="334.0" font-size="8.5" fill="#5b6068" text-anchor="middle" font-weight="700" class="silk">ESP32-S3</text>
 <rect x="328.2" y="306.6" width="14.0" height="12.0" rx="1.5" fill="#d9dde2" stroke="#8a9099" stroke-width="1" />
 <circle cx="335.2" cy="312.6" r="3.6" fill="#2b2f36" stroke="none" stroke-width="1" />
 <text x="335.2" y="329.6" font-size="6.5" fill="#ffffff" text-anchor="middle" font-weight="700" >RST</text>
@@ -4313,9 +4313,9 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <text x="357.5" y="329.6" font-size="6.5" fill="#ffffff" text-anchor="middle" font-weight="700" >BOOT</text>
 <rect x="477.0" y="296.0" width="16.0" height="20.0" rx="2" fill="#9aa0a8" stroke="none" stroke-width="1" />
 <rect x="477.0" y="336.0" width="16.0" height="20.0" rx="2" fill="#9aa0a8" stroke="none" stroke-width="1" />
-<text x="497.0" y="310.0" font-size="8.5" fill="#6b7280" text-anchor="start" font-weight="400" stroke="#fbfaf6" stroke-width="3" paint-order="stroke">UART</text>
+<text x="497.0" y="310.0" font-size="8.5" fill="#6b7280" text-anchor="start" font-weight="400" stroke="#fbfaf6" stroke-width="3" paint-order="stroke" class="silk">UART</text>
 <text x="497.0" y="350.0" font-size="8.5" fill="#2b5fd9" text-anchor="start" font-weight="700" stroke="#fbfaf6" stroke-width="3" paint-order="stroke">USB → computer</text>
-<text x="419.5" y="334.0" font-size="9" fill="#cfd3da" text-anchor="middle" font-weight="700" >DevKitC-1</text>
+<text x="419.5" y="334.0" font-size="9" fill="#cfd3da" text-anchor="middle" font-weight="700" class="silk">DevKitC-1</text>
 <circle cx="255.0" cy="380.0" r="2.6" fill="#d8ad45" stroke="none" stroke-width="1" />
 <text x="255.0" y="371.0" font-size="6" fill="#e7e9ec" text-anchor="middle" font-weight="400" >3V3</text>
 <circle cx="255.0" cy="380.0" r="2.6" fill="#d8ad45" stroke="none" stroke-width="1" />
@@ -5462,7 +5462,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <line x1="243.0" y1="324.0" x2="261.0" y2="324.0" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round" />
 <line x1="243.0" y1="336.0" x2="261.0" y2="336.0" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round" />
 <line x1="243.0" y1="348.0" x2="261.0" y2="348.0" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round" />
-<text x="274.2" y="334.0" font-size="8.5" fill="#5b6068" text-anchor="middle" font-weight="700" >ESP32-S3</text>
+<text x="274.2" y="334.0" font-size="8.5" fill="#5b6068" text-anchor="middle" font-weight="700" class="silk">ESP32-S3</text>
 <rect x="328.2" y="306.6" width="14.0" height="12.0" rx="1.5" fill="#d9dde2" stroke="#8a9099" stroke-width="1" />
 <circle cx="335.2" cy="312.6" r="3.6" fill="#2b2f36" stroke="none" stroke-width="1" />
 <text x="335.2" y="329.6" font-size="6.5" fill="#ffffff" text-anchor="middle" font-weight="700" >RST</text>
@@ -5471,9 +5471,9 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <text x="357.5" y="329.6" font-size="6.5" fill="#ffffff" text-anchor="middle" font-weight="700" >BOOT</text>
 <rect x="477.0" y="296.0" width="16.0" height="20.0" rx="2" fill="#9aa0a8" stroke="none" stroke-width="1" />
 <rect x="477.0" y="336.0" width="16.0" height="20.0" rx="2" fill="#9aa0a8" stroke="none" stroke-width="1" />
-<text x="497.0" y="310.0" font-size="8.5" fill="#6b7280" text-anchor="start" font-weight="400" stroke="#fbfaf6" stroke-width="3" paint-order="stroke">UART</text>
+<text x="497.0" y="310.0" font-size="8.5" fill="#6b7280" text-anchor="start" font-weight="400" stroke="#fbfaf6" stroke-width="3" paint-order="stroke" class="silk">UART</text>
 <text x="497.0" y="350.0" font-size="8.5" fill="#2b5fd9" text-anchor="start" font-weight="700" stroke="#fbfaf6" stroke-width="3" paint-order="stroke">USB → computer</text>
-<text x="419.5" y="334.0" font-size="9" fill="#cfd3da" text-anchor="middle" font-weight="700" >DevKitC-1</text>
+<text x="419.5" y="334.0" font-size="9" fill="#cfd3da" text-anchor="middle" font-weight="700" class="silk">DevKitC-1</text>
 <circle cx="255.0" cy="380.0" r="2.6" fill="#d8ad45" stroke="none" stroke-width="1" />
 <text x="255.0" y="371.0" font-size="6" fill="#e7e9ec" text-anchor="middle" font-weight="400" >3V3</text>
 <circle cx="255.0" cy="380.0" r="2.6" fill="#d8ad45" stroke="none" stroke-width="1" />
@@ -6763,13 +6763,13 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <line x1="725.0" y1="300.0" x2="718.0" y2="286.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
 <circle cx="710.0" cy="282.0" r="9" fill="#f4e2c0" stroke="#b98a3a" stroke-width="1.5" />
 <path d="M704.0,282 q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>
-<text x="710.0" y="269.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" >light sensor</text>
+<text x="710.0" y="269.0" font-size="9" fill="#6b5a2b" text-anchor="middle" font-weight="700" class="silk">light sensor</text>
 <line x1="725.0" y1="280.0" x2="735.0" y2="262.0" stroke="#888" stroke-width="1.6" stroke-linecap="round" />
 <rect x="725.0" y="261.0" width="10.0" height="20.0" rx="3" fill="#7ab3d6" stroke="#46708c" stroke-width="1.2" />
 <rect x="725.0" y="265.0" width="10.0" height="2.2" rx="0" fill="#8d5a2b" stroke="none" stroke-width="1" />
 <rect x="725.0" y="269.5" width="10.0" height="2.2" rx="0" fill="#111" stroke="none" stroke-width="1" />
 <rect x="725.0" y="274.0" width="10.0" height="2.2" rx="0" fill="#e67e22" stroke="none" stroke-width="1" />
-<text x="740.0" y="275.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke">10 kΩ resistor</text>
+<text x="740.0" y="275.0" font-size="9.5" fill="#1f4e6e" text-anchor="start" font-weight="800" stroke="#f3f1ea" stroke-width="3" paint-order="stroke" class="silk">10 kΩ resistor</text>
 <line x1="435.0" y1="408.0" x2="442.0" y2="438.0" stroke="#888" stroke-width="1.4" stroke-linecap="round" />
 <line x1="455.0" y1="420.0" x2="448.0" y2="438.0" stroke="#888" stroke-width="1.4" stroke-linecap="round" />
 <rect x="439.0" y="438.0" width="12.0" height="14.0" rx="3" fill="#2140a0" stroke="none" stroke-width="1" />
@@ -6799,7 +6799,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <line x1="243.0" y1="324.0" x2="261.0" y2="324.0" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round" />
 <line x1="243.0" y1="336.0" x2="261.0" y2="336.0" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round" />
 <line x1="243.0" y1="348.0" x2="261.0" y2="348.0" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round" />
-<text x="274.2" y="334.0" font-size="8.5" fill="#5b6068" text-anchor="middle" font-weight="700" >ESP32-S3</text>
+<text x="274.2" y="334.0" font-size="8.5" fill="#5b6068" text-anchor="middle" font-weight="700" class="silk">ESP32-S3</text>
 <rect x="328.2" y="306.6" width="14.0" height="12.0" rx="1.5" fill="#d9dde2" stroke="#8a9099" stroke-width="1" />
 <circle cx="335.2" cy="312.6" r="3.6" fill="#2b2f36" stroke="none" stroke-width="1" />
 <text x="335.2" y="329.6" font-size="6.5" fill="#ffffff" text-anchor="middle" font-weight="700" >RST</text>
@@ -6808,9 +6808,9 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <text x="357.5" y="329.6" font-size="6.5" fill="#ffffff" text-anchor="middle" font-weight="700" >BOOT</text>
 <rect x="477.0" y="296.0" width="16.0" height="20.0" rx="2" fill="#9aa0a8" stroke="none" stroke-width="1" />
 <rect x="477.0" y="336.0" width="16.0" height="20.0" rx="2" fill="#9aa0a8" stroke="none" stroke-width="1" />
-<text x="497.0" y="310.0" font-size="8.5" fill="#6b7280" text-anchor="start" font-weight="400" stroke="#fbfaf6" stroke-width="3" paint-order="stroke">UART</text>
+<text x="497.0" y="310.0" font-size="8.5" fill="#6b7280" text-anchor="start" font-weight="400" stroke="#fbfaf6" stroke-width="3" paint-order="stroke" class="silk">UART</text>
 <text x="497.0" y="350.0" font-size="8.5" fill="#2b5fd9" text-anchor="start" font-weight="700" stroke="#fbfaf6" stroke-width="3" paint-order="stroke">USB → computer</text>
-<text x="419.5" y="334.0" font-size="9" fill="#cfd3da" text-anchor="middle" font-weight="700" >DevKitC-1</text>
+<text x="419.5" y="334.0" font-size="9" fill="#cfd3da" text-anchor="middle" font-weight="700" class="silk">DevKitC-1</text>
 <circle cx="255.0" cy="380.0" r="2.6" fill="#d8ad45" stroke="none" stroke-width="1" />
 <text x="255.0" y="371.0" font-size="6" fill="#e7e9ec" text-anchor="middle" font-weight="400" >3V3</text>
 <circle cx="255.0" cy="380.0" r="2.6" fill="#d8ad45" stroke="none" stroke-width="1" />
@@ -7193,4 +7193,5 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
   update();
 })();
 </script>
+<script src="js/declutter.js?v=4"></script>
 </body></html>

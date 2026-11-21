@@ -554,7 +554,7 @@ def draw_esp(s):
     sw = 0.3 * L                                           # the metal can over the ESP32-S3 module
     s.rect(EX0 + 6, EY0 + 24, sw, h - 48, '#c8ccd2', rx=3)
     for i in range(5): s.line(EX0 + 12, EY0 + 32 + i * 12, EX0 + 30, EY0 + 32 + i * 12, '#9aa0a8', 2)
-    s.text(EX0 + 6 + sw / 2, EY0 + h / 2 + 4, 'ESP32-S3', 10 if L > 300 else 8.5, '#5b6068', 'middle', 700)
+    s.text(EX0 + 6 + sw / 2, EY0 + h / 2 + 4, 'ESP32-S3', 10 if L > 300 else 8.5, '#5b6068', 'middle', 700, extra='class="silk"')
     # RST and BOOT push buttons, just past the can on the GND/TX/RX side (as on the board)
     by = EY0 + 0.36 * h
     for fx, lab in ((0.42, 'RST'), (0.51, 'BOOT')):
@@ -564,9 +564,9 @@ def draw_esp(s):
         s.text(bxc, by + 17, lab, 7.5 if L > 300 else 6.5, '#ffffff', 'middle', 700)
     s.rect(EX1 - 2, EY0 + 28, 16, 20, '#9aa0a8', rx=2); s.rect(EX1 - 2, EY0 + 68, 16, 20, '#9aa0a8', rx=2)
     halo = 'stroke="#fbfaf6" stroke-width="3" paint-order="stroke"' if plug else ''
-    s.text(EX1 + 18, EY0 + 42, 'UART', 8.5, '#6b7280', extra=halo)
+    s.text(EX1 + 18, EY0 + 42, 'UART', 8.5, '#6b7280', extra=halo + ' class="silk"')
     s.text(EX1 + 18, EY0 + 82, 'USB → computer', 8.5, '#2b5fd9', 'start', 700, extra=halo)
-    s.text(EX0 + 0.76 * L, EY0 + h / 2 + 4, 'DevKitC-1', 11 if L > 300 else 9, '#cfd3da', 'middle', 700)
+    s.text(EX0 + 0.76 * L, EY0 + h / 2 + 4, 'DevKitC-1', 11 if L > 300 else 9, '#cfd3da', 'middle', 700, extra='class="silk"')
     for hdr, lst in (('J1', J1), ('J3', J3)):
         for i, nm in enumerate(lst):
             x, y = epin(nm, hdr)
@@ -604,7 +604,7 @@ def draw_step(S, k):
                 p_.line(*a, (a[0] + b[0]) / 2 - 8, a[1] - 14, '#888', 1.6); p_.line(*b, (a[0] + b[0]) / 2 + 8, a[1] - 14, '#888', 1.6)
                 p_.circle((a[0] + b[0]) / 2, a[1] - 18, 9, '#f4e2c0', '#b98a3a', 1.5)
                 p_.add(f'<path d="M{(a[0]+b[0])/2-6},{a[1]-18} q3,-5 6,0 q3,5 6,0" fill="none" stroke="#b03030" stroke-width="1.6"/>')
-                p_.text((a[0] + b[0]) / 2, a[1] - 31, 'light sensor', 9, '#6b5a2b', 'middle', 700)
+                p_.text((a[0] + b[0]) / 2, a[1] - 31, 'light sensor', 9, '#6b5a2b', 'middle', 700, extra='' if idx == k else 'class="silk"')
             elif p[0] == 'res_rail':
                 a, b = hole(p[1], 'a', p[4]), rail(p[2], p[1] + 1)
                 p_.line(*a, *b, '#888', 1.6)
@@ -612,7 +612,7 @@ def draw_step(S, k):
                 p_.rect(mx - 5, my - 10, 10, 20, '#7ab3d6', '#46708c', 3, 1.2)
                 for i, bc in enumerate(('#8d5a2b', '#111', '#e67e22')):
                     p_.rect(mx - 5, my - 6 + i * 4.5, 10, 2.2, bc, rx=0)
-                p_.text(mx + 10, my + 4, f'{p[3]} resistor', 9.5, '#1f4e6e', 'start', 800, extra='stroke="#f3f1ea" stroke-width="3" paint-order="stroke"')
+                p_.text(mx + 10, my + 4, f'{p[3]} resistor', 9.5, '#1f4e6e', 'start', 800, extra='stroke="#f3f1ea" stroke-width="3" paint-order="stroke"' + ('' if idx == k else ' class="silk"'))
             elif p[0] == 'led':
                 a, b = hole(p[1], p[3], p[4]), hole(p[2], p[3], p[4])
                 cx, cy = (a[0] + b[0]) / 2, a[1] - 13
@@ -1036,7 +1036,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </head><body class="lay-plug">
 <header class="site"><div class="in">
 <a class="brand" href="index.html"><span class="dot"></span>Ceiling Clock</a>
-<nav><a href="index.html">3D model</a><a href="assembly.html">Assembly</a><a href="wiring.html">Wiring</a><a href="breadboard.html" class="on">Breadboard test</a><a href="parts.html">Parts</a><a href="demo/">Live demo</a><a href="firmware.html">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
+<nav><a href="index.html">3D model</a><a href="printing.html">Printing</a><a href="assembly.html">Assembly</a><a href="wiring.html">Wiring</a><a href="breadboard.html" class="on">Breadboard test</a><a href="perfboard.html">Perfboard</a><a href="parts.html">Parts</a><a href="demo/">Live demo</a><a href="firmware.html">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
 </div></header>
 <main>
 <h1>Breadboard test</h1>
@@ -1124,6 +1124,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
   setLay(lay);
 }})();
 </script>
+<script src="js/declutter.js?v=4"></script>
 </body></html>'''
 
 if __name__ == '__main__':

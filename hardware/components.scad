@@ -114,26 +114,21 @@ module ref_ldr() translate([ldr_xy[0], ldr_xy[1], lid_top - 2]) {
 
 // ---------------------------------------------------------------- circuit board: perfboard + ESP32-S3-DevKitC-1 + parts
 pb0 = [pb_xy[0] - pb_size[0]/2, pb_xy[1] - pb_size[1]/2, pb_top - 1.6];
+// Perfboard: 27 x 15 holes on a 2.54 mm grid (columns 1-27 left to right, rows A-O front to back), as in
+// docs/perfboard.html (hardware/make_perfboard_guide.py). ESP32 female headers in rows C and M, columns 4-25.
+function pbh(c, r) = [pb0[0] + 1.98 + (c - 1) * 2.54, pb0[1] + 2.22 + r * 2.54];   // r: 0 = row A
 module ref_perfboard() {
   translate(pb0) {
-    M("pcb_green") difference() {
-      pcb(pb_size[0], pb_size[1]);
-      for (sx = [2, pb_size[0] - 2], sy = [2, pb_size[1] - 2]) translate([sx, sy, -1]) cylinder(d = 3, h = 4, $fn = 16);
-    }
-    M("copper") for (ix = [0:25], iy = [0:floor((pb_size[1] - 6.8) / 2.54)]) translate([3.6 + ix * 2.54, 3.4 + iy * 2.54, 1.6]) cylinder(d = 1.7, h = 0.06, $fn = 8);
+    M("pcb_green") pcb(pb_size[0], pb_size[1]);
+    M("copper") for (c = [1:27], r = [0:14]) translate([1.98 + (c - 1) * 2.54, 2.22 + r * 2.54, 1.6]) cylinder(d = 1.7, h = 0.06, $fn = 8);
   }
-  // female headers for the ESP32 board
-  M("black") for (s = [-1, 1]) translate([pb_xy[0] - 22 * 2.54 / 2, pb_xy[1] + s * 11.43 - 1.27, pb_top]) female_header(22);
-  // 100 uF for the amplifier in the front strip at the left (the alarm buttons hang just in front of the strip's right
-  // part, so keep it free of anything taller than 2.5 mm); 10 k for the light sensor and the two 220 R for the alarm
-  // lights in the back strip; power terminal at the left end between the header rows
-  translate([pb_xy[0] - 25, pb_xy[1] - 16.4, pb_top]) electrolytic(6.3, 11);
-  for (i = [0:2]) translate([pb_xy[0] - 8 + i * 14, pb_xy[1] + 16.4, pb_top + 2.5]) resistor_2w(8);
-  translate([pb_xy[0] - 26.4, pb_xy[1] - 5.5, pb_top]) rotate([0, 0, 90]) screw_terminal(2);   // between the header rows, left end
+  M("black") for (r = [2, 12]) translate([pbh(4, r)[0] - 1.27, pbh(4, r)[1] - 1.27, pb_top]) female_header(22);
+  translate([pbh(2, 0)[0], pbh(2, 0)[1], pb_top]) electrolytic(6.3, 11);                       // 100 uF across 5 V and GND, front-left
+  // power comes in on two 22 AWG wires soldered into the 5 V and GND columns at the back-left (pads 3O and 1O)
 }
 module ref_esp32() {
-  L = 62.7; W = 25.4; z0 = pb_top + 8.5 + 2.5;      // its pin strips sit on top of the female headers
-  x0 = pb_xy[0] - L/2; y0 = pb_xy[1] - W/2;
+  L = 62.7; W = 28; z0 = pb_top + 8.5 + 2.5;        // its pin strips sit on top of the female headers (rows 25.4 apart)
+  x0 = pbh(14.5, 7)[0] - L/2; y0 = pbh(4, 7)[1] - W/2;
   translate([x0, y0, z0]) {
     M("pcb_black") pcb(L, W);
     // ESP32-S3-WROOM-1 module at the -x end: PCB, metal shield, antenna
@@ -175,6 +170,9 @@ module ref_speaker() translate([spk_xy[0], spk_xy[1], floor_top]) {   // 40 mm, 
   M("metal") translate([0, 0, 12.5]) cylinder(d = 18, h = 0.6, $fn = 40);
   M("gold") for (s = [-1, 1]) translate([s * 15 - 1, -0.3, 2]) cube([2, 0.6, 3]);
 }
+// four 6 mm stick-on rubber feet under the base's corners
+module ref_feet() M("black") for (sx = [-1, 1], sy = [-1, 1])
+  translate([sx * (box_w/2 - 14), sy * (box_d/2 - 14), 0]) cylinder(d = 12.7, h = feet_h, $fn = 32);
 module ref_usbc() translate([-box_w/2 + wall + 12.3, usb_y - 7, usb_z - 3.2]) rotate([0, 0, 90]) {   // socket faces out of the left wall
   M("pcb_green") pcb(14, 12);
   M("metal") translate([7 - 4.5, 12 - 7.3, 1.6]) cube([9, 7.6, 3.2]);

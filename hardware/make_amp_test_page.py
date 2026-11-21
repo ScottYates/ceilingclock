@@ -497,7 +497,7 @@ ol li{{margin:5px 0}}
 </head><body>
 <header class="site"><div class="in">
 <a class="brand" href="index.html"><span class="dot"></span>Ceiling Clock</a>
-<nav><a href="index.html">3D model</a><a href="assembly.html">Assembly</a><a href="wiring.html">Wiring</a><a href="breadboard.html" class="on">Breadboard test</a><a href="parts.html">Parts</a><a href="demo/">Live demo</a><a href="firmware.html">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
+<nav><a href="index.html">3D model</a><a href="printing.html">Printing</a><a href="assembly.html">Assembly</a><a href="wiring.html">Wiring</a><a href="breadboard.html" class="on">Breadboard test</a><a href="perfboard.html">Perfboard</a><a href="parts.html">Parts</a><a href="demo/">Live demo</a><a href="firmware.html">Firmware &amp; use</a><a href="https://github.com/ScottYates/ceilingclock">GitHub</a></nav>
 </div></header>
 <main>
 <p><a href="breadboard.html#o-amp">← back to the breadboard test</a></p>
@@ -576,6 +576,7 @@ ol li{{margin:5px 0}}
 </div>
 </main>
 <footer>Ceiling Clock · drawn by <code>hardware/make_amp_test_page.py</code></footer>
+<script src="js/declutter.js?v=4"></script>
 </body></html>
 '''
 

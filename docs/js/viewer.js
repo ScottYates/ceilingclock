@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { PARTS, ALL, MATERIALS, AXIS } from './parts.js?v=20261120a';
-import { optics, LENS, CEILING } from './optics.js?v=20261120a';
+import { PARTS, ALL, MATERIALS, AXIS } from './parts.js?v=20261120b';
+import { optics, LENS, CEILING } from './optics.js?v=20261120b';
 
 // createViewer(container) -> { ready: Promise, setState({visible, highlight, explode, tilt, focus, beam, camera, target}), onPick }
-export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'models/clock.glb?v=20261120a' } = {}) {
+export function createViewer(container, { background = 0xf6f4ef, modelUrl = 'models/clock.glb?v=20261120b' } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;

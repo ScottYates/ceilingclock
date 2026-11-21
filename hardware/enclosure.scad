@@ -132,9 +132,8 @@ module base() {
         rrect(box_w, box_d, base_top - feet_h, corner_r);
         translate([0, 0, floor_t]) rrect(box_w - 2*wall, box_d - 2*wall, base_top, corner_r - wall);
       }
-      // feet
-      for (sx = [-1, 1], sy = [-1, 1])
-        translate([sx * (box_w/2 - 14), sy * (box_d/2 - 14), 0]) cylinder(d = 14, h = feet_h + eps);
+      // no printed feet: the floor prints flat on the bed, and four 6 mm stick-on rubber feet (ref_feet) lift it so the
+      // downward speaker can breathe. Printed feet left the whole floor as a 6 mm-high overhang.
       // lid posts
       for (p = posts) translate([p[0] * post_xy[0], p[1] * post_xy[1], feet_h]) cylinder(r = 4.5, h = base_top - feet_h);
       // circuit board support pads (under the corners) and snap hooks (on the short edges)
@@ -482,6 +481,7 @@ module show(p) {
   else if (p == "ref_button") ref_button();
   else if (p == "ref_alarmbtns") ref_alarmbtns();
   else if (p == "ref_usbc") ref_usbc();
+  else if (p == "ref_feet") ref_feet();
   else if (p == "ref_buttonB") ref_buttonB();
   else if (p == "ref_window") ref_window();
   else if (p == "ref_ldr") ref_ldr();
@@ -495,7 +495,8 @@ module print_pose(p) {
   if (p == "lid")              translate([0, 0, lid_top]) rotate([180, 0, 0]) children();   // upside down (turned over, not mirrored): the pin ramps are on its underside
   // barrel stands on its open left end; the mirror ramp is then a 45 degree slope, no supports
   else if (p == "barrel")      rotate([0, -90, 0]) translate([-br_x0, -ax_y, -z_ax]) children();
-  else if (p == "disp_holder") rotate([0, -90, 0]) translate([-br_x0, -ax_y, -z_ax]) children();
+  // display holder lies on its mirror-side face: the end cap's collar recess is then on top, not a 52 mm ceiling
+  else if (p == "disp_holder") rotate([0, 90, 0]) translate([-lh_x1, -ax_y, -z_ax]) children();
   // end cap stands on its collar; the tabs then rise as upright walls
   else if (p == "end_cap")     rotate([0, 90, 0]) translate([-(br_x0 + 1.8), -ax_y, -z_ax]) children();
   // lens mount prints upside down, top ring on the bed. NOTE: these two poses are mirror images, so the printed
@@ -504,6 +505,7 @@ module print_pose(p) {
   else if (p == "lens_mount")  translate([0, 0, z_ax + lm_top]) mirror([0, 0, 1]) translate([-mx, -ax_y, 0]) children();
   else if (p == "sleeve")      translate([-mx, -ax_y, lens_z]) mirror([0, 0, 1]) children();  // seat face down
   else if (p == "lens_cap")    translate([0, 0, 2]) rotate([180, 0, 0]) translate([-mx, -ax_y, -lens_z]) children();   // ring on the bed, tube up
+  else if (p == "base")        translate([0, 0, -feet_h]) children();   // floor on the bed
   else children();
 }
 module show_print(p) {   // as show(), but untilted
@@ -518,6 +520,7 @@ module assembled_pins() lid_pins() lp_place($grip);   // lid corners, end cap ta
 if (part == "assembly") {
   color("#3a3f47") base();
   color("#4a505a") lid();
+  ref_feet();
   color("#2b2f36") tilted() barrel();
   color("#e8743b") tilted() disp_holder();
   color("#2b2f36") end_cap();

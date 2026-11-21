@@ -18,7 +18,7 @@ export const STEPS = [
   {
     title: 'Print the parts',
     view: { visible: PRINTED, highlight: [], explode: 0.75, camera: [420, 380, 560], target: [0, 100, 0] },
-    html: `<p>Print the nine files in <code>hardware/stl/</code>. They are already in printing orientation. The case needs <b>no screws</b>: printed quarter-turn lock pins hold the lid, end cap and lens mount, and the circuit board snaps under printed hooks.</p>
+    html: `<p>Print the nine files in <code>hardware/stl/</code>; the <a href="printing.html">printing page</a> shows each one on the bed with its settings. They are already in printing orientation. The case needs <b>no screws</b>: printed quarter-turn lock pins hold the lid, end cap and lens mount, and the circuit board snaps under printed hooks.</p>
 <table><thead><tr><th>Part</th><th>Material</th><th>Notes</th></tr></thead><tbody>
 <tr><td>base.stl</td><td>PLA/PETG, black or dark grey</td><td>170 × 135 × 44 mm (56 mm at the bearing). 0.2 mm layers, 3 walls, 15% infill. No supports. For a 0.56" display, print <code>base_056.stl</code> instead.</td></tr>
 <tr><td>lid.stl</td><td>Same as base</td><td>Prints flat, <b>top face down</b> (as exported): the pins' ramps are on its underside. The top gets the smooth bed finish.</td></tr>
