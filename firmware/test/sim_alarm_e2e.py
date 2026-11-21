@@ -287,6 +287,43 @@ def s_stream_fails_then_backup_fails(c):
            'stream -> backup -> beep')
 
 
+def _feed(items):
+    """An RSS feed, items listed in the order given: (title, RFC 822 date, audio URL)."""
+    body = ''.join(f'<item><title>{t}</title><pubDate>{d}</pubDate><description><![CDATA[<p>notes</p>]]></description>'
+                   f'<enclosure url="{u}" type="audio/mpeg" length="1"/></item>' for t, d, u in items)
+    return ('<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>Show</title>' + body + '</channel></rss>').encode()
+
+
+def s_podcast_feed(c):
+    """A podcast feed rings with its newest episode (by date, not by position), looked up before the alarm, and
+    still does when the feed can't be reached at ring time."""
+    import http.server, threading
+    feed = {'body': _feed([('Ep 1', 'Mon, 05 Jan 2026 10:00:00 GMT', 'http://cdn.example/ep1.mp3'),
+                           ('Ep 3', 'Mon, 19 Jan 2026 10:00:00 GMT', 'http://cdn.example/ep3.mp3'),
+                           ('Ep 2', 'Mon, 12 Jan 2026 10:00:00 GMT', 'http://cdn.example/ep2.mp3')])}
+    class H(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200); self.send_header('Content-Type', 'application/rss+xml'); self.end_headers()
+            self.wfile.write(feed['body'])
+        def log_message(self, *a): pass
+    srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    url = f'http://127.0.0.1:{srv.server_address[1]}/feed.xml'
+    try:
+        c.start()
+        at = next_minute(c, 120)
+        c.set_alarms([alarm(at, stream=url)])
+        f = c.wait(lambda: [x for x in c.state().get('feeds', []) if x['feed'] == url and x['ok']], 60, 'feed looked up ahead')
+        assert f[0]['url'] == 'http://cdn.example/ep3.mp3' and f[0]['title'] == 'Ep 3', f
+        srv.shutdown(); srv.server_close()            # the feed is unreachable when the alarm goes off
+        ring_and_check(c, at, 'rings')
+        c.wait(lambda: c.hw()['audio']['url'] == 'http://cdn.example/ep3.mp3', 10, 'plays the newest episode')
+        c.wait(lambda: c.state()['stream']['title'] == 'Ep 3', 5, 'shows its title')
+    finally:
+        try: srv.shutdown()
+        except Exception: pass
+
+
 def s_audio_hang(c):
     """The audio task freezes: the clock restarts itself and carries on ringing with the beep."""
     c.start()

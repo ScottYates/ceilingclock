@@ -121,8 +121,8 @@ details[open]>summary{border-bottom:1px solid var(--line)}
   <div class="row"><span>Name</span><input type="text" id="eLabel" maxlength="40"></div>
   <div class="row"><span>Sound</span><select id="eSound" class="grow" style="max-width:none"></select></div>
   <input type="file" id="eUp" accept=".mp3,.wav,.m4a,.aac,.flac,.ogg,.opus" hidden>
-  <div class="row" id="eStreamRow" hidden><input type="url" id="eStream" placeholder="Paste a radio, MP3 or podcast link"></div>
-  <div class="row" id="eBackRow" hidden><div class="grow">Backup sound<small>Rings if the link hasn't started after 25 seconds, or drops out. A podcast plays its newest episode.</small></div><select id="eBack"></select></div>
+  <div class="row" id="eStreamRow" hidden><div class="grow"><input type="url" id="eStream" placeholder="Paste a radio, MP3 or podcast feed link" style="width:100%"><small id="eFeed"></small></div></div>
+  <div class="row" id="eBackRow" hidden><div class="grow">Backup sound<small>Rings if the link hasn't started after 25 seconds, or drops out. A podcast feed plays its newest episode, looked up every hour.</small></div><select id="eBack"></select></div>
   <div class="row"><span>Volume</span><input type="range" id="eVol" min="6" max="21"><span class="val" id="eVolV"></span></div>
   <div class="row"><button class="pbtn" id="ePlay">Play</button><button class="pbtn" onclick="act('stop')">Stop</button><span class="grow"></span><button class="pbtn" id="eRing">Ring now</button></div>
  </div>
@@ -284,12 +284,16 @@ function addAlarm(){if(C.alarms.length>=8)return toast('The clock holds up to 8 
 const RAMP=[[0,'No fade-in'],[30,'30 seconds'],[60,'1 minute'],[120,'2 minutes'],[300,'5 minutes'],[600,'10 minutes']];
 const SNZ=[5,7,9,10,15,20,30].map(m=>[m,m+' minutes']),MAXR=[[5,'5 minutes'],[10,'10 minutes'],[15,'15 minutes'],[30,'30 minutes'],[60,'1 hour']];
 function opts(list,val){if(!list.some(x=>x[0]==val))list=[...list,[val,val+'']].sort((a,b)=>a[0]-b[0]);return list.map(x=>`<option value="${x[0]}" ${x[0]==val?'selected':''}>${x[1]}</option>`).join('')}
-const STREAM='stream:',UPLOAD='upload:',UPOPT=`<option value="upload:">Upload a sound…</option>`;let streamMode=false,lastStream='',upFor=null;
+const STREAM='stream:',UPLOAD='upload:',PRESET='preset:',UPOPT=`<option value="upload:">Upload a sound…</option>`;
+// ready-made links in the sound list: a podcast feed plays its newest episode
+const PRESETS=[['Up First from NPR (podcast)','https://feeds.npr.org/510318/podcast.xml']];
+function presetOpts(u){return PRESETS.map((p,i)=>`<option value="${PRESET}${i}" ${u==p[1]?'selected':''}>${esc(p[0])}</option>`).join('')}let streamMode=false,lastStream='',upFor=null;
 function soundOpts(sel){return S.map(x=>`<option ${x.path==sel?'selected':''} value="${esc(x.path)}">${esc(x.path.replace('/sounds/','').replace(/\.[^.]+$/,''))}</option>`).join('')}
 function fillEditor(){const a=C.alarms[cur];
  $('eTime').value=hm(a.hour*60+a.minute);$('eOn').checked=a.enabled;$('eLabel').value=a.label;
  streamMode=!!a.stream;lastStream=a.stream||'';
- $('eSound').innerHTML=soundOpts(streamMode?'':a.sound)+`<option value="${STREAM}" ${streamMode?'selected':''}>Internet radio or podcast…</option>`+UPOPT;
+ const isPre=PRESETS.some(p=>p[1]==a.stream);
+ $('eSound').innerHTML=soundOpts(streamMode?'':a.sound)+presetOpts(a.stream)+`<option value="${STREAM}" ${streamMode&&!isPre?'selected':''}>Other internet radio or podcast…</option>`+UPOPT;
  $('eBack').innerHTML=soundOpts(a.sound)+UPOPT;showStream();$('eVol').value=a.volume;$('eVolV').textContent=Math.round(a.volume/21*100)+'%';
  $('eStream').value=a.stream||'';
  $('eRamp').innerHTML=opts(RAMP,a.rampSec);$('eSnooze').innerHTML=opts(SNZ,a.snoozeMin);$('eMax').innerHTML=opts(MAXR,a.maxRingMin);
@@ -303,9 +307,14 @@ function ed(id,fn,ev='change'){$(id).addEventListener(ev,e=>{if(cur<0)return;fn(
 ed('eTime',(a,t)=>{const m=mh(t.value);a.hour=Math.floor(m/60);a.minute=m%60});
 ed('eOn',(a,t)=>{a.enabled=t.checked});
 ed('eLabel',(a,t)=>{a.label=t.value.trim()||'Alarm'});
-function showStream(){$('eStreamRow').hidden=!streamMode;$('eBackRow').hidden=!streamMode}
+function showStream(){$('eStreamRow').hidden=!streamMode;$('eBackRow').hidden=!streamMode;feedLine()}
+function feedLine(){const el=$('eFeed');if(!el)return;const a=cur>=0&&C&&C.alarms[cur];const u=a&&a.stream;
+ const f=u&&ST&&(ST.feeds||[]).find(x=>x.feed==u);
+ el.textContent=!u?'':/\.(mp3|aac|m4a|ogg|opus|flac|wav|m3u8?|pls)([?#]|$)/i.test(u)?'':!f?(a.enabled?'Podcast feeds are checked within a minute; radio and MP3 links play as they are.':'Feeds are checked while the alarm is on.')
+  :f.ok?'Newest episode: '+(f.title||'(untitled)')+(f.date?' · '+new Date(f.date*1000).toLocaleDateString([], {month:'short',day:'numeric'}):'')+' · checked '+(f.age<90?'just now':Math.round(f.age/60)+' min ago')
+  :'Feed problem: '+f.err}
 // "Internet radio or podcast" in the Sound list: the link plays, and the sound file becomes the backup
-ed('eSound',(a,t)=>{if(t.value==UPLOAD)return pickUpload('eSound');if(t.value==STREAM){streamMode=true;a.stream=lastStream;$('eStream').value=lastStream;showStream();if(!lastStream)$('eStream').focus()}
+ed('eSound',(a,t)=>{if(t.value==UPLOAD)return pickUpload('eSound');if(t.value.startsWith(PRESET)){const p=PRESETS[+t.value.slice(PRESET.length)];streamMode=true;a.stream=p[1];$('eStream').value=p[1];showStream();return}if(t.value==STREAM){if(PRESETS.some(p=>p[1]==lastStream))lastStream='';streamMode=true;a.stream=lastStream;$('eStream').value=lastStream;showStream();if(!lastStream)$('eStream').focus()}
  else{streamMode=false;if(a.stream)lastStream=a.stream;a.stream='';a.sound=t.value;$('eBack').value=t.value;showStream()}});
 ed('eBack',(a,t)=>{if(t.value==UPLOAD)return pickUpload('eBack');a.sound=t.value});
 // "Upload a sound…" in either list: pick a file, send it to the clock, and use it there
@@ -360,7 +369,7 @@ async function fwUpdate(){const f=$('fwfile').files[0];if(!f)return;if(!confirm(
  const fd=new FormData();fd.append('fw',f,f.name);toast('Updating, keep the clock plugged in…');const r=await fetch('/update',{method:'POST',body:fd});toast(await r.text());$('fwfile').value=''}
 
 // ---- live state, once a second
-async function poll(){try{const s=await(await fetch('/api/state')).json();ST=s;if(C&&s.you&&!poll.me){poll.me=1;renderTrust()}
+async function poll(){try{const s=await(await fetch('/api/state')).json();ST=s;feedLine();if(C&&s.you&&!poll.me){poll.me=1;renderTrust()}
  $('face').innerHTML=segs4(timeSegs(s),'#ff4a35','#1d151b','rgba(0,0,0,0)');
  const d=new Date(s.now*1000);$('date').textContent=s.timeValid?d.toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'}):'Waiting for the time';
  $('nextLine').textContent=s.nextAt?'Next alarm '+fmtWhen(s.nextAt):'No alarms on';

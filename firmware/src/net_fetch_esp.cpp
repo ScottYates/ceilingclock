@@ -12,7 +12,7 @@ bool netFetch(const char* url, std::string& contentType, const std::function<boo
   WiFiClient plain;
   if (https) secure.setInsecure();  // no certificate store on the clock; podcast feeds are public
   HTTPClient http;
-  http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+  http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);   // podcast hosts redirect through trackers
   http.setRedirectLimit(6);
   http.setConnectTimeout(8000);
   http.setTimeout(8000);
@@ -23,19 +23,24 @@ bool netFetch(const char* url, std::string& contentType, const std::function<boo
   int code = http.GET();
   if (code != HTTP_CODE_OK) { http.end(); return false; }
   contentType = http.header("Content-Type").c_str();
-  WiFiClient* s = http.getStreamPtr();
-  int left = http.getSize();  // -1 = unknown length
-  char buf[1024];
-  uint32_t last = millis();
-  while (http.connected() && left != 0 && millis() - last < 8000) {
-    int n = s->available();
-    if (n <= 0) { delay(5); continue; }
-    n = s->readBytes(buf, n < (int)sizeof buf ? n : (int)sizeof buf);
-    if (n <= 0) continue;
-    last = millis();
-    if (left > 0) left -= n;
-    if (!sink(buf, n)) break;
-  }
+  // writeToStream() undoes chunked transfer encoding (most podcast hosts send feeds chunked); reading the
+  // raw socket would mix the chunk-size lines into the XML.
+  struct Sink : public Stream {
+    const std::function<bool(const char*, size_t)>& fn;
+    bool stopped = false;
+    explicit Sink(const std::function<bool(const char*, size_t)>& f) : fn(f) {}
+    size_t write(const uint8_t* b, size_t n) override {
+      if (stopped) return 0;
+      if (!fn((const char*)b, n)) { stopped = true; return 0; }   // enough read: a short write ends the transfer
+      return n;
+    }
+    size_t write(uint8_t c) override { return write(&c, 1); }
+    int available() override { return 0; }
+    int read() override { return -1; }
+    int peek() override { return -1; }
+    void flush() override {}
+  } sink_(sink);
+  int r = http.writeToStream(&sink_);
   http.end();
-  return true;
+  return r >= 0 || sink_.stopped;
 }

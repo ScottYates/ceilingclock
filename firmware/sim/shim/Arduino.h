@@ -107,6 +107,8 @@ class Stream : public Print {
   virtual int available() = 0;
   virtual int read() = 0;
   virtual size_t readBytes(char* b, size_t n) { size_t k = 0; while (k < n) { int c = read(); if (c < 0) break; b[k++] = (char)c; } return k; }
+  virtual int peek() { return -1; }
+  virtual void flush() {}
 };
 class SerialClass : public Print {
  public:

@@ -19,6 +19,19 @@ class HTTPClient {
   int GET();
   String header(const char* name);
   WiFiClient* getStreamPtr() { return client_; }
+  // Hands the body to a Stream in pieces, as the ESP32 one does (it also undoes chunked encoding, which the
+  // simulator's fetch has already done). A short write ends it with HTTPC_ERROR_STREAM_WRITE (-10).
+  int writeToStream(Stream* s) {
+    if (!client_) return -1;
+    char b[1024]; int total = 0;
+    while (client_->available() > 0) {
+      size_t n = client_->readBytes(b, sizeof b);
+      if (!n) break;
+      if (s->write((const uint8_t*)b, n) != n) return -10;
+      total += (int)n;
+    }
+    return total;
+  }
   int getSize() { return size_; }
   bool connected() { return client_ && client_->connected(); }
   void end() {}

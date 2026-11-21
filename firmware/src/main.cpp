@@ -26,8 +26,9 @@
 #include "net_fetch.h"
 #include "persist.h"
 #include <esp_task_wdt.h>
+#include <atomic>
 
-#define FW_VERSION "2.6.0"   // bump on every release
+#define FW_VERSION "2.7.0"   // bump on every release
 #ifndef FW_BUILD
 #define FW_BUILD __DATE__ " " __TIME__   // set by build_stamp.py in PlatformIO builds
 #endif
@@ -101,11 +102,45 @@ uint32_t streamStartMs = 0;
 
 Audio* audioPlayer = nullptr;
 
-// Podcast feed URL -> the newest episode's audio URL (and its title). Radio streams and
-// links to audio files come back unchanged. False if it can't be reached or has no episodes.
-bool resolveStream(const char* url, std::string& out, std::string& title, std::string& err) {
-  out = url;
-  if (urlLooksLikeAudio(url)) return true;
+// ---- podcast feeds
+// A feed URL becomes its newest episode's audio URL (and title). Radio streams and links to audio files come
+// back unchanged. Feeds used by alarms are looked up ahead of time by a background task (feedTask, every hour
+// and whenever an alarm's feed changes), so an alarm normally starts its episode at once instead of first
+// downloading the feed. A lookup older than FEED_FRESH_MS is done again at ring time.
+const uint32_t FEED_REFRESH_MS = 60UL * 60 * 1000, FEED_FRESH_MS = 12UL * 60 * 60 * 1000;
+struct FeedEntry { std::string feed, url, title, err; uint32_t atMs = 0; bool ok = false; int64_t date = 0; };
+static FeedEntry feedCache[4];
+// a tiny lock shared by the feed task, the audio task and the web server (held only to copy a few strings)
+struct FeedLock {
+  std::atomic_flag f = ATOMIC_FLAG_INIT;
+  void lock() { while (f.test_and_set(std::memory_order_acquire)) vTaskDelay(1); }
+  void unlock() { f.clear(std::memory_order_release); }
+};
+struct FeedGuard { FeedLock& l; explicit FeedGuard(FeedLock& x) : l(x) { l.lock(); } ~FeedGuard() { l.unlock(); } };
+static FeedLock feedMx;
+
+static bool feedCached(const char* feed, std::string& url, std::string& title) {
+  FeedGuard g(feedMx);
+  for (auto& e : feedCache)
+    if (e.ok && e.feed == feed && millis() - e.atMs < FEED_FRESH_MS) { url = e.url; title = e.title; return true; }
+  return false;
+}
+static void feedStore(const char* feed, bool ok, const std::string& url, const std::string& title, const std::string& err, int64_t date) {
+  FeedGuard g(feedMx);
+  FeedEntry* slot = nullptr;
+  for (auto& e : feedCache) if (e.feed == feed) slot = &e;
+  if (!slot) {                                       // oldest slot
+    slot = &feedCache[0];
+    for (auto& e : feedCache) if (e.feed.empty() || e.atMs < slot->atMs) { slot = &e; if (e.feed.empty()) break; }
+  }
+  if (!ok && slot->ok && slot->feed == feed && millis() - slot->atMs < FEED_FRESH_MS) { slot->err = err; return; }   // keep the last good answer
+  slot->feed = feed; slot->ok = ok; slot->url = url; slot->title = title; slot->err = err; slot->date = date; slot->atMs = millis();
+}
+
+// Downloads the feed and picks its newest episode. True with the episode's URL in out (or the URL unchanged
+// if it turned out to be audio).
+static bool lookupFeed(const char* url, std::string& out, std::string& title, std::string& err, int64_t& date) {
+  out = url; date = 0;
   FeedScan scan;
   bool sniffed = false, isAudio = false;
   size_t total = 0;
@@ -120,14 +155,63 @@ bool resolveStream(const char* url, std::string& out, std::string& title, std::s
     }
     scan.feed(p, n);
     total += n;
-    return !scan.done() && total < 512 * 1024;
+    return !scan.done() && total < 4u * 1024 * 1024;   // a newest-first feed stops after a few episodes
   });
   if (!ok) { err = "could not reach the URL"; return false; }
   if (isAudio || !sniffed) return true;
+  scan.finish();
   if (!scan.found()) { err = "no episodes found in the feed"; return false; }
   out = scan.url();
   title = scan.title();
+  date = scan.date();
   return true;
+}
+
+bool resolveStream(const char* url, std::string& out, std::string& title, std::string& err) {
+  out = url;
+  if (urlLooksLikeAudio(url)) return true;
+  if (feedCached(url, out, title)) return true;
+  int64_t date;
+  bool ok = lookupFeed(url, out, title, err, date);
+  if (ok && out != url) feedStore(url, true, out, title, "", date);
+  return ok;
+}
+
+// Background lookups: the main loop queues the feeds that alarms use; this task fetches them one at a time.
+struct FeedReq { char url[300]; };
+QueueHandle_t feedQ;
+void feedTask(void*) {
+  FeedReq r;
+  for (;;) {
+    if (xQueueReceive(feedQ, &r, pdMS_TO_TICKS(1000)) != pdTRUE) { vTaskDelay(pdMS_TO_TICKS(250)); continue; }
+    if (WiFi.status() != WL_CONNECTED) continue;
+    std::string out, title, err;
+    int64_t date;
+    bool ok = lookupFeed(r.url, out, title, err, date);
+    if (ok && out == r.url) continue;               // plain audio or a radio stream: nothing to remember
+    feedStore(r.url, ok, out, title, err, date);
+  }
+}
+// Called from loop(): queue the alarms' feeds when they change and every hour (not while an alarm rings).
+void scheduleFeedLookups(bool ringing) {
+  static uint32_t lastCheck = 0, lastAll = 0;
+  static std::string lastSet;
+  if (millis() - lastCheck < 5000 || ringing || WiFi.status() != WL_CONNECTED) return;
+  lastCheck = millis();
+  std::string set;
+  for (int i = 0; i < cfg.alarmCount; i++) {
+    const AlarmCfg& a = cfg.alarms[i];
+    if (!a.t.enabled || !a.stream.length() || urlLooksLikeAudio(a.stream.c_str())) continue;
+    if (set.find(std::string(a.stream.c_str()) + "\n") == std::string::npos) set += std::string(a.stream.c_str()) + "\n";
+  }
+  bool due = set != lastSet || (lastAll && millis() - lastAll > FEED_REFRESH_MS) || (!lastAll && millis() > 30000);
+  if (!due || set.empty()) { if (set != lastSet) lastSet = set; return; }
+  lastSet = set; lastAll = millis();
+  for (size_t a = 0, b; (b = set.find('\n', a)) != std::string::npos; a = b + 1) {
+    FeedReq r;
+    strlcpy(r.url, set.substr(a, b - a).c_str(), sizeof r.url);
+    xQueueSend(feedQ, &r, 0);
+  }
 }
 
 // ---- audio diagnostics (/api/audiodiag): the library's last messages and the loudest sample seen,
@@ -956,6 +1040,16 @@ void apiState() {
   st["state"] = ssName[streamState];
   st["title"] = streamTitle;
   st["note"] = streamNote;
+  {   // the newest episode of each alarm's podcast feed, as last looked up
+    FeedGuard g(feedMx);
+    JsonArray fa = d["feeds"].to<JsonArray>();
+    for (auto& e : feedCache) {
+      if (e.feed.empty()) continue;
+      JsonObject f = fa.add<JsonObject>();
+      f["feed"] = e.feed.c_str(); f["ok"] = e.ok; f["title"] = e.title.c_str(); f["url"] = e.url.c_str();
+      f["err"] = e.err.c_str(); f["age"] = (millis() - e.atMs) / 1000; f["date"] = (long long)e.date;
+    }
+  }
   d["fw"] = FW_VERSION;
   d["fwBuild"] = FW_BUILD;
   d["fsUsed"] = LittleFS.usedBytes();
@@ -1188,6 +1282,8 @@ void setup() {
 
   audioQ = xQueueCreate(8, sizeof(AudioCmd));
   xTaskCreatePinnedToCore(audioTask, "audio", 8192, nullptr, 3, nullptr, 0);
+  feedQ = xQueueCreate(6, sizeof(FeedReq));
+  xTaskCreatePinnedToCore(feedTask, "feeds", 12288, nullptr, 1, nullptr, 1);
 
   WiFi.setHostname(HOSTNAME);
   wm.setConfigPortalBlocking(false);
@@ -1262,6 +1358,7 @@ void loop() {
   if (testPlaying && !soundPlaying() && streamState != SS_CONNECTING) testPlaying = false;
 
   serviceBattery();
+  scheduleFeedLookups(ringState == RS_RINGING);
   announceChanges();
   renderAlarmLeds(nightNow);  // every pass: the blinks are faster than a frame
   static uint32_t lastFrame = 0;

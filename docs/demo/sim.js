@@ -67,7 +67,7 @@
   }
 
   const ready = (async () => {
-    const r = await fetch(new URL('ceilingclock.wasm?v=16', document.currentScript ? document.currentScript.src : location.href));
+    const r = await fetch(new URL('ceilingclock.wasm?v=17', document.currentScript ? document.currentScript.src : location.href));
     const { instance } = await WebAssembly.instantiate(await r.arrayBuffer(), { wasi_snapshot_preview1: wasi, env });
     X = instance.exports;
     X._initialize();
