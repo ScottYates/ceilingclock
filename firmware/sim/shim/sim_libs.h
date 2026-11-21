@@ -10,6 +10,8 @@
 #define WL_DISCONNECTED 6
 struct IPAddressSim { std::string ip = "127.0.0.1"; String toString() const { return String(ip.c_str()); } };
 struct WiFiClass {
+  bool sleepOn = true;   // modem power saving (the firmware turns it off while sound plays)
+  bool setSleep(bool on) { sleepOn = on; return true; }
   int status() { return sim::wifiLinked() ? WL_CONNECTED : WL_DISCONNECTED; }
   int getMode() { return sim::hw.portalActive ? (WIFI_STA | WIFI_AP) : WIFI_STA; }
   void mode(int) {}

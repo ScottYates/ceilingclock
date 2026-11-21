@@ -28,7 +28,7 @@
 #include <esp_task_wdt.h>
 #include <atomic>
 
-#define FW_VERSION "2.7.0"   // bump on every release
+#define FW_VERSION "2.7.1"   // bump on every release
 #ifndef FW_BUILD
 #define FW_BUILD __DATE__ " " __TIME__   // set by build_stamp.py in PlatformIO builds
 #endif
@@ -139,10 +139,13 @@ static void feedStore(const char* feed, bool ok, const std::string& url, const s
 
 // Downloads the feed and picks its newest episode. True with the episode's URL in out (or the URL unchanged
 // if it turned out to be audio).
-static bool lookupFeed(const char* url, std::string& out, std::string& title, std::string& err, int64_t& date) {
+// While sound is playing the background lookups wait: a feed download competing with the episode or radio
+// stream for the Wi-Fi made the start of playback choppy. audioBusy is set by loop().
+std::atomic<bool> audioBusy{false};
+static bool lookupFeed(const char* url, std::string& out, std::string& title, std::string& err, int64_t& date, bool yieldToAudio = false) {
   out = url; date = 0;
   FeedScan scan;
-  bool sniffed = false, isAudio = false;
+  bool sniffed = false, isAudio = false, interrupted = false;
   size_t total = 0;
   std::string ctype;
   bool ok = netFetch(url, ctype, [&](const char* p, size_t n) {
@@ -153,10 +156,12 @@ static bool lookupFeed(const char* url, std::string& out, std::string& title, st
       if (ct.rfind("audio/", 0) == 0 || ct.find("mpegurl") != std::string::npos || ct.find("scpls") != std::string::npos ||
           !FeedScan::looksLikeXml(p, n)) { isAudio = true; return false; }
     }
+    if (yieldToAudio && audioBusy) { interrupted = true; return false; }
     scan.feed(p, n);
     total += n;
     return !scan.done() && total < 4u * 1024 * 1024;   // a newest-first feed stops after a few episodes
   });
+  if (interrupted) { err = "interrupted"; return false; }
   if (!ok) { err = "could not reach the URL"; return false; }
   if (isAudio || !sniffed) return true;
   scan.finish();
@@ -184,19 +189,25 @@ void feedTask(void*) {
   FeedReq r;
   for (;;) {
     if (xQueueReceive(feedQ, &r, pdMS_TO_TICKS(1000)) != pdTRUE) { vTaskDelay(pdMS_TO_TICKS(250)); continue; }
-    if (WiFi.status() != WL_CONNECTED) continue;
     std::string out, title, err;
     int64_t date;
-    bool ok = lookupFeed(r.url, out, title, err, date);
+    bool ok;
+    for (;;) {                                       // wait for quiet, and start again if sound starts meanwhile
+      while (audioBusy) vTaskDelay(pdMS_TO_TICKS(1000));
+      if (WiFi.status() != WL_CONNECTED) { ok = false; break; }
+      ok = lookupFeed(r.url, out, title, err, date, true);
+      if (ok || err != "interrupted") break;
+    }
+    if (WiFi.status() != WL_CONNECTED) continue;
     if (ok && out == r.url) continue;               // plain audio or a radio stream: nothing to remember
     feedStore(r.url, ok, out, title, err, date);
   }
 }
 // Called from loop(): queue the alarms' feeds when they change and every hour (not while an alarm rings).
-void scheduleFeedLookups(bool ringing) {
+void scheduleFeedLookups(bool busy) {
   static uint32_t lastCheck = 0, lastAll = 0;
   static std::string lastSet;
-  if (millis() - lastCheck < 5000 || ringing || WiFi.status() != WL_CONNECTED) return;
+  if (millis() - lastCheck < 5000 || busy || WiFi.status() != WL_CONNECTED) return;
   lastCheck = millis();
   std::string set;
   for (int i = 0; i < cfg.alarmCount; i++) {
@@ -1358,7 +1369,15 @@ void loop() {
   if (testPlaying && !soundPlaying() && streamState != SS_CONNECTING) testPlaying = false;
 
   serviceBattery();
-  scheduleFeedLookups(ringState == RS_RINGING);
+  {
+    bool busy = ringState == RS_RINGING || soundPlaying() || streamState == SS_CONNECTING;
+    audioBusy = busy;
+    scheduleFeedLookups(busy);
+    // Wi-Fi power saving delays packets; with a weak signal that starves a stream. Keep the radio fully awake
+    // while sound plays, and let it save power (the battery) the rest of the time.
+    static int8_t sleepOn = -1;
+    if (WiFi.status() == WL_CONNECTED && sleepOn != (busy ? 0 : 1)) { sleepOn = busy ? 0 : 1; WiFi.setSleep(!busy); }
+  }
   announceChanges();
   renderAlarmLeds(nightNow);  // every pass: the blinks are faster than a frame
   static uint32_t lastFrame = 0;
