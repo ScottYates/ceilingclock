@@ -28,7 +28,7 @@
 #include <esp_task_wdt.h>
 #include <atomic>
 
-#define FW_VERSION "2.7.2"   // bump on every release
+#define FW_VERSION "2.7.3"   // bump on every release
 #ifndef FW_BUILD
 #define FW_BUILD __DATE__ " " __TIME__   // set by build_stamp.py in PlatformIO builds
 #endif
@@ -229,6 +229,7 @@ void scheduleFeedLookups(bool busy) {
 // before and after volume, since the last play started. Helps tell "no data" from "silent data".
 static char audioLog[8][96];
 static uint8_t audioLogN = 0;
+static char startNote[64];   // the library's "start buffer ... bytes after ... ms" for the last stream start
 static volatile int32_t peakRaw = 0, peakOut = 0;
 static volatile uint32_t samplesOut = 0;
 static volatile uint32_t audioFrames = 0;   // grows while sound reaches the amplifier; never reset (sound watchdog)
@@ -263,6 +264,7 @@ void audioInit() {
   Audio::audio_info_callback = [](Audio::msg_t m) {
     if (!m.msg || !*m.msg) return;
     audioLogAdd(m.msg);
+    if (!strncmp(m.msg, "start buffer", 12)) strlcpy(startNote, m.msg, sizeof startNote);
     if (m.e == Audio::evt_streamtitle || (m.e == Audio::evt_name && !streamTitle[0])) strlcpy(streamTitle, m.msg, sizeof streamTitle);
   };
 }
@@ -281,6 +283,7 @@ void audioStep() {
     } else if (c.type == AC_STREAM) {
       audioPlayer->stopSong();
       audioPlayer->setVolume(c.vol);
+      startNote[0] = 0;
       std::string url, title, err;
       streamTitle[0] = streamNote[0] = 0;
       if (resolveStream(c.path, url, title, err) && audioPlayer->connecttohost(url.c_str())) {
@@ -1199,6 +1202,8 @@ void setupServer() {
     JsonDocument d;
     d["peakRaw"] = peakRaw; d["peakOut"] = peakOut; d["samplesOut"] = samplesOut;
     d["volume"] = audioPlayer ? audioPlayer->getVolume() : -1;
+    d["buffered"] = audioPlayer ? audioPlayer->inBufferFilled() : 0;   // bytes waiting to be played
+    d["start"] = startNote;
     JsonArray a = d["log"].to<JsonArray>();
     uint8_t n = audioLogN < 8 ? audioLogN : 8;
     for (uint8_t i = 0; i < n; i++) a.add(audioLog[(audioLogN - n + i) % 8]);
