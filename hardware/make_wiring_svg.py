@@ -13,8 +13,8 @@ left = [
 right = [
   ("MAX98357A amplifier", "#7b3fa0", [("BCLK", g("PIN_I2S_BCLK")), ("LRC", g("PIN_I2S_LRC")), ("DIN", g("PIN_I2S_DOUT"))], "VIN → 5V · GND · speaker on + / −"),
   ("DS3231 clock module", "#1f4e8c", [("SDA", g("PIN_SDA")), ("SCL", g("PIN_SCL"))], "VCC → 3V3 · GND"),
-  ("MAX17048 fuel gauge (battery base)", "#1d1d1d", [("SDA (shared with DS3231)", g("PIN_SDA")), ("SCL (shared with DS3231)", g("PIN_SCL"))], "VIN → 3V3 · GND · pack → gauge → charger BAT"),
-  ("BQ24074 charger (battery base)", "#1d1d1d", [("CE (high = stop charging)", g("PIN_CHG_CE")), ("PGOOD (low = USB power)", g("PIN_PGOOD"))], "VBUS from USB-C · OUT → 5 V boost → 5 V rail"),
+  ("MAX17048 fuel gauge (battery)", "#1d1d1d", [("SDA (shared with DS3231)", g("PIN_SDA")), ("SCL (shared with DS3231)", g("PIN_SCL"))], "VIN → 3V3 · GND · pack → gauge → charger BAT"),
+  ("BQ24074 charger (battery)", "#1d1d1d", [("CE (high = stop charging)", g("PIN_CHG_CE")), ("PGOOD (low = USB power)", g("PIN_PGOOD"))], "VBUS from USB-C · OUT → 5 V boost → 5 V rail"),
 ]
 W = 1100; ROW = 30; MODW = 300; ESPX = 470; ESPW = 160
 out = []

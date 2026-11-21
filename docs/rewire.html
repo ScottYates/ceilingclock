@@ -65,11 +65,11 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 <tr><td>18</td><td>Clock module (DS3231) SDA: on the breadboard only; pin 1 in the finished clock</td></tr>
 <tr><td>3</td><td>Clock module (DS3231) SCL: on the breadboard only; pin 2 in the finished clock</td></tr>
 <tr><td>41, 42</td><td>Alarm 1 and 2 lights: left out on the breadboard (that edge is covered)</td></tr>
-<tr><td>10</td><td>Battery charger CE (battery base, optional)</td></tr>
-<tr><td>13</td><td>Battery charger PGOOD (battery base, optional)</td></tr></table>
+<tr><td>10</td><td>Battery charger CE (battery, optional)</td></tr>
+<tr><td>13</td><td>Battery charger PGOOD (battery, optional)</td></tr></table>
 <div class="need"><b>You need:</b> <span class="chip">A second TM1637 display, the same kind as the front one</span><span class="chip">2 small push buttons</span><span class="chip">DS3231 clock module, with its coin cell</span><span class="chip">8 female–male jumper wires</span><span class="chip">4 male–male jumper wires</span></div>
 <p class="mut">Firmware: 2.3.1 or later, which also finds the DS3231 on pins 18 and 3. Your clock has it.</p>
-<div class="toc" style="display:flex"><a href="#start"><span>1</span>Your board now, and clearing space</a><a href="#proj"><span>2</span>Projector display (second TM1637)</a><a href="#alarm"><span>3</span>Alarm buttons</a><a href="#rtc"><span>4</span>Clock module (DS3231)</a><a href="#check"><span>5</span>Check the whole board</a><a href="#battery"><span>6</span>Battery base (optional)</a></div>
+<div class="toc" style="display:flex"><a href="#start"><span>1</span>Your board now, and clearing space</a><a href="#proj"><span>2</span>Projector display (second TM1637)</a><a href="#alarm"><span>3</span>Alarm buttons</a><a href="#rtc"><span>4</span>Clock module (DS3231)</a><a href="#check"><span>5</span>Check the whole board</a><a href="#battery"><span>6</span>Battery (optional)</a></div>
 
 <section class="bbstep" id="start">
   <div class="bbhead"><span class="num">1</span><h2>Your board now, and clearing space</h2><span class="time">⏱ 5 min</span></div>
@@ -3414,7 +3414,7 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
 </section>
 <section class="bbstep" id="rtc">
   <div class="bbhead"><span class="num">4</span><h2>Clock module (DS3231)</h2><span class="time">⏱ 5 min</span></div>
-  <p>The battery-backed clock that keeps time when Wi-Fi or power drops. In the finished clock it uses ESP32 pins 1 and 2, but on one breadboard those are on the covered side. So here it goes on pins <b>18</b> and <b>3</b>, on the front edge: the firmware (2.3.1 or later) looks there when the module isn't on 1 and 2. Each pin has only one free hole, and the battery base's fuel gauge shares these two wires, so they go to two free rows first: <b>26</b> for SDA and <b>28</b> for SCL. Your clock already runs that firmware.</p>
+  <p>The battery-backed clock that keeps time when Wi-Fi or power drops. In the finished clock it uses ESP32 pins 1 and 2, but on one breadboard those are on the covered side. So here it goes on pins <b>18</b> and <b>3</b>, on the front edge: the firmware (2.3.1 or later) looks there when the module isn't on 1 and 2. Each pin has only one free hole, and the battery's fuel gauge shares these two wires, so they go to two free rows first: <b>26</b> for SDA and <b>28</b> for SCL. Your clock already runs that firmware.</p>
   
   <div class="pic"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 690" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
 <rect x="0.0" y="0.0" width="1100.0" height="690.0" rx="0" fill="#fbfaf6" stroke="none" stroke-width="1" />
@@ -5908,8 +5908,8 @@ body.lay-beside .toc.only-beside,body.lay-plug .toc.only-plug,body.lay-one .toc.
   
 </section>
 <section class="bbstep" id="battery">
-  <div class="bbhead"><span class="num">6</span><h2>Battery base (optional)</h2><span class="time">⏱ 25 min</span></div>
-  <p>In the finished clock these three boards sit in the battery base under the clock. Here they hang off the breadboard the same way the other modules do. The USB-C breakout's <b>VBUS</b> wire moves from the bottom + rail to the charger. The charger runs the clock from USB when it's there and from the battery when it isn't; the boost turns the battery's 3.0–4.2 V into a steady 5 V for the bottom rail. The gauge sits between the pack and the charger and tells the ESP32 how full the pack is. Its SDA and SCL go to the same rows as the clock module's (<b>26</b> and <b>28</b>). Needs firmware 2.6.0 or later.</p>
+  <div class="bbhead"><span class="num">6</span><h2>Battery (optional)</h2><span class="time">⏱ 25 min</span></div>
+  <p>In the finished clock these three boards sit on the floor beside the battery, under the barrel. Here they hang off the breadboard the same way the other modules do. The USB-C breakout's <b>VBUS</b> wire moves from the bottom + rail to the charger. The charger runs the clock from USB when it's there and from the battery when it isn't; the boost turns the battery's 3.0–4.2 V into a steady 5 V for the bottom rail. The gauge sits between the pack and the charger and tells the ESP32 how full the pack is. Its SDA and SCL go to the same rows as the clock module's (<b>26</b> and <b>28</b>). Needs firmware 2.6.0 or later.</p>
   <div class="warn">⚠️ The ESP32 itself still runs from your computer's USB here, so unplugging the adapter only tests the rest. To see the whole clock run on the battery, unplug the computer first and then add a red wire from the bottom + rail to the ESP32's <b>5V</b> pin. Never have both plugged in at once.</div>
   <div class="pic"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 690" class="bbsvg" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
 <rect x="0.0" y="0.0" width="1100.0" height="690.0" rx="0" fill="#fbfaf6" stroke="none" stroke-width="1" />

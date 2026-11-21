@@ -124,7 +124,7 @@ MODS = {
   'amp':    (30, 250, 200, 370, 'right', ['LRC', 'BCLK', 'DIN', 'GAIN', 'SD', 'GND', 'VIN'], '#7b3fa0', 'MAX98357A amp', ''),
   'usbc':   (30, 560, 170, 625, 'right', ['VBUS', 'GND'], '#2a6f9e', 'USB-C breakout', '5 V 3 A supply'),
   'proj':   (800, 150, 980, 225, 'left', ['CLK', 'DIO', 'VCC', 'GND'], '#c0392b', 'Projector display', ''),
-  # battery base parts (one-breadboard test)
+  # battery parts (one-breadboard test)
   'charger': (30, 385, 200, 495, 'right', ['VBUS', 'GND', 'OUT', 'CE', 'PGOOD'], '#1d1d1d', 'BQ24074 charger', 'battery on its JST'),
   'gauge':   (800, 255, 980, 345, 'left', ['VIN', 'GND', 'SCL', 'SDA'], '#1d1d1d', 'MAX17048 gauge', 'battery: in / out JST'),
   'boost':   (800, 370, 980, 445, 'left', ['VIN', 'GND', 'VOUT'], '#2a6f9e', '5 V boost', 'Pololu U3V40F5'),
@@ -417,7 +417,7 @@ def build_steps():
              need=['DS3231 module (with its coin cell)'],
              intro='The battery-backed clock that keeps time when Wi-Fi or power drops. In the finished clock it uses ESP32 pins 1 and 2, but on one breadboard those are on the covered side. '
                    f'So here it goes on pins <b>{G("PIN_SDA_ALT")}</b> and <b>{G("PIN_SCL_ALT")}</b>, on the front edge: the firmware (2.3.1 or later) looks there when the module isn\'t on 1 and 2. '
-                   f'Each pin has only one free hole, and the battery base\'s fuel gauge shares these two wires, so they go to two free rows first: <b>{I2C_ROWS[0]}</b> for SDA and <b>{I2C_ROWS[1]}</b> for SCL.',
+                   f'Each pin has only one free hole, and the battery\'s fuel gauge shares these two wires, so they go to two free rows first: <b>{I2C_ROWS[0]}</b> for SDA and <b>{I2C_ROWS[1]}</b> for SCL.',
              wires=[W_('blue', esp(str(G('PIN_SDA_ALT'))), hl(I2C_ROWS[0], 'e', note='SDA row')),
                     W_('yellow', esp(str(G('PIN_SCL_ALT'))), hl(I2C_ROWS[1], 'e', note='SCL row')),
                     W_('blue', md('ds3231', 'SDA (D)', 'module SDA (marked D on mini boards)'), hl(I2C_ROWS[0], 'd')),
@@ -472,10 +472,10 @@ def build_steps():
 
     if one:
         sup = next(i for i, w in enumerate(next(st for st in S if st['id'] == 'supply')['wires']) if w['col'] == '5v')
-        step(id='battery', title='Battery base: charger, gauge and boost', time='25 min', mods=['charger', 'gauge', 'boost'], parts=[],
+        step(id='battery', title='Battery: charger, gauge and boost', time='25 min', mods=['charger', 'gauge', 'boost'], parts=[],
              drops=[('supply', sup)],
              need=['BQ24074 charger board', 'MAX17048 fuel gauge board (with its JST cable)', 'Pololu U3V40F5 5 V boost', 'The battery pack (JST-PH plug)', 'Header pins soldered to the three boards'],
-             intro='In the finished clock these three boards sit in the battery base under the clock. Here they hang off the breadboard the same way the other modules do. '
+             intro='In the finished clock these three boards sit on the floor beside the battery, under the barrel. Here they hang off the breadboard the same way the other modules do. '
                    'The USB-C breakout\'s <b>VBUS</b> wire moves from the bottom + rail to the charger. The charger runs the clock from USB when it\'s there and from the battery when it isn\'t; '
                    'the boost turns the battery\'s 3.0–4.2 V into a steady 5 V for the bottom rail. The gauge sits between the pack and the charger and tells the ESP32 how full the pack is. '
                    f'Its SDA and SCL go to the same rows as the clock module\'s (<b>{I2C_ROWS[0]}</b> and <b>{I2C_ROWS[1]}</b>).',
@@ -498,10 +498,10 @@ def build_steps():
                   ('Always charging past the limit', f'CE wire isn\'t on pin {G("PIN_CHG_CE")}, or the firmware is older than 2.6.0. CE high stops charging.')],
              warn='The ESP32 itself still runs from your computer\'s USB here, so unplugging the adapter only tests the rest. To see the whole clock run on the battery, unplug the computer first and then add a red wire from the bottom + rail to the ESP32\'s <b>5V</b> pin. Never have both plugged in at once.')
     else:
-        step(id='battery', title='Battery base: wire it on the perfboard', time='0 min', mods=[], parts=[], wires=[],
+        step(id='battery', title='Battery: wire it in the case', time='0 min', mods=[], parts=[], wires=[],
              need=['Nothing for now'],
-             intro='The charger, fuel gauge and boost go in the battery base under the clock. On this layout there are no free rows for the gauge\'s I2C junction, so wire them as the <a href="wiring.html#battery">wiring page</a> shows, or switch to the one-board layout at the top of this page to try them on the breadboard first.',
-             test='', fix=[], todo=['Wire the battery base (<a href="wiring.html#battery">wiring page</a>), or use the one-board layout.'])
+             intro='The charger, fuel gauge and boost go on the floor beside the battery, under the barrel. On this layout there are no free rows for the gauge\'s I2C junction, so wire them as the <a href="wiring.html#battery">wiring page</a> shows, or switch to the one-board layout at the top of this page to try them on the breadboard first.',
+             test='', fix=[], todo=['Wire the battery (<a href="wiring.html#battery">wiring page</a>), or use the one-board layout.'])
     return S
 
 def check_holes(S):

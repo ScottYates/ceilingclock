@@ -126,7 +126,7 @@ BAT = NEW['battery']
 SUP5 = NEW['supply']['wires'][[i for sid, i in BAT['drops'] if sid == 'supply'][0]]
 before_bat = merge(*KEEP, PROJ_NEW, ALARM, part(wires=RTC['wires'], mods=['ds3231']))
 before_bat['wires'] = [w for w in before_bat['wires'] if w is not SUP5]
-step('battery', 'Battery base (optional)', '25 min',
+step('battery', 'Battery (optional)', '25 min',
      BAT['intro'] + ' Needs firmware 2.6.0 or later.',
      picture('rw-battery', before_bat, part(wires=BAT['wires'], mods=BAT['mods'])),
      lists='<h3>Connect</h3><p>First pull the red VBUS wire from the USB-C breakout off the bottom + rail (row 3); wire 1 below takes its place on the charger.</p>' + wire_list('rw-battery', BAT['wires'], 'Add'),
@@ -177,8 +177,8 @@ def page():
 <tr><td>18</td><td>Clock module (DS3231) SDA: on the breadboard only; pin 1 in the finished clock</td></tr>
 <tr><td>3</td><td>Clock module (DS3231) SCL: on the breadboard only; pin 2 in the finished clock</td></tr>
 <tr><td>41, 42</td><td>Alarm 1 and 2 lights: left out on the breadboard (that edge is covered)</td></tr>
-<tr><td>10</td><td>Battery charger CE (battery base, optional)</td></tr>
-<tr><td>13</td><td>Battery charger PGOOD (battery base, optional)</td></tr></table>
+<tr><td>10</td><td>Battery charger CE (battery, optional)</td></tr>
+<tr><td>13</td><td>Battery charger PGOOD (battery, optional)</td></tr></table>
 <div class="need"><b>You need:</b> <span class="chip">A second TM1637 display, the same kind as the front one</span><span class="chip">2 small push buttons</span><span class="chip">DS3231 clock module, with its coin cell</span><span class="chip">8 female–male jumper wires</span><span class="chip">4 male–male jumper wires</span></div>
 <p class="mut">Firmware: 2.3.1 or later, which also finds the DS3231 on pins 18 and 3. Your clock has it.</p>
 <div class="toc" style="display:flex">{''.join(toc)}</div>

@@ -120,7 +120,7 @@ module ref_perfboard() {
       pcb(pb_size[0], pb_size[1]);
       for (sx = [2, pb_size[0] - 2], sy = [2, pb_size[1] - 2]) translate([sx, sy, -1]) cylinder(d = 3, h = 4, $fn = 16);
     }
-    M("copper") for (ix = [0:25], iy = [0:17]) translate([3.6 + ix * 2.54, 3.4 + iy * 2.54, 1.6]) cylinder(d = 1.7, h = 0.06, $fn = 8);
+    M("copper") for (ix = [0:25], iy = [0:floor((pb_size[1] - 6.8) / 2.54)]) translate([3.6 + ix * 2.54, 3.4 + iy * 2.54, 1.6]) cylinder(d = 1.7, h = 0.06, $fn = 8);
   }
   // female headers for the ESP32 board
   M("black") for (s = [-1, 1]) translate([pb_xy[0] - 22 * 2.54 / 2, pb_xy[1] + s * 11.43 - 1.27, pb_top]) female_header(22);
