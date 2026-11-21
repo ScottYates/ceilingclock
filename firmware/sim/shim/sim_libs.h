@@ -46,6 +46,8 @@ struct UpdateClass {
   bool end(bool) { running = false; return true; }
   bool isRunning() { return running; }
   bool hasError() { return false; }
+  bool isFinished() { return !running; }
+  void abort() { running = false; total = 0; }
 };
 extern UpdateClass Update;
 // I2C: answers for the DS3231 (0x68, when fitted) and the battery base's MAX17048 fuel gauge (0x36), whose

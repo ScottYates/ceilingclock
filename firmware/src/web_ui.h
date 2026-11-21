@@ -22,6 +22,7 @@ button{cursor:pointer}
 .top{display:flex;align-items:center;justify-content:space-between;min-height:44px}
 .top h1{font-size:17px;font-weight:600;margin:0}
 .link{background:none;border:0;color:var(--on);padding:10px 4px;font-size:16px}
+.links{display:flex;gap:18px}
 .back{padding-left:0}
 h2{font-size:15px;font-weight:500;color:var(--mut);margin:26px 4px 8px}
 .grp{background:var(--grp);border-radius:var(--r);overflow:hidden}
@@ -86,7 +87,7 @@ details[open]>summary{border-bottom:1px solid var(--line)}
 
 <!-- ============ home ============ -->
 <section id="vHome">
- <div class="top"><h1>Ceiling Clock</h1><button class="link" onclick="go('settings')">Settings</button></div>
+ <div class="top"><h1>Ceiling Clock</h1><span class="links"><button class="link" onclick="go('info')">Info</button><button class="link" onclick="go('settings')">Settings</button></span></div>
  <div id="ring" hidden><b id="ringTxt">Alarm</b><span id="ringSub"></span>
   <div class="acts"><button class="snz" id="bSnz" onclick="act('snooze')">Snooze</button><button class="stp" onclick="act('dismiss')">Stop</button></div></div>
  <div class="hero">
@@ -188,13 +189,6 @@ details[open]>summary{border-bottom:1px solid var(--line)}
   <button class="row tap" onclick="act('resync').then(()=>toast('Syncing time'))" style="color:var(--on)">Sync the time now</button>
  </div>
 
- <h2>Buttons on the clock</h2>
- <div class="grp">
-  <div class="row"><div class="grow">Alarm 1 and Alarm 2<small>Press: switch that alarm on (the front display shows "1 on", then its time, and the button lights for a moment) or off ("1 oF", two blinks). While an alarm rings, either one stops it. Hold 2 s to set that alarm's time: "SEt1", then the time (24-hour) with the hours blinking. Snooze adds one, the side button takes one away (hold to go faster). Press the alarm button to move to the minutes, and again to save; that also switches the alarm on. Leave it 30 s to keep the old time ("CAnC").</small></div></div>
-  <div class="row"><div class="grow">Snooze (top)<small>While ringing: press to snooze ("SnoZ", then when it rings again); hold 2 s to stop ("StoP"). Otherwise: shows which alarms are on ("AL12" both, "AL1-" only alarm 1, "AL--" none), lights their buttons, and shows the time on the ceiling for 15 s. While setting an alarm: adds one.</small></div></div>
-  <div class="row"><div class="grow">Side button<small>Press: front display on or off ("d on" / "d oF"). Hold 3 s: ceiling projection on or off ("P on" / "P oF"). Keep holding to 10 s: forget the Wi-Fi and restart in setup mode ("rSEt"). While setting an alarm: takes one away.</small></div></div>
-  <div class="row"><div class="grow">Messages<small>Changes made on this page show on the front display too, so the clock always says what just happened.</small></div></div>
- </div>
 
  <h2>Battery</h2>
  <div class="grp">
@@ -212,6 +206,16 @@ details[open]>summary{border-bottom:1px solid var(--line)}
   <label class="row tap" style="color:var(--on);cursor:pointer">Update firmware (.bin file)<input type="file" id="fwfile" accept=".bin" hidden onchange="fwUpdate()"></label>
  </div>
  <p class="note">With a password set, the page asks for user name admin and that password, except on a trusted computer.</p>
+</section>
+<section id="vInfo" hidden>
+ <div class="top"><button class="link back" onclick="go('')">‹ Clock</button><h1>Info</h1><span style="width:60px"></span></div>
+ <h2>Buttons on the clock</h2>
+ <div class="grp">
+  <div class="row"><div class="grow">Alarm 1 and Alarm 2<small>Press: switch that alarm on (the front display shows "1 on", then its time, and the button lights for a moment) or off ("1 oF", two blinks). While an alarm rings, either one stops it. Hold 2 s to set that alarm's time: "SEt1", then the time (24-hour) with the hours blinking. Snooze adds one, the side button takes one away (hold to go faster). Press the alarm button to move to the minutes, and again to save; that also switches the alarm on. Leave it 30 s to keep the old time ("CAnC").</small></div></div>
+  <div class="row"><div class="grow">Snooze (top)<small>While ringing: press to snooze ("SnoZ", then when it rings again); hold 2 s to stop ("StoP"). Otherwise: shows which alarms are on ("AL12" both, "AL1-" only alarm 1, "AL--" none), lights their buttons, and shows the time on the ceiling for 15 s. While setting an alarm: adds one.</small></div></div>
+  <div class="row"><div class="grow">Side button<small>Press: front display on or off ("d on" / "d oF"). Hold 3 s: ceiling projection on or off ("P on" / "P oF"). Keep holding to 10 s: forget the Wi-Fi and restart in setup mode ("rSEt"). While setting an alarm: takes one away.</small></div></div>
+  <div class="row"><div class="grow">Messages<small>Changes made on this page show on the front display too, so the clock always says what just happened.</small></div></div>
+ </div>
  <h2>System</h2>
  <div class="grp">
   <div class="row"><div class="grow">Processor<small id="yCpuS">&nbsp;</small></div><span class="val" id="yCpu">…</span></div>
@@ -261,17 +265,17 @@ function drawCeil(s){const lv=s.live||{},on=lv.projOn,a=0.3+0.7*(lv.projBright||
 // ---- screens
 function go(v){location.hash=v}
 function route(){const h=location.hash.slice(1);const m=h.match(/^alarm\/(\d+)$/);
- $('vHome').hidden=!!h;$('vSettings').hidden=h!='settings';$('vAlarm').hidden=!m;
+ $('vHome').hidden=!!h;$('vSettings').hidden=h!='settings';$('vInfo').hidden=h!='info';$('vAlarm').hidden=!m;
  if(m&&C&&C.alarms[+m[1]]){cur=+m[1];fillEditor()}else{cur=-1;if(m)go('')}
  if(h=='settings'&&C)fillSettings();if(!h&&C)renderHome();window.scrollTo(0,0)}
 window.addEventListener('hashchange',route);
 
-// ---- System section: asked for every 2 s, only while Settings is showing and the tab is visible
+// ---- System section: asked for every 2 s, only while Info is showing and the tab is visible
 let sysT=null;
 const kb=b=>b>=1048576?(b/1048576).toFixed(1)+' MB':Math.round(b/1024)+' KB';
 function upText(t){const d=Math.floor(t/86400),h=Math.floor(t%86400/3600),m=Math.floor(t%3600/60);
  return d?d+' d '+h+' h':h?h+' h '+m+' min':m?m+' min':t+' s'}
-async function sysPoll(){if($('vSettings').hidden||document.hidden)return;
+async function sysPoll(){if($('vInfo').hidden||document.hidden)return;
  try{const y=await(await fetch('/api/sys')).json();
   $('yCpu').textContent=y.cpu[0]==null?'measuring':y.cpu[0]+'% and '+y.cpu[1]+'%';
   $('yCpuS').textContent='Two cores at '+y.mhz+' MHz, chip at '+Math.round(y.temp)+' °C, '+y.tasks+' tasks';
@@ -285,7 +289,7 @@ async function sysPoll(){if($('vSettings').hidden||document.hidden)return;
   $('yUp').textContent=upText(y.up);
   $('yUpS').textContent='Last restart: '+y.reset+'. Wi-Fi '+y.rssi+' dBm';
  }catch(e){}}
-function sysTimer(){const on=!$('vSettings').hidden&&!document.hidden;
+function sysTimer(){const on=!$('vInfo').hidden&&!document.hidden;
  if(on&&!sysT){sysPoll();sysT=setInterval(sysPoll,2000)}else if(!on&&sysT){clearInterval(sysT);sysT=null}}
 window.addEventListener('hashchange',sysTimer);document.addEventListener('visibilitychange',sysTimer);
 
@@ -417,8 +421,8 @@ async function poll(){try{const s=await(await fetch('/api/state')).json();ST=s;f
   for(const k of['front','proj'])if(typeof s[k+'Mode']=='number'&&C[k].mode!=s[k+'Mode']){C[k].mode=s[k+'Mode'];ch=true;if(!$('vSettings').hidden)$(k=='front'?'sFMode':'sPMode').value=C[k].mode}
   if(ch){if(!$('vHome').hidden)renderHome();if(cur>=0)$('eOn').checked=C.alarms[cur].enabled}}
  if(!$('vSettings').hidden){drawCeil(s);$('sLdrNow').textContent='Light sensor reads '+s.ldr+' now (0 is dark)';
-  $('fs').textContent='Storage: '+(s.fsUsed/1048576).toFixed(1)+' of '+(s.fsTotal/1048576).toFixed(1)+' MB used';
-  const ago2=s.lastSync?Math.round((s.now-s.lastSync)/60):null;
+  $('fs').textContent='Storage: '+(s.fsUsed/1048576).toFixed(1)+' of '+(s.fsTotal/1048576).toFixed(1)+' MB used'}
+ if(!$('vInfo').hidden){const ago2=s.lastSync?Math.round((s.now-s.lastSync)/60):null;
   $('sys').textContent='Firmware '+s.fw+(s.fwBuild?', built '+s.fwBuild:'')+'. IP '+s.ip+', Wi-Fi '+s.rssi+' dBm. Time '+(ago2===null?'not synced yet':'synced '+(ago2<1?'just now':ago2+' min ago'))+(s.rtc?', backup clock fitted.':', no backup clock.')}
 }catch(e){}}
 async function load(){C=await(await fetch('/api/config')).json();await loadSounds();route()}

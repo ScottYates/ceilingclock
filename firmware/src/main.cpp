@@ -29,7 +29,7 @@
 #include <esp_task_wdt.h>
 #include <atomic>
 
-#define FW_VERSION "2.8.0"   // bump on every release
+#define FW_VERSION "2.8.1"   // bump on every release
 #ifndef FW_BUILD
 #define FW_BUILD __DATE__ " " __TIME__   // set by build_stamp.py in PlatformIO builds
 #endif
@@ -1242,7 +1242,8 @@ void setupServer() {
   server.on("/update", HTTP_POST,
             [] {
               if (!authed()) return;
-              bool ok = !Update.hasError();
+              bool ok = !Update.hasError() && Update.isFinished();
+              if (!ok) Update.abort();   // clear it so the next try can start
               server.send(ok ? 200 : 500, "text/plain", ok ? "Updated, rebooting" : "Update failed");
               if (ok) { delay(500); ESP.restart(); }
             },
@@ -1250,12 +1251,15 @@ void setupServer() {
               HTTPUpload& up = server.upload();
               if (up.status == UPLOAD_FILE_START) {
                 if (!cfg.webPassword.isEmpty() && !trustedClient() && !server.authenticate("admin", cfg.webPassword.c_str())) return;
+                if (Update.isRunning()) Update.abort();   // an earlier upload was cut off part way
                 Update.begin(UPDATE_SIZE_UNKNOWN);
               } else if (up.status == UPLOAD_FILE_WRITE) {
     feedWatchdog();
                 if (Update.isRunning()) Update.write(up.buf, up.currentSize);
               } else if (up.status == UPLOAD_FILE_END) {
                 if (Update.isRunning()) Update.end(true);
+              } else if (up.status == UPLOAD_FILE_ABORTED) {
+                if (Update.isRunning()) Update.abort();
               }
             });
   server.onNotFound([] { server.send(404, "text/plain", "not found"); });
