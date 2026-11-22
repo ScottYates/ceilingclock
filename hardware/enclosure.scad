@@ -441,10 +441,31 @@ module battery_bay() translate([0, 0, floor_top - eps]) {
     translate([-b[3]/2 - 2, -4, 1]) cube([b[3] + 4, 8, 10]);                                   // gaps for the wires
   }
 }
-module ref_packs() translate([pack_xy[0], pack_xy[1], floor_top]) {   // 4 x 18650 in parallel, cells front to back
-  M("cap_blue") for (i = [0:3]) translate([-37 + 9.25 + i * 18.5, 0, 9.25]) rotate([90, 0, 0]) cylinder(d = 18.4, h = 65, center = true, $fn = 32);
-  M("black") translate([-37, -33.5, 0]) cube([74, 1, 18.5]);
-  M("black") translate([-37, 32.5, 0]) cube([74, 1, 18.5]);
+// Scott's battery (2026-11-21): a 5000 mAh LiPo pouch, size code 955565 = 9.5 x 55 x 65 mm, leads out of one
+// 55 mm end. It lies flat in a printed tray that drops into the bay, long side left to right, leads to the right.
+// Measure the cell when it arrives and change pouch if it differs: the tray follows. A bigger pack (Adafruit 5035,
+// Pimoroni BAT0015, up to about 75 x 66 x 19 mm) goes in the bay without the tray.
+pouch = [65, 55, 9.5];                                     // length (x), width (y), thickness
+pouch_gap = 1;                                             // clearance all round: a pouch must not be squeezed
+tray_h = 10;
+module batt_tray() translate([pack_xy[0], pack_xy[1], floor_top]) {
+  o = [pack[0] - 1.6, pack[1] - 0.6];                      // clearance in the bay (its left wall has a 0.5 mm bump)
+  i = [pouch[0] + 2 * pouch_gap, pouch[1] + 2 * pouch_gap];
+  difference() {
+    translate([-o[0]/2, -o[1]/2, 0]) cube([o[0], o[1], tray_h]);
+    // pocket with rounded corners, open at the bottom: the pouch lies on the case floor
+    hull() for (sx = [-1, 1], sy = [-1, 1]) translate([sx * (i[0]/2 - 2), sy * (i[1]/2 - 2), -1]) cylinder(r = 2, h = tray_h + 2, $fn = 24);
+    // softened top edge of the pocket
+    hull() for (sx = [-1, 1], sy = [-1, 1]) translate([sx * (i[0]/2 - 2), sy * (i[1]/2 - 2), tray_h - 0.8]) cylinder(r1 = 2, r2 = 3, h = 1, $fn = 24);
+    translate([i[0]/2 - 1, -20, 2]) cube([20, 40, tray_h]);               // lead exit on the right, over the bay's lead gap
+    translate([-15, -o[1]/2 - 1, 2]) cube([30, (o[1] - i[1])/2 + 2, tray_h]);   // finger gap at the front, over the bay's
+  }
+}
+module ref_packs() translate([pack_xy[0], pack_xy[1], floor_top]) {   // the pouch, with its protection board and leads
+  M("alu") translate([-pouch[0]/2, -pouch[1]/2, 0]) cube([pouch[0] - 6, pouch[1], pouch[2]]);
+  M("black") translate([pouch[0]/2 - 6, -pouch[1]/2 + 2, 1]) cube([6, pouch[1] - 4, pouch[2] - 2]);
+  M("wire_red") translate([pouch[0]/2, 3, 4]) rotate([0, 90, 0]) cylinder(d = 1.6, h = 14, $fn = 10);
+  M("wire_black") translate([pouch[0]/2, -3, 4]) rotate([0, 90, 0]) cylinder(d = 1.6, h = 14, $fn = 10);
 }
 module ref_bb_boards() for (b = bb_boards) translate([b[1] - b[3]/2 + 0.3, b[2] - b[4]/2 + 0.3, floor_top]) {
   M(b[0] == "boost" ? "pcb_green" : "pcb_black") pcb(b[3] - 0.6, b[4] - 0.6);
@@ -459,6 +480,7 @@ include <components.scad>
 module show(p) {
   if (p == "base") base();
   else if (p == "ref_packs") ref_packs();
+  else if (p == "batt_tray") batt_tray();
   else if (p == "ref_bb_boards") ref_bb_boards();
   else if (p == "lid") lid();
   else if (p == "barrel") tilted() barrel();
@@ -506,6 +528,7 @@ module print_pose(p) {
   else if (p == "sleeve")      translate([-mx, -ax_y, lens_z]) mirror([0, 0, 1]) children();  // seat face down
   else if (p == "lens_cap")    translate([0, 0, 2]) rotate([180, 0, 0]) translate([-mx, -ax_y, -lens_z]) children();   // ring on the bed, tube up
   else if (p == "base")        translate([0, 0, -feet_h]) children();   // floor on the bed
+  else if (p == "batt_tray")   translate([-pack_xy[0], -pack_xy[1], -floor_top]) children();   // flat on the bed as it sits
   else children();
 }
 module show_print(p) {   // as show(), but untilted

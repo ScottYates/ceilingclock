@@ -4,7 +4,7 @@
 const ELEC = ['ref_perfboard', 'ref_esp32', 'ref_amp', 'ref_rtc'];
 const BARREL = ['barrel', 'ref_mirror', 'disp_holder', 'ref_projdisp', 'lens_mount', 'pins_barrel', 'sleeve', 'ref_lens', 'lens_cap'];
 const CAP = ['end_cap'];
-const BATT = ['ref_packs', 'ref_bb_boards'];
+const BATT = ['batt_tray', 'ref_packs', 'ref_bb_boards'];
 const PRINTED = ['base', 'lid', 'barrel', 'disp_holder', 'end_cap', 'lens_mount', 'sleeve', 'lens_cap', 'pins_asm', 'pins_barrel'];
 
 const s1 = ['base', 'ref_speaker'];
@@ -103,13 +103,14 @@ export const STEPS = [
   {
     title: 'Battery (optional)',
     view: { visible: [...s3, ...BATT], highlight: BATT, explode: 0, camera: [300, 260, 330], target: [0, 15, 10] },
-    html: `<p>Runs the clock for about three days without mains power. Do it before the barrel goes in: the pack lies on the floor under it. Skip it and the clock works as before from the USB-C supply. Needs firmware 2.6.0 or later.</p>
+    html: `<p>Runs the clock for about a day without mains power on the 5000 mAh pouch cell (about two or three days on a bigger pack). Do it before the barrel goes in: the battery lies on the floor under it. Skip it and the clock works as before from the USB-C supply. Needs firmware 2.6.0 or later.</p>
 <ol>
 <li>Solder header pins or short wires to the <b>BQ24074 charger</b>, the <b>MAX17048 fuel gauge</b> and the <b>5 V boost</b>. Drop them into the three pockets on the floor to the right of the battery bay (charger at the back) and fix each with a square of foam tape.</li>
 <li>Wire them as the <a href="wiring.html#battery">wiring page</a> shows: USB-C VBUS to the charger, charger OUT to boost VIN, boost VOUT to the 5 V rail, grounds together, plus 3V3, SDA, SCL, CE and PGOOD from the circuit board.</li>
-<li>Plug the pack into the gauge's JST socket and the gauge's lead into the charger's <b>BAT</b> socket. Lay the pack in its bay, label up, with its lead out through the gap on the right. The notch at the front of the bay is for your finger when you lift it out.</li>
+<li><b>Change the pouch cell's plug.</b> It comes with a 2.54 mm JST-XH plug, which doesn't fit the gauge. Push each half of a JST-PH 2.0 pigtail into the gauge's battery socket and keep the one that clicks in. Note which of its wires lines up with <b>+</b> on the gauge: the battery's red wire goes to that one, whatever its colour (drone pigtails are often wired the other way round). Cut <b>one battery wire at a time</b>, never both together, which would short the cell. Solder and heat-shrink each joint before cutting the next. Check the polarity at the new plug with a meter before plugging it in.</li>
+<li>Drop the printed battery tray into the bay, with its wide opening on the right and its notch at the front. Plug the battery into the gauge's JST socket and the gauge's lead into the charger's <b>BAT</b> socket. Lay the pouch in the tray, label up, with its lead out through the opening on the right. A square of foam tape under it stops it sliding. Use the notch to lift it out. A bigger pack (up to about 75 × 66 × 19 mm) goes straight into the bay without the tray.</li>
 <li>Plug in USB power. On the clock's web page, a <b>Battery</b> line shows the charge. The pack charges to 80% and stops there; change that under <b>Settings › Battery</b>.</li></ol>
-<p>Lithium cells need respect: don't crush or pierce the pack, and keep it out of hot sun. The pack's own protection board cuts it off at 2.4 V; the clock shows <code>bA 9</code> on the front display when it's below 10%. To get at the pack later, take off the lid and lift the barrel out.</p>`,
+<p>Lithium cells need respect: don't crush or pierce the pack, and keep it out of hot sun. The battery's own protection board cuts it off when it's empty; the clock shows <code>bA 9</code> on the front display when it's below 10%. To get at the pack later, take off the lid and lift the barrel out.</p>`,
   },
   {
     title: 'Focus, aim and finish',

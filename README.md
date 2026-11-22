@@ -7,7 +7,7 @@ A Wi-Fi ceiling projection alarm clock built on an ESP32-S3.
 - Keeps time from internet time servers (NTP), with a DS3231 battery-backed clock for outages.
 - Projects the time onto the ceiling: a lens images the glowing digits of a second TM1637 7-segment display (sent mirrored, so they read right after the optics). The display, a 45° mirror and the lens ride in a barrel along the back of the clock, so the clock is only about 10 cm tall, and rolling the barrel aims the time up to about 1 m forward on the ceiling.
 - Front 4-digit display that can be switched completely off.
-- Optional battery inside the case: a 13400 mAh Li-ion pack under the barrel, with a charger, a fuel gauge and a 5 V boost. Runs the clock about three days without mains power; the firmware stops charging at a set level (80% by default) to make the pack last.
+- Optional battery inside the case: a 5000 mAh LiPo pouch cell in a printed tray under the barrel (or a bigger pack, up to 13400 mAh), with a charger, a fuel gauge and a 5 V boost. Runs the clock about a day without mains power (two to three days on a bigger pack); the firmware stops charging at a set level (80% by default) to make the pack last.
 - Up to 8 alarms with per-alarm days, sound, volume fade-in and snooze.
 - Two lit buttons on top switch alarms 1 and 2 on and off; the front display shows the alarm's time or OFF. The lights only come on briefly, so the bedroom stays dark.
 - Upload your own MP3/WAV alarm sounds, or wake to an internet radio stream or the newest episode of a podcast (with a sound file as backup if the stream won't play), and change every setting from a phone at `http://ceilingclock.local/`.

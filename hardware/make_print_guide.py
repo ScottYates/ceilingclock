@@ -28,6 +28,9 @@ PARTS = [
      'Turn on elephant\'s-foot compensation (about 0.2 mm): the lens pocket is on the bed side.', 220),
     ('lens_cap_61in', 'Lens cap, 61in', 'Any', '0.2 mm', 'None',
      'Ring on the bed, tube up. Use the cap with the same number as the focus ring: its tube is cut to the depth of that ring\'s lens pocket.', 200),
+    ('batt_tray', 'Battery tray', 'Any', '0.2 mm', 'None',
+     'Only if you fit the battery, and only for the 5000 mAh pouch cell: a bigger pack goes in the bay without it. Prints flat as it is, 75 × 66 × 10 mm. '
+     'The pocket is 67 × 57 mm, 1 mm larger than the cell all round so it isn\'t squeezed: if your cell measures differently, change <code>pouch</code> in enclosure.scad and export again.', 200),
     ('pins', 'Twist-lock pins', 'Any (PETG is a little tougher)', '0.16 mm', 'None',
      'Wing heads flat on the bed. One file prints the whole set: short pins for the lid corners, long ones for the end cap and the lens mount. Print a spare set; they are small.', 160),
 ]
