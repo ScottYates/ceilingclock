@@ -443,9 +443,9 @@ module battery_bay() translate([0, 0, floor_top - eps]) {
 }
 // Scott's battery (2026-11-21): a 5000 mAh LiPo pouch, size code 955565 = 9.5 x 55 x 65 mm, leads out of one
 // 55 mm end. It lies flat in a printed tray that drops into the bay, long side left to right, leads to the right.
-// Measure the cell when it arrives and change pouch if it differs: the tray follows. A bigger pack (Adafruit 5035,
+// Scott measured his cell on 2026-11-23; for another cell change pouch and the tray follows. A bigger pack (Adafruit 5035,
 // Pimoroni BAT0015, up to about 75 x 66 x 19 mm) goes in the bay without the tray.
-pouch = [65, 55, 9.5];                                     // length (x), width (y), thickness
+pouch = [65.5, 54.6, 9.5];                                 // length (x), width (y), thickness: measured 65.5 x 54.58 x 9.47
 pouch_gap = 1;                                             // clearance all round: a pouch must not be squeezed
 tray_h = 10;
 module batt_tray() translate([pack_xy[0], pack_xy[1], floor_top]) {
