@@ -51,11 +51,19 @@ module seg_digit(lit, h = 9.1, w = 4.9, t = 0.9) {
     else M("seg_off") translate([segs[i][0], 0, segs[i][1]]) cube([segs[i][2], 0.3, segs[i][3]]);
   }
 }
-module button16(len = 18, panel = wall) {     // 16 mm flush metal push button; axis +z = outward
-  M("metal") { translate([0, 0, 0]) cylinder(d = 19, h = 2, $fn = 48); translate([0, 0, -len]) cylinder(d = 15.8, h = len, $fn = 40); }
-  M("alu") translate([0, 0, 2]) cylinder(d = 12, h = 0.3, $fn = 40);
-  M("metal_dark") translate([0, 0, -panel - 0.2 - 3]) cylinder(d = 22 / cos(30), h = 3, $fn = 6);
-  M("gold") for (s = [-1, 1]) translate([s * 3.5 - 1, -0.3, -len - 6]) cube([2, 0.6, 6]);
+// 16 mm metal push button with screw terminals, as measured on Scott's (2026-11-23; snooze and button B): round
+// bezel 17.8 mm, cap 1.5 mm proud, round 16 mm thread 7.8 mm long, 20.6 mm deep behind the bezel including the two
+// screw terminals, which span 10.8 mm. Nut not measured: drawn as a 19 mm hex, 3 mm thick. Axis +z = outward.
+module button16(panel = wall) {
+  M("black") {
+    cylinder(d = 17.8, h = 2, $fn = 48);
+    translate([0, 0, 2]) cylinder(d = 12, h = 1.5, $fn = 40);
+    translate([0, 0, -7.8]) cylinder(d = 16, h = 7.8, $fn = 40);
+    translate([0, 0, -13]) cylinder(d = 14.5, h = 5.2, $fn = 40);
+  }
+  M("white") translate([0, 0, -15]) cylinder(d = 13, h = 2, $fn = 40);                  // blue terminal base
+  M("metal_dark") translate([0, 0, -panel - 0.2 - 3]) cylinder(d = 19 / cos(30), h = 3, $fn = 6);
+  M("metal") for (s = [-1, 1]) translate([s * 5.4 - (s > 0 ? 4 : 0), -2, -20.6]) cube([4, 4, 5.6]);   // screw terminals
 }
 // wire along a quadratic Bezier from a to c with control point b
 module wire(a, b, c, d = 1.3, n = 10) {
@@ -93,13 +101,15 @@ module ref_window() M("acrylic_red") translate([-tm_w/2 + 0.2, -box_d/2, tm_z - 
 
 // ---------------------------------------------------------------- buttons
 module ref_button()  translate([button_xy[0], button_xy[1], lid_top]) button16(panel = lid_t);
-// lit alarm buttons: a 16 mm momentary button with an LED ring, shown lit green
-// 16 mm lit button, Adafruit 1440 and its R16 family (dimension drawing: cdn-shop.adafruit.com/datasheets/R16diagram.jpg):
-// 18 mm bezel, 13 mm cap standing 6.3 mm proud, body 22 mm below the panel's top face, then 5.5 mm tabs.
-module button16lit(len = 22, panel = wall) {
-  M("black") { cylinder(d = 18, h = 2, $fn = 48); translate([0, 0, -len]) cylinder(d = 15.6, h = len, $fn = 40); }
-  M("led_green") translate([0, 0, 2]) cylinder(d = 13, h = 4.3, $fn = 40);
-  M("black") translate([0, 0, -panel - 3]) cylinder(d = 21, h = 3, $fn = 40);          // plastic nut
+// lit alarm buttons, as measured on Scott's (R16-503 family): 18 mm square bezel, cap 3.2 mm proud, threaded body
+// 15.8 mm with flats 14.8 mm apart, round 18.1 mm nut, 26 mm deep below the bezel including the 5.5 mm tabs.
+module button16lit(len = 20.5, panel = wall) {
+  M("black") {
+    translate([-9, -9, 0]) cube([18, 18, 2]);
+    translate([0, 0, -len]) intersection() { cylinder(d = 15.8, h = len, $fn = 40); translate([-8, -7.4, 0]) cube([16, 14.8, len]); }
+  }
+  M("led_green") translate([0, 0, 2]) cylinder(d = 13, h = 3.2, $fn = 40);
+  M("black") translate([0, 0, -panel - 3]) cylinder(d = 18.1, h = 3, $fn = 40);        // nut
   M("gold") for (s = [-1, 1], t = [-1, 1]) translate([s * 3 - 0.3, t * 3 - 1, -len - 5.5]) cube([0.6, 2, 5.5]);
 }
 module ref_alarmbtns() for (p = alarm_xy) translate([p[0], p[1], lid_top]) button16lit(panel = lid_t);
@@ -203,15 +213,15 @@ module ref_wires() {
     wire([-tm_board[0]/2 + 1.9, inner_front + tm_disp[2] + 9, tm_z - 3.8 + k * 2.54], [0, -46, 40], [bx + 4 + k * 2.54, pb_xy[1] - 20, hz]);
   // button B and USB power (left wall) -> board
   for (s = [-1, 1]) M(s < 0 ? "wire_blue" : "wire_black")
-    wire([-box_w/2 + 21, btnb_y, btnb_z + s * 3.5], [-20, -24, 40], [bx, pb_xy[1] + 18 + s * 1.3, hz]);
+    wire([-box_w/2 + 20.6, btnb_y, btnb_z + s * 3.4], [-20, -24, 40], [bx, pb_xy[1] + 18 + s * 1.3, hz]);
   for (s = [-1, 1]) M(s < 0 ? "wire_red" : "wire_black")
     wire([-box_w/2 + wall + 11.5, usb_y + s * 3, usb_z - 1.4], [-30, -8, 36], [bx + 1, pb_xy[1] + 12 + s * 1.3, hz]);
   // top button -> board
   for (s = [-1, 1]) M(s < 0 ? "wire_green" : "wire_black")
-    wire([button_xy[0] + s * 3.5, button_xy[1], lid_top - 24], [-30, -12, 24], [bx + 3 + s, pb_xy[1] - 4, hz]);
+    wire([button_xy[0] + s * 3.4, button_xy[1], lid_top - 20.6], [-30, -12, 24], [bx + 3 + s, pb_xy[1] - 4, hz]);
   // alarm buttons -> board: two switch wires and two light wires each
   for (i = [0:1], k = [0:3]) M(["wire_white", "wire_black", "wire_red", "wire_black"][k])
-    wire([alarm_xy[i][0] + (k % 2 ? 1 : -1) * 3, alarm_xy[i][1] + (k < 2 ? -3 : 3), lid_top - 27.5], [alarm_xy[i][0] - 25, -58, floor_top + 3],
+    wire([alarm_xy[i][0] + (k % 2 ? 1 : -1) * 3, alarm_xy[i][1] + (k < 2 ? -3 : 3), lid_top - 26], [alarm_xy[i][0] - 25, -58, floor_top + 3],
          [bx + 6 + i * 6 + k * 1.3, pb_xy[1] - 14, hz]);
   // speaker -> amplifier -> board
   M("wire_red") wire([spk_xy[0] + 15, spk_xy[1], floor_top + 4], [-18, -44, 14], [-6.2, -49.5, floor_top + 7]);

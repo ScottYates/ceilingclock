@@ -93,9 +93,14 @@ lid_cut = [cap_x0 - 0.5, br_x1 + 0.5, ax_y - br_R - 0.5];   // x from, x to, y f
 blk_x = br_x1 + 0.5;                                       // right bearing block, x from here to the wall
 
 // other lid features
-button_xy = [-50, -52]; button_hole = 16.2;
+button_xy = [-50, -52]; button_hole = 16.2;   // alarm buttons' holes (15.8 mm thread, flats)
+plain_hole = 16.4;                             // snooze and button B: round 16 mm thread
 alarm_xy = [[38, -52], [62, -52]];        // lit alarm buttons 1 and 2: front right, well away from snooze. Their
-                                          // bodies and tabs hang 27.5 mm below the lid, in front of the circuit board
+                                          // bodies and tabs hang 26 mm below the lid, in front of the circuit board
+// Scott's alarm buttons (measured 2026-11-23, marked R16-503): thread 15.8 mm with two flats 14.8 mm apart, parallel
+// to the sides of an 18 mm square bezel; round nut 18.1 mm; 26 mm deep below the bezel with the tabs; cap 3.2 mm.
+// The holes are double-D so the buttons can't turn, flats front and back, which squares the bezels with the case.
+alarm_flats = 14.8;
 ldr_xy = [-70, -55];                     // front left: clear of the corner pins, button B, and the alarm buttons' lights
 // front display: TM1637 4-digit module. Set to "0.36" (42 x 24 mm board, default) or "0.56" (~50 mm display).
 tm_size = "0.36";
@@ -173,7 +178,7 @@ module base() {
     translate([-tm_w/2, -box_d/2 - 1, tm_z - tm_h/2]) cube([tm_w, wall + 2, tm_h]);
     // left side: USB-C, button B
     translate([-box_w/2 - 1, usb_y - 5, usb_z - 2.25]) cube([wall + 2, 10, 4.5]);
-    translate([-box_w/2 - 1, btnb_y, btnb_z]) rotate([0, 90, 0]) cylinder(d = button_hole, h = wall + 2);
+    translate([-box_w/2 - 1, btnb_y, btnb_z]) rotate([0, 90, 0]) cylinder(d = plain_hole, h = wall + 2);
     // speaker grille
     translate([spk_xy[0], spk_xy[1], -1])
       for (r = [0, 7, 14], a = [0 : (r == 0 ? 360 : 360 / (r * 0.9)) : 359])
@@ -218,8 +223,11 @@ module lid() {
     translate([mx - lm_od/2 - 2, lid_cut[2], base_top]) rotate([0, 90, 0]) linear_extrude(lm_od + 4)
       polygon([[0.01, 0.01], [0.01, -2.5], [-lid_t - 0.01, -6], [-lid_t - 0.01, 0.01]]);
     lid_pins() lp_bore($grip);
-    translate([button_xy[0], button_xy[1], base_top - 1]) cylinder(d = button_hole, h = 10);
-    for (p = alarm_xy) translate([p[0], p[1], base_top - 1]) cylinder(d = button_hole, h = 10);
+    translate([button_xy[0], button_xy[1], base_top - 1]) cylinder(d = plain_hole, h = 10);
+    for (p = alarm_xy) translate([p[0], p[1], base_top - 1]) intersection() {
+      cylinder(d = button_hole, h = 10);
+      translate([-10, -(alarm_flats + 0.3)/2, 0]) cube([20, alarm_flats + 0.3, 10]);
+    }
     translate([ldr_xy[0], ldr_xy[1], base_top - 1]) cylinder(d = 5.2, h = 10);
   }
   lid_pins() lp_ramps($grip);   // on the lid's underside: the lid prints upside down

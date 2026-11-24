@@ -95,7 +95,7 @@ export const STEPS = [
     title: 'Lid and buttons',
     view: { visible: s7, highlight: ['lid', 'ref_button', 'ref_alarmbtns', 'ref_ldr', 'pins_asm'], explode: 0.3, camera: [300, 330, 400], target: [0, 60, 0] },
     html: `<ol>
-<li>Push the 16 mm snooze button through the hole at the front left of the lid, and the two lit alarm buttons through the pair of holes at the front right, well away from snooze so a sleepy hand doesn't switch an alarm off: <b>alarm 1 on the left</b>, alarm 2 on the right. Tighten the nuts.</li>
+<li>Push the 16 mm snooze button through the hole at the front left of the lid, and the two lit alarm buttons through the pair of holes at the front right, well away from snooze so a sleepy hand doesn't switch an alarm off: <b>alarm 1 on the left</b>, alarm 2 on the right. Their holes have two flat sides that match the flats on the buttons' threads, so the square bezels sit square to the case and the buttons can't turn. Tighten the nuts.</li>
 <li>Plug their leads onto the board's header: each alarm button has two switch wires and two light wires (the light's + goes to the 220 Ω resistor).</li>
 <li>Glue the LDR into the small hole at the front-left corner, with its face flush with the top. (It's away from the alarm buttons, so their lights don't fool it.)</li>
 <li>Lay the lid on so the barrel and end cap sit in its cut-out. Lock it with a short pin in each of the three corners and a long pin through each of the end cap's two tabs: push the pin in with its wing head <b>along</b> the slot beside the hole, then turn the head a quarter turn either way until it lies <b>crosswise</b> and clicks.</li></ol>`,
