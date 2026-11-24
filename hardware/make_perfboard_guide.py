@@ -12,6 +12,7 @@ OUT = os.path.join(HERE, '..', 'docs', 'perfboard.html')
 PINS = open(os.path.join(HERE, '..', 'firmware', 'src', 'pins.h')).read()
 G = lambda n: int(re.search(r'#define\s+%s\s+(\d+)' % n, PINS).group(1))
 
+IMGV = '20261123a'           # cache-buster for the rendered pictures and model
 COLS, ROWS = 27, 15
 RL = 'ABCDEFGHIJKLMNO'
 BW, BH = 70.0, 40.0
@@ -45,7 +46,7 @@ def sig(gpio, front=True, row=None):
 GROUPS = [
     dict(id='front', name='Front display', to='the TM1637 behind the front window', color='#c0392b', wires=[
         ('CLK', sig(G('PIN_TM_CLK')), f'GPIO {G("PIN_TM_CLK")}', '#7d3c98'), ('DIO', sig(G('PIN_TM_DIO')), f'GPIO {G("PIN_TM_DIO")}', '#2e86c1'),
-        ('VCC', '2B', '3.3 V', '#e67e22'), ('GND', '1B', 'ground', '#222')]),
+        ('VCC', '2E', '3.3 V', '#e67e22'), ('GND', '1C', 'ground', '#222')]),   # 1B/2B sit under the capacitor
     dict(id='proj', name='Projector display', to='the TM1637 in the barrel (out past the display holder)', color='#c0392b', wires=[
         ('CLK', sig(G('PIN_PROJ_CLK')), f'GPIO {G("PIN_PROJ_CLK")}', '#7d3c98'), ('DIO', sig(G('PIN_PROJ_DIO')), f'GPIO {G("PIN_PROJ_DIO")}', '#2e86c1'),
         ('VCC', '2D', '3.3 V', '#e67e22'), ('GND', '1D', 'ground', '#222')]),
@@ -69,6 +70,8 @@ GROUPS = [
     dict(id='power', name='Power in', to='the 5 V boost (or straight to the USB-C breakout without the battery)', color='#c0392b', wires=[
         ('5 V in', '3O', '5 V', '#e74c3c'), ('GND in', '1O', 'ground', '#222')]),
 ]
+SHORT = dict(front='front display', proj='projector display', amp='amplifier', rtc='clock module', lid='lid', btnb='button B',
+             bat='battery boards', power='power-in')
 SIG_COLS_FRONT = sorted({pad(w[1])[0] for g in GROUPS for w in g['wires'] if pad(w[1])[1] == 0 and pad(w[1])[0] > 3})
 SIG_COLS_BACK = sorted({pad(w[1])[0] for g in GROUPS for w in g['wires'] if pad(w[1])[1] >= 13 and pad(w[1])[0] > 3})
 CAP = ('3A', '1A')            # 100 uF: + in 3A (5 V), - in 1A (ground)
@@ -315,8 +318,8 @@ def wire_table(g):
 
 def page():
     steps = []
-    def step(sid, title, time, intro, pic='', after='', test='', warn=''):
-        steps.append(dict(sid=sid, title=title, time=time, intro=intro, pic=pic, after=after, test=test, warn=warn))
+    def step(sid, title, time, intro, pic='', after='', test='', warn='', shots=(), mid=''):
+        steps.append(dict(sid=sid, title=title, time=time, intro=intro, pic=pic, after=after, test=test, warn=warn, shots=shots, mid=mid))
 
     step('first', 'Before you start', '5 min',
          'Do this once the <a href="breadboard.html">breadboard test</a> works end to end: every module has done what its test step said. '
@@ -330,11 +333,14 @@ def page():
 <li>Two 220 Ω resistors and one 10 kΩ resistor (the same ones from the breadboard), heat-shrink</li>
 <li>Soldering iron, solder, side cutters, multimeter</li></ul>
 <p>Every hole has a name: its <b>column</b> number 1–27 counted from the left, then its <b>row</b> letter A–O counted from the front. Hold the board with row A toward you whenever you read the pictures.</p>''',
-         pic=pic_cut())
+         pic=pic_cut(), shots=[('kit', 'The parts for the board: the perfboard, two 22-way female headers, the 100 µF capacitor, the resistors for the lid, bare wire for the bridges and hookup wire in several colours.')])
     step('bridges', 'Solder bridges on the underside', '25 min',
          'Turn the board over <b>left to right</b>, so row A is still toward you; column 1 is now on your right. That is how the underside pictures are drawn. '
          'Make each grey line by laying bare wire across the pads and soldering it to every pad it crosses (or by flooding solder from pad to pad on short ones).',
          pic=pic_bridges(),
+         shots=[('rails', 'Start with the three power rails: one straight piece of bare wire down each of columns 1, 2 and 3, soldered at all 15 pads. Seen from underneath, so column 1 is on the right.'),
+                ('bridges', 'Then the short bridges: rows A to C at the front and M to O at the back, one for each ESP32 pin that has a wire.'),
+                ('bridges-close', 'Close up: the bare wire lies flat on the pads, with a small shiny fillet of solder at every pad it crosses. No solder may join one column to the next.')],
          after=f'''<ul>
 <li><b>Columns 1, 2 and 3, all 15 holes A–O:</b> the power rails. Column 1 is ground, column 2 is 3.3 V, column 3 is 5 V. Long runs are easiest with one piece of bare wire.</li>
 <li><b>Rows A–B–C in columns {", ".join(map(str, SIG_COLS_FRONT))}:</b> each joins an ESP32 pin (row C, under its socket) to the hole two rows in front of it, where that pin's wire will go.</li>
@@ -344,6 +350,7 @@ def page():
     step('links', 'Three insulated links on the underside', '10 min',
          'These connect the ESP32\'s power pins to the rails. Use insulated wire: each one crosses other bridges. Strip only the ends.',
          pic=pic_links(),
+         shots=[('links', 'The three links, still from underneath: the short black one is ground (4M to 1M), the short orange one is 3.3 V (4C to 2C), and the long red one is 5 V (24C to 3K), across the middle.')],
          after='<ul>' + ''.join(f'<li><b>{a} → {b}</b>: {esc(lab)}.</li>' for a, b, lab, _ in LINKS) + '</ul>'
                '<p>The 5 V link is the long one: run it across the middle of the board, where nothing else is soldered.</p>',
          test='Beep test: 4C to 2O (3.3 V), 4M to 1A (ground), 24C to 3A (5 V). Then 1A to 2A and 1A to 3A must still be silent.')
@@ -351,6 +358,8 @@ def page():
          'Back to the top side. Push the two 22-way female headers into rows <b>C</b> and <b>M</b>, columns <b>4 to 25</b>. '
          'Tip: plug them onto the ESP32 first and use the ESP32 as a jig, so they are exactly the right distance apart; solder one pin at each end, take the ESP32 out, then solder the rest.',
          pic=pic_top(),
+         shots=[('jig', 'The jig trick: plug both headers onto the ESP32, then drop the whole thing into rows C and M, columns 4 to 25. Solder one pin at each end of each header from underneath, then lift the ESP32 off.'),
+                ('headers', 'Headers soldered, and the 100 µF capacitor standing in 3A (+) and 1A (−, the striped side). Its body covers pads 2A and 2B: nothing else goes there.')],
          after='<p><b>100 µF capacitor:</b> long leg (+) in <b>3A</b> (5 V), short leg and the stripe (−) in <b>1A</b> (ground). It steadies the 5 V for the amplifier. Solder it flat to the board or standing: keep it under 11 mm tall.</p>',
          test='Beep test, top side: each socket pin you bridged beeps to its pad two rows out (for example the socket in 7C to pad 7A). The socket in 4C beeps to column 2, 4M to column 1, 24C to column 3.',
          warn='Don\'t plug the ESP32 in yet.')
@@ -367,9 +376,16 @@ def page():
         step(g['id'], f'Wires: {g["name"]}', '10 min',
              f'Wires for {esc(g["to"])}. Cut each long enough to reach with the board in place in the case and the lid lifted off (about 15 cm for most; 25 cm for the lid and the projector, which has to reach the barrel\'s end). '
              'Strip 3 mm, push it into the pad from the top and solder it underneath. Label the far ends with tape as you go.',
-             pic=pic_group(g['id']), after=wire_table(g) + extra)
+             pic=pic_group(g['id']), after=wire_table(g) + extra,
+             shots=[(f'g-{g["id"]}', f'The {SHORT[g["id"]]} wires in colour; earlier wires are shown pale. '
+                     'Wires on the power columns leave to the left, wires in row A leave over the front edge, and wires in rows N and O leave over the back edge.')])
     step('all', 'All the wires at once', '–', 'For checking: every wire and its pad. Wires leaving the front edge (row A) go to the modules at the front and the lid; the left column (rails) carries power and ground; the back edge (rows N and O) goes to the clock module, the alarm lights and the battery boards.',
-         pic=pic_all())
+         pic=pic_all(),
+         shots=[('all', 'Every wire in place, before the ESP32 goes in.'),
+                ('all-under', 'The underside when it\'s finished: the three rails, the short bridges, the three links, and a joint at every header pin and wire.')],
+         mid='''<h3>Turn it round</h3><p>Drag to turn the finished board, scroll or pinch to zoom.</p>
+<div class="pb3d"><canvas id="pb3d"></canvas><div class="pb3dbar">
+<button type="button" data-v="top">Top</button><button type="button" data-v="under">Underside</button><button type="button" data-v="esp">Take the ESP32 out</button></div></div>''')
     step('move', 'Move the ESP32 over and test, one module at a time', '30 min',
          'With nothing plugged into the sockets, check once more that 1, 2 and 3 don\'t beep to each other. Then:',
          after='''<ol>
@@ -377,20 +393,25 @@ def page():
 <li>Connect only the power wires and the <b>front display</b>. Power it from the USB-C supply. The front display shows the time within 30 seconds.</li>
 <li>Add the modules one at a time, powering off between each: projector display, amplifier, clock module, lid, button B, battery boards. After each, run that module's test from the <a href="breadboard.html">breadboard guide</a>.</li>
 <li>Open the clock's web page: status should show the clock module found, and with the battery boards a Battery line.</li></ol>''',
+         shots=[('esp32', 'The ESP32 in its sockets: antenna end over column 4, USB ports at the right. 22 pins in each row.'),
+                ('esp32-back', 'From the back right: the USB ports, the back edge\'s wires to the clock module, alarm lights and battery boards, and the power-in pair on the left.')],
          test='Everything that worked on the breadboard works here. If one module doesn\'t, its wires are the only new thing: beep each one from the module\'s pin to its pad.',
          warn='Never plug the USB-C supply and the ESP32\'s own USB port into power at the same time.')
     step('fit', 'Into the case', '10 min',
          'The board sits on the four pads at the front right of the base, ESP32 USB end toward the right wall, row A toward the front. Press it down until the two hooks on each short side click over its edges. '
          'Route the lid and projector wires up the right side, leave the battery and clock-module wires along the floor, and keep everything clear of the barrel, which turns. '
-         'See the <a href="assembly.html">assembly steps</a> for the rest.')
+         'See the <a href="assembly.html">assembly steps</a> for the rest.',
+         shots=[('incase', 'Where it ends up: the board at the front right of the base, ESP32 on top, with the battery, the floor modules and the wiring around it.')])
     toc = ''.join(f'<a href="#{s["sid"]}"><span>{i + 1}</span>{esc(re.sub("<[^>]+>", "", s["title"]))}</a>' for i, s in enumerate(steps))
     secs = ''.join(f'''
 <section class="bbstep" id="{s['sid']}">
   <div class="bbhead"><span class="num">{i + 1}</span><h2>{s['title']}</h2><span class="time">⏱ {s['time']}</span></div>
   <p>{s['intro']}</p>
   {f'<div class="warn">⚠️ {s["warn"]}</div>' if s['warn'] else ''}
-  {f'<div class="pic">{s["pic"]}</div>' if s['pic'] else ''}
+  {''.join(f'<figure class="shot"><img src="img/pb-{n}.jpg?v={IMGV}" alt="{esc(re.sub("<[^>]+>", "", c))}" width="1400" height="875" loading="lazy"><figcaption>{c}</figcaption></figure>' for n, c in s['shots'])}
+  {f'<figure class="pic"><figcaption class="maptitle">Hole map</figcaption>{s["pic"]}</figure>' if s['pic'] else ''}
   {s['after']}
+  {s['mid']}
   {f'<div class="test"><b>✅ Check:</b> {s["test"]}</div>' if s['test'] else ''}
 </section>''' for i, s in enumerate(steps))
     return f'''<!DOCTYPE html>
@@ -398,6 +419,7 @@ def page():
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Perfboard · Ceiling Clock</title>
 <link rel="stylesheet" href="style.css?v=20261030w">
+<script type="importmap">{{"imports":{{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}}}</script>
 <style>
 .pbsvg{{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px;background:#fbfaf6}}
 .toc{{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 6px}}
@@ -408,6 +430,14 @@ def page():
 .bbhead .num{{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:#e8743b;color:#fff;font-weight:800;font-size:1.1rem}}
 .time{{color:var(--mut);font-size:.9rem}}
 .pic{{margin:10px 0}}
+.shot{{margin:12px 0 16px}}.shot img{{width:100%;height:auto;display:block;border-radius:12px;border:1px solid var(--line);background:#2a5444}}
+.shot figcaption{{color:var(--mut);font-size:.93rem;margin-top:6px;line-height:1.45}}
+.maptitle{{font-weight:700;font-size:.9rem;color:var(--mut);margin:4px 0 6px}}
+.pb3d{{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#e9e6df;margin:8px 0 16px}}
+.pb3d canvas{{display:block;width:100%;aspect-ratio:16/10;touch-action:none;cursor:grab}}
+.pb3dbar{{position:absolute;left:10px;bottom:10px;display:flex;gap:6px;flex-wrap:wrap}}
+.pb3dbar button{{border:1px solid var(--line);background:#fbfaf6;border-radius:999px;padding:6px 12px;font:inherit;font-size:.88rem;cursor:pointer}}
+.pb3dbar button[aria-pressed=true]{{background:#e8743b;color:#fff;border-color:#e8743b}}
 .pins{{border-collapse:collapse;margin:8px 0 14px}}.pins td,.pins th{{border:1px solid var(--line);padding:5px 10px;text-align:left}}.pins th{{background:#f3f1ea}}
 .sw{{display:inline-block;width:10px;height:16px;border-radius:3px;margin-right:8px;vertical-align:-3px}}
 .test{{background:#eef7ee;border:1px solid #cfe6cf;border-radius:10px;padding:10px 12px;margin:10px 0}}
@@ -420,11 +450,54 @@ def page():
 </div></header>
 <main class="in">
 <h1>Wiring the perfboard</h1>
-<p class="lead">From the breadboard to the board that goes in the case: about two and a half hours of soldering. The pictures are drawn to scale; every hole is named by its column (1–27) and row (A–O).</p>
+<p class="lead">From the breadboard to the board that goes in the case: about two and a half hours of soldering. Each step has a picture of the board as it should look when the step is done, and a hole map underneath that names every hole used, by its column (1–27) and row (A–O). Both are drawn from the same layout, to scale. At the end you can turn the finished board round in 3D.</p>
 <nav class="toc">{toc}</nav>
 {secs}
 </main>
 <script src="js/declutter.js?v=4"></script>
+<script type="module">
+import * as THREE from 'three';
+import {{ OrbitControls }} from 'three/addons/controls/OrbitControls.js';
+import {{ makeStudio, v }} from './js/pbscene.js?v={IMGV}';
+const cv = document.getElementById('pb3d');
+if (cv) {{
+  const st = makeStudio(cv, {{ width: cv.clientWidth, height: cv.clientWidth * 10 / 16, shadows: false }});
+  st.mat.visible = false;
+  st.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  const ctl = new OrbitControls(st.camera, cv);
+  ctl.enableDamping = true; ctl.minDistance = 40; ctl.maxDistance = 400;
+  let need = true; ctl.addEventListener('change', () => need = true);
+  // Underside turns the board over left to right, as you would in your hands: row A stays toward you, column 1 goes right
+  const pivot = new THREE.Group(); pivot.position.copy(v(35, 20, 0.8)); st.scene.add(pivot);
+  let flipTo = 0, anim = null;
+  function go(k) {{
+    if (k === 'top' || k === 'under') {{ flipTo = k === 'under' ? Math.PI : 0; anim = performance.now(); }}
+    st.look([35, -70, 95], [35, 20, 4], 32); ctl.target.copy(v(35, 20, 4)); ctl.update(); need = true;
+  }}
+  let started = false;
+  const start = async () => {{
+    if (started) return; started = true;
+    await st.load('models/perfboard.glb?v={IMGV}', 0);
+    pivot.add(st.model); st.model.position.copy(pivot.position).negate(); go('top');
+    const esp = []; st.model.traverse(o => {{ if (o.isMesh && /^esp32_/.test(o.name)) esp.push(o); }});
+    document.querySelectorAll('.pb3dbar button').forEach(b => b.addEventListener('click', () => {{
+      if (b.dataset.v === 'esp') {{ const out = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', out); esp.forEach(o => o.visible = !out); b.textContent = out ? 'Put the ESP32 in' : 'Take the ESP32 out'; need = true; }}
+      else go(b.dataset.v);
+    }}));
+    (function loop(t) {{
+      requestAnimationFrame(loop); ctl.update();
+      if (anim !== null) {{
+        const d = flipTo - pivot.rotation.z;
+        if (Math.abs(d) < 0.01) {{ pivot.rotation.z = flipTo; anim = null; }} else pivot.rotation.z += d * 0.16;
+        need = true;
+      }}
+      if (need) {{ st.render(); need = false; }}
+    }})();
+  }};
+  new IntersectionObserver((es, o) => {{ if (es.some(e => e.isIntersecting)) {{ o.disconnect(); start(); }} }}, {{ rootMargin: '300px' }}).observe(cv);
+  addEventListener('resize', () => {{ st.renderer.setSize(cv.clientWidth, cv.clientWidth * 10 / 16, false); st.camera.aspect = 1.6; st.camera.updateProjectionMatrix(); need = true; }});
+}}
+</script>
 </body></html>'''
 
 

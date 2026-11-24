@@ -3,6 +3,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Perfboard · Ceiling Clock</title>
 <link rel="stylesheet" href="style.css?v=20261030w">
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}</script>
 <style>
 .pbsvg{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px;background:#fbfaf6}
 .toc{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 6px}
@@ -13,6 +14,14 @@
 .bbhead .num{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:#e8743b;color:#fff;font-weight:800;font-size:1.1rem}
 .time{color:var(--mut);font-size:.9rem}
 .pic{margin:10px 0}
+.shot{margin:12px 0 16px}.shot img{width:100%;height:auto;display:block;border-radius:12px;border:1px solid var(--line);background:#2a5444}
+.shot figcaption{color:var(--mut);font-size:.93rem;margin-top:6px;line-height:1.45}
+.maptitle{font-weight:700;font-size:.9rem;color:var(--mut);margin:4px 0 6px}
+.pb3d{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#e9e6df;margin:8px 0 16px}
+.pb3d canvas{display:block;width:100%;aspect-ratio:16/10;touch-action:none;cursor:grab}
+.pb3dbar{position:absolute;left:10px;bottom:10px;display:flex;gap:6px;flex-wrap:wrap}
+.pb3dbar button{border:1px solid var(--line);background:#fbfaf6;border-radius:999px;padding:6px 12px;font:inherit;font-size:.88rem;cursor:pointer}
+.pb3dbar button[aria-pressed=true]{background:#e8743b;color:#fff;border-color:#e8743b}
 .pins{border-collapse:collapse;margin:8px 0 14px}.pins td,.pins th{border:1px solid var(--line);padding:5px 10px;text-align:left}.pins th{background:#f3f1ea}
 .sw{display:inline-block;width:10px;height:16px;border-radius:3px;margin-right:8px;vertical-align:-3px}
 .test{background:#eef7ee;border:1px solid #cfe6cf;border-radius:10px;padding:10px 12px;margin:10px 0}
@@ -25,14 +34,15 @@
 </div></header>
 <main class="in">
 <h1>Wiring the perfboard</h1>
-<p class="lead">From the breadboard to the board that goes in the case: about two and a half hours of soldering. The pictures are drawn to scale; every hole is named by its column (1–27) and row (A–O).</p>
+<p class="lead">From the breadboard to the board that goes in the case: about two and a half hours of soldering. Each step has a picture of the board as it should look when the step is done, and a hole map underneath that names every hole used, by its column (1–27) and row (A–O). Both are drawn from the same layout, to scale. At the end you can turn the finished board round in 3D.</p>
 <nav class="toc"><a href="#first"><span>1</span>Before you start</a><a href="#bridges"><span>2</span>Solder bridges on the underside</a><a href="#links"><span>3</span>Three insulated links on the underside</a><a href="#headers"><span>4</span>Sockets for the ESP32, and the capacitor</a><a href="#front"><span>5</span>Wires: Front display</a><a href="#proj"><span>6</span>Wires: Projector display</a><a href="#amp"><span>7</span>Wires: Amplifier</a><a href="#rtc"><span>8</span>Wires: Clock module (DS3231)</a><a href="#lid"><span>9</span>Wires: Lid: buttons, lights and light sensor</a><a href="#btnb"><span>10</span>Wires: Button B</a><a href="#bat"><span>11</span>Wires: Battery boards (optional)</a><a href="#power"><span>12</span>Wires: Power in</a><a href="#all"><span>13</span>All the wires at once</a><a href="#move"><span>14</span>Move the ESP32 over and test, one module at a time</a><a href="#fit"><span>15</span>Into the case</a></nav>
 
 <section class="bbstep" id="first">
   <div class="bbhead"><span class="num">1</span><h2>Before you start</h2><span class="time">⏱ 5 min</span></div>
   <p>Do this once the <a href="breadboard.html">breadboard test</a> works end to end: every module has done what its test step said. The perfboard does the breadboard's job in a form that fits in the case: the ESP32 plugs into two sockets, and every module gets its own wires, soldered to the board.</p>
   
-  <div class="pic"><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="The board: 27 by 15 holes" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+  <figure class="shot"><img src="img/pb-kit.jpg?v=20261123a" alt="The parts for the board: the perfboard, two 22-way female headers, the 100 µF capacitor, the resistors for the lid, bare wire for the bridges and hookup wire in several colours." width="1400" height="875" loading="lazy"><figcaption>The parts for the board: the perfboard, two 22-way female headers, the 100 µF capacitor, the resistors for the lid, bare wire for the bridges and hookup wire in several colours.</figcaption></figure>
+  <figure class="pic"><figcaption class="maptitle">Hole map</figcaption><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="The board: 27 by 15 holes" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
 <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9z" fill="#e8743b"/></marker></defs>
 <rect x="190" y="105" width="770.0" height="440.0" rx="6" fill="#c9a26a" stroke="#8a6a3b" stroke-width="2"/>
 <circle cx="211.8" cy="520.6" r="5.2" fill="#e2b866" stroke="#9c7434" stroke-width="1"/><circle cx="211.8" cy="520.6" r="1.9" fill="#3b2a12"/>
@@ -503,7 +513,7 @@
 <rect x="325.0" y="285.0" width="500" height="74" rx="10" fill="#fbfaf6" opacity=".92"/>
 <text x="575.0" y="315.0" text-anchor="middle" font-size="22" font-weight="800" fill="#5a3d12">70 × 40 mm · 27 × 15 holes</text>
 <text x="575.0" y="345.0" text-anchor="middle" font-size="15" fill="#5a3d12">holes are named by column and row; the ringed one is 7A</text>
-<circle cx="379.4" cy="520.6" r="9" fill="none" stroke="#e8743b" stroke-width="3"/></svg></div>
+<circle cx="379.4" cy="520.6" r="9" fill="none" stroke="#e8743b" stroke-width="3"/></svg></figure>
   <h3>You need</h3><ul>
 <li>Perfboard with a copper pad round every hole (single-sided is fine), 2.54 mm pitch, cut to <b>70 × 40 mm</b> (27 × 15 holes)</li>
 <li>Two 22-way 2.54 mm <b>female</b> header strips (cut longer strips with a knife, sacrificing one socket)</li>
@@ -514,12 +524,14 @@
 <li>Soldering iron, solder, side cutters, multimeter</li></ul>
 <p>Every hole has a name: its <b>column</b> number 1–27 counted from the left, then its <b>row</b> letter A–O counted from the front. Hold the board with row A toward you whenever you read the pictures.</p>
   
+  
 </section>
 <section class="bbstep" id="bridges">
   <div class="bbhead"><span class="num">2</span><h2>Solder bridges on the underside</h2><span class="time">⏱ 25 min</span></div>
   <p>Turn the board over <b>left to right</b>, so row A is still toward you; column 1 is now on your right. That is how the underside pictures are drawn. Make each grey line by laying bare wire across the pads and soldering it to every pad it crosses (or by flooding solder from pad to pad on short ones).</p>
   
-  <div class="pic"><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Underside: solder bridges" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+  <figure class="shot"><img src="img/pb-rails.jpg?v=20261123a" alt="Start with the three power rails: one straight piece of bare wire down each of columns 1, 2 and 3, soldered at all 15 pads. Seen from underneath, so column 1 is on the right." width="1400" height="875" loading="lazy"><figcaption>Start with the three power rails: one straight piece of bare wire down each of columns 1, 2 and 3, soldered at all 15 pads. Seen from underneath, so column 1 is on the right.</figcaption></figure><figure class="shot"><img src="img/pb-bridges.jpg?v=20261123a" alt="Then the short bridges: rows A to C at the front and M to O at the back, one for each ESP32 pin that has a wire." width="1400" height="875" loading="lazy"><figcaption>Then the short bridges: rows A to C at the front and M to O at the back, one for each ESP32 pin that has a wire.</figcaption></figure><figure class="shot"><img src="img/pb-bridges-close.jpg?v=20261123a" alt="Close up: the bare wire lies flat on the pads, with a small shiny fillet of solder at every pad it crosses. No solder may join one column to the next." width="1400" height="875" loading="lazy"><figcaption>Close up: the bare wire lies flat on the pads, with a small shiny fillet of solder at every pad it crosses. No solder may join one column to the next.</figcaption></figure>
+  <figure class="pic"><figcaption class="maptitle">Hole map</figcaption><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Underside: solder bridges" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
 <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9z" fill="#e8743b"/></marker></defs>
 <rect x="190" y="105" width="770.0" height="440.0" rx="6" fill="#b8925b" stroke="#8a6a3b" stroke-width="2"/>
 <circle cx="938.2" cy="520.6" r="5.2" fill="#d7a04a" stroke="#9c7434" stroke-width="1"/><circle cx="938.2" cy="520.6" r="1.9" fill="#3b2a12"/>
@@ -1031,19 +1043,21 @@
 <line x1="714.7" y1="185.3" x2="714.7" y2="129.4" stroke="#c8ccd2" stroke-width="9" stroke-linecap="round" opacity="1"/>
 <line x1="714.7" y1="185.3" x2="714.7" y2="129.4" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7"/>
 <line x1="686.8" y1="185.3" x2="686.8" y2="129.4" stroke="#c8ccd2" stroke-width="9" stroke-linecap="round" opacity="1"/>
-<line x1="686.8" y1="185.3" x2="686.8" y2="129.4" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7"/></svg></div>
+<line x1="686.8" y1="185.3" x2="686.8" y2="129.4" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7"/></svg></figure>
   <ul>
 <li><b>Columns 1, 2 and 3, all 15 holes A–O:</b> the power rails. Column 1 is ground, column 2 is 3.3 V, column 3 is 5 V. Long runs are easiest with one piece of bare wire.</li>
 <li><b>Rows A–B–C in columns 7, 8, 9, 10, 11, 12, 13, 15, 18, 19, 20, 21, 22, 23:</b> each joins an ESP32 pin (row C, under its socket) to the hole two rows in front of it, where that pin's wire will go.</li>
 <li><b>Rows M–N–O in columns 7, 8, 9, 10:</b> the same for the back row of pins.</li>
 <li>Columns not listed get no bridge: those ESP32 pins aren't used.</li></ul>
+  
   <div class="test"><b>✅ Check:</b> With the meter on continuity (beep): touch the probes to 1A and 1O (beeps), 1A and 2A (<b>no beep</b>), 2A and 3A (no beep), then 7A to 8A (no beep) for each pair of neighbouring signal columns. A beep between neighbours means a solder bridge where it shouldn't be: clean it with desoldering braid.</div>
 </section>
 <section class="bbstep" id="links">
   <div class="bbhead"><span class="num">3</span><h2>Three insulated links on the underside</h2><span class="time">⏱ 10 min</span></div>
   <p>These connect the ESP32's power pins to the rails. Use insulated wire: each one crosses other bridges. Strip only the ends.</p>
   
-  <div class="pic"><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Underside: three insulated links" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+  <figure class="shot"><img src="img/pb-links.jpg?v=20261123a" alt="The three links, still from underneath: the short black one is ground (4M to 1M), the short orange one is 3.3 V (4C to 2C), and the long red one is 5 V (24C to 3K), across the middle." width="1400" height="875" loading="lazy"><figcaption>The three links, still from underneath: the short black one is ground (4M to 1M), the short orange one is 3.3 V (4C to 2C), and the long red one is 5 V (24C to 3K), across the middle.</figcaption></figure>
+  <figure class="pic"><figcaption class="maptitle">Hole map</figcaption><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Underside: three insulated links" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
 <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9z" fill="#e8743b"/></marker></defs>
 <rect x="190" y="105" width="770.0" height="440.0" rx="6" fill="#b8925b" stroke="#8a6a3b" stroke-width="2"/>
 <circle cx="938.2" cy="520.6" r="5.2" fill="#d7a04a" stroke="#9c7434" stroke-width="1"/><circle cx="938.2" cy="520.6" r="1.9" fill="#3b2a12"/>
@@ -1545,15 +1559,17 @@
 <circle cx="295.6" cy="464.7" r="6" fill="#c8ccd2" stroke="#666"/>
 <circle cx="882.3" cy="241.2" r="6" fill="#c8ccd2" stroke="#666"/>
 <rect x="285.3" y="212.0" width="300" height="46" rx="8" fill="#fbfaf6" opacity=".92"/>
-<text x="435.3" y="230.0" text-anchor="middle" font-size="15" font-weight="700" fill="#5a3d12">the long 5 V link crosses the middle,</text><text x="435.3" y="250.0" text-anchor="middle" font-size="15" font-weight="700" fill="#5a3d12">where the ESP32 will sit</text></svg></div>
+<text x="435.3" y="230.0" text-anchor="middle" font-size="15" font-weight="700" fill="#5a3d12">the long 5 V link crosses the middle,</text><text x="435.3" y="250.0" text-anchor="middle" font-size="15" font-weight="700" fill="#5a3d12">where the ESP32 will sit</text></svg></figure>
   <ul><li><b>4C → 2C</b>: 3.3 V: ESP32 3V3 pin to the 3.3 V column.</li><li><b>4M → 1M</b>: ground: ESP32 G pin to the ground column.</li><li><b>24C → 3K</b>: 5 V: ESP32 5V pin to the 5 V column.</li></ul><p>The 5 V link is the long one: run it across the middle of the board, where nothing else is soldered.</p>
+  
   <div class="test"><b>✅ Check:</b> Beep test: 4C to 2O (3.3 V), 4M to 1A (ground), 24C to 3A (5 V). Then 1A to 2A and 1A to 3A must still be silent.</div>
 </section>
 <section class="bbstep" id="headers">
   <div class="bbhead"><span class="num">4</span><h2>Sockets for the ESP32, and the capacitor</h2><span class="time">⏱ 15 min</span></div>
   <p>Back to the top side. Push the two 22-way female headers into rows <b>C</b> and <b>M</b>, columns <b>4 to 25</b>. Tip: plug them onto the ESP32 first and use the ESP32 as a jig, so they are exactly the right distance apart; solder one pin at each end, take the ESP32 out, then solder the rest.</p>
   <div class="warn">⚠️ Don't plug the ESP32 in yet.</div>
-  <div class="pic"><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Top: headers and capacitor" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+  <figure class="shot"><img src="img/pb-jig.jpg?v=20261123a" alt="The jig trick: plug both headers onto the ESP32, then drop the whole thing into rows C and M, columns 4 to 25. Solder one pin at each end of each header from underneath, then lift the ESP32 off." width="1400" height="875" loading="lazy"><figcaption>The jig trick: plug both headers onto the ESP32, then drop the whole thing into rows C and M, columns 4 to 25. Solder one pin at each end of each header from underneath, then lift the ESP32 off.</figcaption></figure><figure class="shot"><img src="img/pb-headers.jpg?v=20261123a" alt="Headers soldered, and the 100 µF capacitor standing in 3A (+) and 1A (−, the striped side). Its body covers pads 2A and 2B: nothing else goes there." width="1400" height="875" loading="lazy"><figcaption>Headers soldered, and the 100 µF capacitor standing in 3A (+) and 1A (−, the striped side). Its body covers pads 2A and 2B: nothing else goes there.</figcaption></figure>
+  <figure class="pic"><figcaption class="maptitle">Hole map</figcaption><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Top: headers and capacitor" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
 <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9z" fill="#e8743b"/></marker></defs>
 <rect x="190" y="105" width="770.0" height="440.0" rx="6" fill="#c9a26a" stroke="#8a6a3b" stroke-width="2"/>
 <circle cx="211.8" cy="520.6" r="5.2" fill="#e2b866" stroke="#9c7434" stroke-width="1"/><circle cx="211.8" cy="520.6" r="1.9" fill="#3b2a12"/>
@@ -2112,15 +2128,17 @@
 <text x="854.4" y="169.3" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1b1b1b" opacity="0.95">G</text>
 <text x="882.3" y="169.3" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1b1b1b" opacity="0.95">G</text>
 <rect x="359.0" y="309.0" width="460" height="30" rx="8" fill="#fbfaf6" opacity=".85"/><text x="589.0" y="330.0" text-anchor="middle" font-size="15" font-weight="600" fill="#6b5330">ESP32 plugs in here: antenna end left, USB end right</text>
-<g opacity="1"><circle cx="239.7" cy="518.6" r="34.6" fill="#1f4e8c" stroke="#0c2a4f" stroke-width="2"/><path d="M205.1,518.6 A34.6,34.6 0 0 1 224.3,487.8 L224.3,549.4 A34.6,34.6 0 0 1 205.1,518.6z" fill="#d6dbe2"/><text x="214.4" y="523.6" text-anchor="middle" font-size="16" font-weight="800" fill="#1f4e8c">−</text><text x="252.9" y="523.6" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">100µF</text></g></svg></div>
+<g opacity="1"><circle cx="239.7" cy="518.6" r="34.6" fill="#1f4e8c" stroke="#0c2a4f" stroke-width="2"/><path d="M205.1,518.6 A34.6,34.6 0 0 1 224.3,487.8 L224.3,549.4 A34.6,34.6 0 0 1 205.1,518.6z" fill="#d6dbe2"/><text x="214.4" y="523.6" text-anchor="middle" font-size="16" font-weight="800" fill="#1f4e8c">−</text><text x="252.9" y="523.6" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">100µF</text></g></svg></figure>
   <p><b>100 µF capacitor:</b> long leg (+) in <b>3A</b> (5 V), short leg and the stripe (−) in <b>1A</b> (ground). It steadies the 5 V for the amplifier. Solder it flat to the board or standing: keep it under 11 mm tall.</p>
+  
   <div class="test"><b>✅ Check:</b> Beep test, top side: each socket pin you bridged beeps to its pad two rows out (for example the socket in 7C to pad 7A). The socket in 4C beeps to column 2, 4M to column 1, 24C to column 3.</div>
 </section>
 <section class="bbstep" id="front">
   <div class="bbhead"><span class="num">5</span><h2>Wires: Front display</h2><span class="time">⏱ 10 min</span></div>
   <p>Wires for the TM1637 behind the front window. Cut each long enough to reach with the board in place in the case and the lid lifted off (about 15 cm for most; 25 cm for the lid and the projector, which has to reach the barrel's end). Strip 3 mm, push it into the pad from the top and solder it underneath. Label the far ends with tape as you go.</p>
   
-  <div class="pic"><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Front display" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+  <figure class="shot"><img src="img/pb-g-front.jpg?v=20261123a" alt="The front display wires in colour; earlier wires are shown pale. Wires on the power columns leave to the left, wires in row A leave over the front edge, and wires in rows N and O leave over the back edge." width="1400" height="875" loading="lazy"><figcaption>The front display wires in colour; earlier wires are shown pale. Wires on the power columns leave to the left, wires in row A leave over the front edge, and wires in rows N and O leave over the back edge.</figcaption></figure>
+  <figure class="pic"><figcaption class="maptitle">Hole map</figcaption><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Front display" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
 <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9z" fill="#e8743b"/></marker></defs>
 <rect x="190" y="105" width="770.0" height="440.0" rx="6" fill="#c9a26a" stroke="#8a6a3b" stroke-width="2"/>
 <circle cx="211.8" cy="520.6" r="5.2" fill="#e2b866" stroke="#9c7434" stroke-width="1"/><circle cx="211.8" cy="520.6" r="1.9" fill="#3b2a12"/>
@@ -2688,22 +2706,24 @@
 <polyline points="407.4,520.6 407.4,573.0" fill="none" stroke="#2e86c1" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="407.4" cy="520.6" r="5" fill="#c8ccd2" stroke="#555"/>
 <line x1="407.4" y1="573.0" x2="407.4" y2="598.0" stroke="#999" stroke-width="1"/><text x="407.4" y="612.0" text-anchor="middle" font-size="12.5" font-weight="700" fill="#222">DIO · 8A</text>
-<polyline points="239.7,492.6 184.0,475.6 140.0,475.6" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="239.7,492.6 184.0,475.6 140.0,475.6" fill="none" stroke="#e67e22" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="239.7" cy="492.6" r="5" fill="#c8ccd2" stroke="#555"/>
-<text x="134.0" y="479.6" text-anchor="end" font-size="12.5" font-weight="700" fill="#222">VCC · 2B</text>
-<polyline points="211.8,492.6 184.0,492.6 140.0,492.6" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="211.8,492.6 184.0,492.6 140.0,492.6" fill="none" stroke="#222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="211.8" cy="492.6" r="5" fill="#c8ccd2" stroke="#555"/>
-<text x="134.0" y="496.6" text-anchor="end" font-size="12.5" font-weight="700" fill="#222">GND · 1B</text></svg></div>
-  <table class="pins"><tr><th>Wire</th><th>Pad</th><th>ESP32 / supply</th></tr><tr><td><span class="sw" style="background:#7d3c98"></span>CLK</td><td><b>7A</b></td><td>GPIO 4</td></tr><tr><td><span class="sw" style="background:#2e86c1"></span>DIO</td><td><b>8A</b></td><td>GPIO 5</td></tr><tr><td><span class="sw" style="background:#e67e22"></span>VCC</td><td><b>2B</b></td><td>3.3 V</td></tr><tr><td><span class="sw" style="background:#222"></span>GND</td><td><b>1B</b></td><td>ground</td></tr></table>
+<polyline points="239.7,408.8 184.0,391.8 140.0,391.8" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="239.7,408.8 184.0,391.8 140.0,391.8" fill="none" stroke="#e67e22" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="239.7" cy="408.8" r="5" fill="#c8ccd2" stroke="#555"/>
+<text x="134.0" y="395.8" text-anchor="end" font-size="12.5" font-weight="700" fill="#222">VCC · 2E</text>
+<polyline points="211.8,464.7 184.0,464.7 140.0,464.7" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="211.8,464.7 184.0,464.7 140.0,464.7" fill="none" stroke="#222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="211.8" cy="464.7" r="5" fill="#c8ccd2" stroke="#555"/>
+<text x="134.0" y="468.7" text-anchor="end" font-size="12.5" font-weight="700" fill="#222">GND · 1C</text></svg></figure>
+  <table class="pins"><tr><th>Wire</th><th>Pad</th><th>ESP32 / supply</th></tr><tr><td><span class="sw" style="background:#7d3c98"></span>CLK</td><td><b>7A</b></td><td>GPIO 4</td></tr><tr><td><span class="sw" style="background:#2e86c1"></span>DIO</td><td><b>8A</b></td><td>GPIO 5</td></tr><tr><td><span class="sw" style="background:#e67e22"></span>VCC</td><td><b>2E</b></td><td>3.3 V</td></tr><tr><td><span class="sw" style="background:#222"></span>GND</td><td><b>1C</b></td><td>ground</td></tr></table>
+  
   
 </section>
 <section class="bbstep" id="proj">
   <div class="bbhead"><span class="num">6</span><h2>Wires: Projector display</h2><span class="time">⏱ 10 min</span></div>
   <p>Wires for the TM1637 in the barrel (out past the display holder). Cut each long enough to reach with the board in place in the case and the lid lifted off (about 15 cm for most; 25 cm for the lid and the projector, which has to reach the barrel's end). Strip 3 mm, push it into the pad from the top and solder it underneath. Label the far ends with tape as you go.</p>
   
-  <div class="pic"><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Projector display" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+  <figure class="shot"><img src="img/pb-g-proj.jpg?v=20261123a" alt="The projector display wires in colour; earlier wires are shown pale. Wires on the power columns leave to the left, wires in row A leave over the front edge, and wires in rows N and O leave over the back edge." width="1400" height="875" loading="lazy"><figcaption>The projector display wires in colour; earlier wires are shown pale. Wires on the power columns leave to the left, wires in row A leave over the front edge, and wires in rows N and O leave over the back edge.</figcaption></figure>
+  <figure class="pic"><figcaption class="maptitle">Hole map</figcaption><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Projector display" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
 <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9z" fill="#e8743b"/></marker></defs>
 <rect x="190" y="105" width="770.0" height="440.0" rx="6" fill="#c9a26a" stroke="#8a6a3b" stroke-width="2"/>
 <circle cx="211.8" cy="520.6" r="5.2" fill="#e2b866" stroke="#9c7434" stroke-width="1"/><circle cx="211.8" cy="520.6" r="1.9" fill="#3b2a12"/>
@@ -3265,8 +3285,8 @@
 <g opacity="0.55"><circle cx="239.7" cy="518.6" r="34.6" fill="#1f4e8c" stroke="#0c2a4f" stroke-width="2"/><path d="M205.1,518.6 A34.6,34.6 0 0 1 224.3,487.8 L224.3,549.4 A34.6,34.6 0 0 1 205.1,518.6z" fill="#d6dbe2"/><text x="214.4" y="523.6" text-anchor="middle" font-size="16" font-weight="800" fill="#1f4e8c">−</text><text x="252.9" y="523.6" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">100µF</text></g>
 <circle cx="379.4" cy="520.6" r="6" fill="#7d3c98" opacity=".45"/>
 <circle cx="407.4" cy="520.6" r="6" fill="#2e86c1" opacity=".45"/>
-<circle cx="239.7" cy="492.6" r="6" fill="#e67e22" opacity=".45"/>
-<circle cx="211.8" cy="492.6" r="6" fill="#222" opacity=".45"/>
+<circle cx="239.7" cy="408.8" r="6" fill="#e67e22" opacity=".45"/>
+<circle cx="211.8" cy="464.7" r="6" fill="#222" opacity=".45"/>
 <polyline points="770.6,520.6 770.6,573.0" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
 <polyline points="770.6,520.6 770.6,573.0" fill="none" stroke="#7d3c98" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="770.6" cy="520.6" r="5" fill="#c8ccd2" stroke="#555"/>
@@ -3282,15 +3302,17 @@
 <polyline points="211.8,436.8 184.0,436.8 140.0,436.8" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
 <polyline points="211.8,436.8 184.0,436.8 140.0,436.8" fill="none" stroke="#222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="211.8" cy="436.8" r="5" fill="#c8ccd2" stroke="#555"/>
-<text x="134.0" y="440.8" text-anchor="end" font-size="12.5" font-weight="700" fill="#222">GND · 1D</text></svg></div>
+<text x="134.0" y="440.8" text-anchor="end" font-size="12.5" font-weight="700" fill="#222">GND · 1D</text></svg></figure>
   <table class="pins"><tr><th>Wire</th><th>Pad</th><th>ESP32 / supply</th></tr><tr><td><span class="sw" style="background:#7d3c98"></span>CLK</td><td><b>21A</b></td><td>GPIO 12</td></tr><tr><td><span class="sw" style="background:#2e86c1"></span>DIO</td><td><b>20A</b></td><td>GPIO 11</td></tr><tr><td><span class="sw" style="background:#e67e22"></span>VCC</td><td><b>2D</b></td><td>3.3 V</td></tr><tr><td><span class="sw" style="background:#222"></span>GND</td><td><b>1D</b></td><td>ground</td></tr></table>
+  
   
 </section>
 <section class="bbstep" id="amp">
   <div class="bbhead"><span class="num">7</span><h2>Wires: Amplifier</h2><span class="time">⏱ 10 min</span></div>
   <p>Wires for the MAX98357A on the floor. Cut each long enough to reach with the board in place in the case and the lid lifted off (about 15 cm for most; 25 cm for the lid and the projector, which has to reach the barrel's end). Strip 3 mm, push it into the pad from the top and solder it underneath. Label the far ends with tape as you go.</p>
   
-  <div class="pic"><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Amplifier" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+  <figure class="shot"><img src="img/pb-g-amp.jpg?v=20261123a" alt="The amplifier wires in colour; earlier wires are shown pale. Wires on the power columns leave to the left, wires in row A leave over the front edge, and wires in rows N and O leave over the back edge." width="1400" height="875" loading="lazy"><figcaption>The amplifier wires in colour; earlier wires are shown pale. Wires on the power columns leave to the left, wires in row A leave over the front edge, and wires in rows N and O leave over the back edge.</figcaption></figure>
+  <figure class="pic"><figcaption class="maptitle">Hole map</figcaption><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Amplifier" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
 <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9z" fill="#e8743b"/></marker></defs>
 <rect x="190" y="105" width="770.0" height="440.0" rx="6" fill="#c9a26a" stroke="#8a6a3b" stroke-width="2"/>
 <circle cx="211.8" cy="520.6" r="5.2" fill="#e2b866" stroke="#9c7434" stroke-width="1"/><circle cx="211.8" cy="520.6" r="1.9" fill="#3b2a12"/>
@@ -3852,8 +3874,8 @@
 <g opacity="0.55"><circle cx="239.7" cy="518.6" r="34.6" fill="#1f4e8c" stroke="#0c2a4f" stroke-width="2"/><path d="M205.1,518.6 A34.6,34.6 0 0 1 224.3,487.8 L224.3,549.4 A34.6,34.6 0 0 1 205.1,518.6z" fill="#d6dbe2"/><text x="214.4" y="523.6" text-anchor="middle" font-size="16" font-weight="800" fill="#1f4e8c">−</text><text x="252.9" y="523.6" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">100µF</text></g>
 <circle cx="379.4" cy="520.6" r="6" fill="#7d3c98" opacity=".45"/>
 <circle cx="407.4" cy="520.6" r="6" fill="#2e86c1" opacity=".45"/>
-<circle cx="239.7" cy="492.6" r="6" fill="#e67e22" opacity=".45"/>
-<circle cx="211.8" cy="492.6" r="6" fill="#222" opacity=".45"/>
+<circle cx="239.7" cy="408.8" r="6" fill="#e67e22" opacity=".45"/>
+<circle cx="211.8" cy="464.7" r="6" fill="#222" opacity=".45"/>
 <circle cx="770.6" cy="520.6" r="6" fill="#7d3c98" opacity=".45"/>
 <circle cx="742.6" cy="520.6" r="6" fill="#2e86c1" opacity=".45"/>
 <circle cx="239.7" cy="436.8" r="6" fill="#e67e22" opacity=".45"/>
@@ -3877,15 +3899,17 @@
 <polyline points="211.8,408.8 184.0,408.8 140.0,408.8" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
 <polyline points="211.8,408.8 184.0,408.8 140.0,408.8" fill="none" stroke="#222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="211.8" cy="408.8" r="5" fill="#c8ccd2" stroke="#555"/>
-<text x="134.0" y="412.8" text-anchor="end" font-size="12.5" font-weight="700" fill="#222">GND · 1E</text></svg></div>
+<text x="134.0" y="412.8" text-anchor="end" font-size="12.5" font-weight="700" fill="#222">GND · 1E</text></svg></figure>
   <table class="pins"><tr><th>Wire</th><th>Pad</th><th>ESP32 / supply</th></tr><tr><td><span class="sw" style="background:#17a589"></span>BCLK</td><td><b>11A</b></td><td>GPIO 15</td></tr><tr><td><span class="sw" style="background:#d4ac0d"></span>LRC</td><td><b>12A</b></td><td>GPIO 16</td></tr><tr><td><span class="sw" style="background:#ca6f1e"></span>DIN</td><td><b>13A</b></td><td>GPIO 17</td></tr><tr><td><span class="sw" style="background:#e74c3c"></span>VIN</td><td><b>3E</b></td><td>5 V</td></tr><tr><td><span class="sw" style="background:#222"></span>GND</td><td><b>1E</b></td><td>ground</td></tr></table>
+  
   
 </section>
 <section class="bbstep" id="rtc">
   <div class="bbhead"><span class="num">8</span><h2>Wires: Clock module (DS3231)</h2><span class="time">⏱ 10 min</span></div>
   <p>Wires for the DS3231 on the floor. Cut each long enough to reach with the board in place in the case and the lid lifted off (about 15 cm for most; 25 cm for the lid and the projector, which has to reach the barrel's end). Strip 3 mm, push it into the pad from the top and solder it underneath. Label the far ends with tape as you go.</p>
   
-  <div class="pic"><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Clock module (DS3231)" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+  <figure class="shot"><img src="img/pb-g-rtc.jpg?v=20261123a" alt="The clock module wires in colour; earlier wires are shown pale. Wires on the power columns leave to the left, wires in row A leave over the front edge, and wires in rows N and O leave over the back edge." width="1400" height="875" loading="lazy"><figcaption>The clock module wires in colour; earlier wires are shown pale. Wires on the power columns leave to the left, wires in row A leave over the front edge, and wires in rows N and O leave over the back edge.</figcaption></figure>
+  <figure class="pic"><figcaption class="maptitle">Hole map</figcaption><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Clock module (DS3231)" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
 <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9z" fill="#e8743b"/></marker></defs>
 <rect x="190" y="105" width="770.0" height="440.0" rx="6" fill="#c9a26a" stroke="#8a6a3b" stroke-width="2"/>
 <circle cx="211.8" cy="520.6" r="5.2" fill="#e2b866" stroke="#9c7434" stroke-width="1"/><circle cx="211.8" cy="520.6" r="1.9" fill="#3b2a12"/>
@@ -4447,8 +4471,8 @@
 <g opacity="0.55"><circle cx="239.7" cy="518.6" r="34.6" fill="#1f4e8c" stroke="#0c2a4f" stroke-width="2"/><path d="M205.1,518.6 A34.6,34.6 0 0 1 224.3,487.8 L224.3,549.4 A34.6,34.6 0 0 1 205.1,518.6z" fill="#d6dbe2"/><text x="214.4" y="523.6" text-anchor="middle" font-size="16" font-weight="800" fill="#1f4e8c">−</text><text x="252.9" y="523.6" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">100µF</text></g>
 <circle cx="379.4" cy="520.6" r="6" fill="#7d3c98" opacity=".45"/>
 <circle cx="407.4" cy="520.6" r="6" fill="#2e86c1" opacity=".45"/>
-<circle cx="239.7" cy="492.6" r="6" fill="#e67e22" opacity=".45"/>
-<circle cx="211.8" cy="492.6" r="6" fill="#222" opacity=".45"/>
+<circle cx="239.7" cy="408.8" r="6" fill="#e67e22" opacity=".45"/>
+<circle cx="211.8" cy="464.7" r="6" fill="#222" opacity=".45"/>
 <circle cx="770.6" cy="520.6" r="6" fill="#7d3c98" opacity=".45"/>
 <circle cx="742.6" cy="520.6" r="6" fill="#2e86c1" opacity=".45"/>
 <circle cx="239.7" cy="436.8" r="6" fill="#e67e22" opacity=".45"/>
@@ -4473,15 +4497,17 @@
 <polyline points="211.8,380.9 184.0,380.9 140.0,380.9" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
 <polyline points="211.8,380.9 184.0,380.9 140.0,380.9" fill="none" stroke="#222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="211.8" cy="380.9" r="5" fill="#c8ccd2" stroke="#555"/>
-<text x="134.0" y="384.9" text-anchor="end" font-size="12.5" font-weight="700" fill="#222">GND · 1F</text></svg></div>
+<text x="134.0" y="384.9" text-anchor="end" font-size="12.5" font-weight="700" fill="#222">GND · 1F</text></svg></figure>
   <table class="pins"><tr><th>Wire</th><th>Pad</th><th>ESP32 / supply</th></tr><tr><td><span class="sw" style="background:#2e86c1"></span>SDA</td><td><b>7O</b></td><td>GPIO 1</td></tr><tr><td><span class="sw" style="background:#d4ac0d"></span>SCL</td><td><b>8O</b></td><td>GPIO 2</td></tr><tr><td><span class="sw" style="background:#e67e22"></span>VCC</td><td><b>2F</b></td><td>3.3 V</td></tr><tr><td><span class="sw" style="background:#222"></span>GND</td><td><b>1F</b></td><td>ground</td></tr></table>
+  
   
 </section>
 <section class="bbstep" id="lid">
   <div class="bbhead"><span class="num">9</span><h2>Wires: Lid: buttons, lights and light sensor</h2><span class="time">⏱ 10 min</span></div>
   <p>Wires for the lid (see the lid harness below). Cut each long enough to reach with the board in place in the case and the lid lifted off (about 15 cm for most; 25 cm for the lid and the projector, which has to reach the barrel's end). Strip 3 mm, push it into the pad from the top and solder it underneath. Label the far ends with tape as you go.</p>
   
-  <div class="pic"><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Lid: buttons, lights and light sensor" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+  <figure class="shot"><img src="img/pb-g-lid.jpg?v=20261123a" alt="The lid wires in colour; earlier wires are shown pale. Wires on the power columns leave to the left, wires in row A leave over the front edge, and wires in rows N and O leave over the back edge." width="1400" height="875" loading="lazy"><figcaption>The lid wires in colour; earlier wires are shown pale. Wires on the power columns leave to the left, wires in row A leave over the front edge, and wires in rows N and O leave over the back edge.</figcaption></figure>
+  <figure class="pic"><figcaption class="maptitle">Hole map</figcaption><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Lid: buttons, lights and light sensor" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
 <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9z" fill="#e8743b"/></marker></defs>
 <rect x="190" y="105" width="770.0" height="440.0" rx="6" fill="#c9a26a" stroke="#8a6a3b" stroke-width="2"/>
 <circle cx="211.8" cy="520.6" r="5.2" fill="#e2b866" stroke="#9c7434" stroke-width="1"/><circle cx="211.8" cy="520.6" r="1.9" fill="#3b2a12"/>
@@ -5043,8 +5069,8 @@
 <g opacity="0.55"><circle cx="239.7" cy="518.6" r="34.6" fill="#1f4e8c" stroke="#0c2a4f" stroke-width="2"/><path d="M205.1,518.6 A34.6,34.6 0 0 1 224.3,487.8 L224.3,549.4 A34.6,34.6 0 0 1 205.1,518.6z" fill="#d6dbe2"/><text x="214.4" y="523.6" text-anchor="middle" font-size="16" font-weight="800" fill="#1f4e8c">−</text><text x="252.9" y="523.6" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">100µF</text></g>
 <circle cx="379.4" cy="520.6" r="6" fill="#7d3c98" opacity=".45"/>
 <circle cx="407.4" cy="520.6" r="6" fill="#2e86c1" opacity=".45"/>
-<circle cx="239.7" cy="492.6" r="6" fill="#e67e22" opacity=".45"/>
-<circle cx="211.8" cy="492.6" r="6" fill="#222" opacity=".45"/>
+<circle cx="239.7" cy="408.8" r="6" fill="#e67e22" opacity=".45"/>
+<circle cx="211.8" cy="464.7" r="6" fill="#222" opacity=".45"/>
 <circle cx="770.6" cy="520.6" r="6" fill="#7d3c98" opacity=".45"/>
 <circle cx="742.6" cy="520.6" r="6" fill="#2e86c1" opacity=".45"/>
 <circle cx="239.7" cy="436.8" r="6" fill="#e67e22" opacity=".45"/>
@@ -5089,7 +5115,7 @@
 <polyline points="211.8,352.9 184.0,352.9 140.0,352.9" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
 <polyline points="211.8,352.9 184.0,352.9 140.0,352.9" fill="none" stroke="#222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="211.8" cy="352.9" r="5" fill="#c8ccd2" stroke="#555"/>
-<text x="134.0" y="356.9" text-anchor="end" font-size="12.5" font-weight="700" fill="#222">GND · 1G</text></svg></div>
+<text x="134.0" y="356.9" text-anchor="end" font-size="12.5" font-weight="700" fill="#222">GND · 1G</text></svg></figure>
   <table class="pins"><tr><th>Wire</th><th>Pad</th><th>ESP32 / supply</th></tr><tr><td><span class="sw" style="background:#16a085"></span>Snooze</td><td><b>9A</b></td><td>GPIO 6</td></tr><tr><td><span class="sw" style="background:#8e44ad"></span>Alarm 1 button</td><td><b>15A</b></td><td>GPIO 8</td></tr><tr><td><span class="sw" style="background:#00acc1"></span>Alarm 2 button</td><td><b>18A</b></td><td>GPIO 9</td></tr><tr><td><span class="sw" style="background:#7f8c8d"></span>Light sensor</td><td><b>10A</b></td><td>GPIO 7</td></tr><tr><td><span class="sw" style="background:#a04000"></span>Alarm 1 light</td><td><b>10O</b></td><td>GPIO 41</td></tr><tr><td><span class="sw" style="background:#95a5a6"></span>Alarm 2 light</td><td><b>9O</b></td><td>GPIO 42</td></tr><tr><td><span class="sw" style="background:#e67e22"></span>3.3 V</td><td><b>2G</b></td><td>3.3 V</td></tr><tr><td><span class="sw" style="background:#222"></span>GND</td><td><b>1G</b></td><td>ground</td></tr></table><p>The three lid buttons, both alarm lights and the light sensor share one ground wire and the light sensor takes the only 3.3 V. Solder the <b>220 Ω</b> resistors in the light wires right at each button's LED + tab and the <b>10 kΩ</b> from the light sensor's signal leg to ground at the sensor, each covered with heat-shrink. That keeps the board simple.</p><div class="pic"><svg viewBox="0 0 1000 520" class="pbsvg" role="img" aria-label="Lid harness" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
 <rect x="0" y="0" width="1000" height="520" fill="#fbfaf6"/>
 <text x="500" y="30" text-anchor="middle" font-size="17" font-weight="800" fill="#333">Under the lid (seen from below, front edge at the bottom)</text>
@@ -5129,12 +5155,14 @@
 <path d="M911,272 C865,290 855,370 855,420" stroke="#7f8c8d" stroke-width="5" fill="none"/><text x="855" y="440" text-anchor="middle" font-size="12" font-weight="700">to 10A</text>
 <text x="500" y="505" text-anchor="middle" font-size="13" fill="#555">Each alarm button has four tabs: two for the switch, two for its light (+ is usually marked or the longer tab).</text></svg></div>
   
+  
 </section>
 <section class="bbstep" id="btnb">
   <div class="bbhead"><span class="num">10</span><h2>Wires: Button B</h2><span class="time">⏱ 10 min</span></div>
   <p>Wires for the button on the left wall. Cut each long enough to reach with the board in place in the case and the lid lifted off (about 15 cm for most; 25 cm for the lid and the projector, which has to reach the barrel's end). Strip 3 mm, push it into the pad from the top and solder it underneath. Label the far ends with tape as you go.</p>
   
-  <div class="pic"><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Button B" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+  <figure class="shot"><img src="img/pb-g-btnb.jpg?v=20261123a" alt="The button B wires in colour; earlier wires are shown pale. Wires on the power columns leave to the left, wires in row A leave over the front edge, and wires in rows N and O leave over the back edge." width="1400" height="875" loading="lazy"><figcaption>The button B wires in colour; earlier wires are shown pale. Wires on the power columns leave to the left, wires in row A leave over the front edge, and wires in rows N and O leave over the back edge.</figcaption></figure>
+  <figure class="pic"><figcaption class="maptitle">Hole map</figcaption><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Button B" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
 <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9z" fill="#e8743b"/></marker></defs>
 <rect x="190" y="105" width="770.0" height="440.0" rx="6" fill="#c9a26a" stroke="#8a6a3b" stroke-width="2"/>
 <circle cx="211.8" cy="520.6" r="5.2" fill="#e2b866" stroke="#9c7434" stroke-width="1"/><circle cx="211.8" cy="520.6" r="1.9" fill="#3b2a12"/>
@@ -5696,8 +5724,8 @@
 <g opacity="0.55"><circle cx="239.7" cy="518.6" r="34.6" fill="#1f4e8c" stroke="#0c2a4f" stroke-width="2"/><path d="M205.1,518.6 A34.6,34.6 0 0 1 224.3,487.8 L224.3,549.4 A34.6,34.6 0 0 1 205.1,518.6z" fill="#d6dbe2"/><text x="214.4" y="523.6" text-anchor="middle" font-size="16" font-weight="800" fill="#1f4e8c">−</text><text x="252.9" y="523.6" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">100µF</text></g>
 <circle cx="379.4" cy="520.6" r="6" fill="#7d3c98" opacity=".45"/>
 <circle cx="407.4" cy="520.6" r="6" fill="#2e86c1" opacity=".45"/>
-<circle cx="239.7" cy="492.6" r="6" fill="#e67e22" opacity=".45"/>
-<circle cx="211.8" cy="492.6" r="6" fill="#222" opacity=".45"/>
+<circle cx="239.7" cy="408.8" r="6" fill="#e67e22" opacity=".45"/>
+<circle cx="211.8" cy="464.7" r="6" fill="#222" opacity=".45"/>
 <circle cx="770.6" cy="520.6" r="6" fill="#7d3c98" opacity=".45"/>
 <circle cx="742.6" cy="520.6" r="6" fill="#2e86c1" opacity=".45"/>
 <circle cx="239.7" cy="436.8" r="6" fill="#e67e22" opacity=".45"/>
@@ -5726,15 +5754,17 @@
 <polyline points="211.8,325.0 184.0,325.0 140.0,325.0" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
 <polyline points="211.8,325.0 184.0,325.0 140.0,325.0" fill="none" stroke="#222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="211.8" cy="325.0" r="5" fill="#c8ccd2" stroke="#555"/>
-<text x="134.0" y="329.0" text-anchor="end" font-size="12.5" font-weight="700" fill="#222">GND · 1H</text></svg></div>
+<text x="134.0" y="329.0" text-anchor="end" font-size="12.5" font-weight="700" fill="#222">GND · 1H</text></svg></figure>
   <table class="pins"><tr><th>Wire</th><th>Pad</th><th>ESP32 / supply</th></tr><tr><td><span class="sw" style="background:#27ae60"></span>Button B</td><td><b>23A</b></td><td>GPIO 14</td></tr><tr><td><span class="sw" style="background:#222"></span>GND</td><td><b>1H</b></td><td>ground</td></tr></table>
+  
   
 </section>
 <section class="bbstep" id="bat">
   <div class="bbhead"><span class="num">11</span><h2>Wires: Battery boards (optional)</h2><span class="time">⏱ 10 min</span></div>
   <p>Wires for the charger and fuel gauge beside the battery. Cut each long enough to reach with the board in place in the case and the lid lifted off (about 15 cm for most; 25 cm for the lid and the projector, which has to reach the barrel's end). Strip 3 mm, push it into the pad from the top and solder it underneath. Label the far ends with tape as you go.</p>
   
-  <div class="pic"><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Battery boards (optional)" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+  <figure class="shot"><img src="img/pb-g-bat.jpg?v=20261123a" alt="The battery boards wires in colour; earlier wires are shown pale. Wires on the power columns leave to the left, wires in row A leave over the front edge, and wires in rows N and O leave over the back edge." width="1400" height="875" loading="lazy"><figcaption>The battery boards wires in colour; earlier wires are shown pale. Wires on the power columns leave to the left, wires in row A leave over the front edge, and wires in rows N and O leave over the back edge.</figcaption></figure>
+  <figure class="pic"><figcaption class="maptitle">Hole map</figcaption><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Battery boards (optional)" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
 <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9z" fill="#e8743b"/></marker></defs>
 <rect x="190" y="105" width="770.0" height="440.0" rx="6" fill="#c9a26a" stroke="#8a6a3b" stroke-width="2"/>
 <circle cx="211.8" cy="520.6" r="5.2" fill="#e2b866" stroke="#9c7434" stroke-width="1"/><circle cx="211.8" cy="520.6" r="1.9" fill="#3b2a12"/>
@@ -6296,8 +6326,8 @@
 <g opacity="0.55"><circle cx="239.7" cy="518.6" r="34.6" fill="#1f4e8c" stroke="#0c2a4f" stroke-width="2"/><path d="M205.1,518.6 A34.6,34.6 0 0 1 224.3,487.8 L224.3,549.4 A34.6,34.6 0 0 1 205.1,518.6z" fill="#d6dbe2"/><text x="214.4" y="523.6" text-anchor="middle" font-size="16" font-weight="800" fill="#1f4e8c">−</text><text x="252.9" y="523.6" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">100µF</text></g>
 <circle cx="379.4" cy="520.6" r="6" fill="#7d3c98" opacity=".45"/>
 <circle cx="407.4" cy="520.6" r="6" fill="#2e86c1" opacity=".45"/>
-<circle cx="239.7" cy="492.6" r="6" fill="#e67e22" opacity=".45"/>
-<circle cx="211.8" cy="492.6" r="6" fill="#222" opacity=".45"/>
+<circle cx="239.7" cy="408.8" r="6" fill="#e67e22" opacity=".45"/>
+<circle cx="211.8" cy="464.7" r="6" fill="#222" opacity=".45"/>
 <circle cx="770.6" cy="520.6" r="6" fill="#7d3c98" opacity=".45"/>
 <circle cx="742.6" cy="520.6" r="6" fill="#2e86c1" opacity=".45"/>
 <circle cx="239.7" cy="436.8" r="6" fill="#e67e22" opacity=".45"/>
@@ -6348,15 +6378,17 @@
 <polyline points="211.8,269.1 184.0,269.1 140.0,269.1" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
 <polyline points="211.8,269.1 184.0,269.1 140.0,269.1" fill="none" stroke="#222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="211.8" cy="269.1" r="5" fill="#c8ccd2" stroke="#555"/>
-<text x="134.0" y="273.1" text-anchor="end" font-size="12.5" font-weight="700" fill="#222">Gauge GND · 1J</text></svg></div>
+<text x="134.0" y="273.1" text-anchor="end" font-size="12.5" font-weight="700" fill="#222">Gauge GND · 1J</text></svg></figure>
   <table class="pins"><tr><th>Wire</th><th>Pad</th><th>ESP32 / supply</th></tr><tr><td><span class="sw" style="background:#e91e63"></span>Charger CE</td><td><b>19A</b></td><td>GPIO 10</td></tr><tr><td><span class="sw" style="background:#43a047"></span>Charger PGOOD</td><td><b>22A</b></td><td>GPIO 13</td></tr><tr><td><span class="sw" style="background:#222"></span>Charger GND</td><td><b>1I</b></td><td>ground</td></tr><tr><td><span class="sw" style="background:#2e86c1"></span>Gauge SDA</td><td><b>7N</b></td><td>GPIO 1</td></tr><tr><td><span class="sw" style="background:#d4ac0d"></span>Gauge SCL</td><td><b>8N</b></td><td>GPIO 2</td></tr><tr><td><span class="sw" style="background:#e67e22"></span>Gauge VIN</td><td><b>2J</b></td><td>3.3 V</td></tr><tr><td><span class="sw" style="background:#222"></span>Gauge GND</td><td><b>1J</b></td><td>ground</td></tr></table><p>Skip this group if you are not fitting the battery. The gauge's SDA and SCL go into <b>7N</b> and <b>8N</b>, right next to the clock module's 7O and 8O: same pins, two wires.</p>
+  
   
 </section>
 <section class="bbstep" id="power">
   <div class="bbhead"><span class="num">12</span><h2>Wires: Power in</h2><span class="time">⏱ 10 min</span></div>
   <p>Wires for the 5 V boost (or straight to the USB-C breakout without the battery). Cut each long enough to reach with the board in place in the case and the lid lifted off (about 15 cm for most; 25 cm for the lid and the projector, which has to reach the barrel's end). Strip 3 mm, push it into the pad from the top and solder it underneath. Label the far ends with tape as you go.</p>
   
-  <div class="pic"><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Power in" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+  <figure class="shot"><img src="img/pb-g-power.jpg?v=20261123a" alt="The power-in wires in colour; earlier wires are shown pale. Wires on the power columns leave to the left, wires in row A leave over the front edge, and wires in rows N and O leave over the back edge." width="1400" height="875" loading="lazy"><figcaption>The power-in wires in colour; earlier wires are shown pale. Wires on the power columns leave to the left, wires in row A leave over the front edge, and wires in rows N and O leave over the back edge.</figcaption></figure>
+  <figure class="pic"><figcaption class="maptitle">Hole map</figcaption><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="Power in" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
 <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9z" fill="#e8743b"/></marker></defs>
 <rect x="190" y="105" width="770.0" height="440.0" rx="6" fill="#c9a26a" stroke="#8a6a3b" stroke-width="2"/>
 <circle cx="211.8" cy="520.6" r="5.2" fill="#e2b866" stroke="#9c7434" stroke-width="1"/><circle cx="211.8" cy="520.6" r="1.9" fill="#3b2a12"/>
@@ -6918,8 +6950,8 @@
 <g opacity="0.55"><circle cx="239.7" cy="518.6" r="34.6" fill="#1f4e8c" stroke="#0c2a4f" stroke-width="2"/><path d="M205.1,518.6 A34.6,34.6 0 0 1 224.3,487.8 L224.3,549.4 A34.6,34.6 0 0 1 205.1,518.6z" fill="#d6dbe2"/><text x="214.4" y="523.6" text-anchor="middle" font-size="16" font-weight="800" fill="#1f4e8c">−</text><text x="252.9" y="523.6" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">100µF</text></g>
 <circle cx="379.4" cy="520.6" r="6" fill="#7d3c98" opacity=".45"/>
 <circle cx="407.4" cy="520.6" r="6" fill="#2e86c1" opacity=".45"/>
-<circle cx="239.7" cy="492.6" r="6" fill="#e67e22" opacity=".45"/>
-<circle cx="211.8" cy="492.6" r="6" fill="#222" opacity=".45"/>
+<circle cx="239.7" cy="408.8" r="6" fill="#e67e22" opacity=".45"/>
+<circle cx="211.8" cy="464.7" r="6" fill="#222" opacity=".45"/>
 <circle cx="770.6" cy="520.6" r="6" fill="#7d3c98" opacity=".45"/>
 <circle cx="742.6" cy="520.6" r="6" fill="#2e86c1" opacity=".45"/>
 <circle cx="239.7" cy="436.8" r="6" fill="#e67e22" opacity=".45"/>
@@ -6957,15 +6989,17 @@
 <polyline points="211.8,129.4 184.0,129.4 140.0,129.4" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
 <polyline points="211.8,129.4 184.0,129.4 140.0,129.4" fill="none" stroke="#222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="211.8" cy="129.4" r="5" fill="#c8ccd2" stroke="#555"/>
-<text x="134.0" y="133.4" text-anchor="end" font-size="12.5" font-weight="700" fill="#222">GND in · 1O</text></svg></div>
+<text x="134.0" y="133.4" text-anchor="end" font-size="12.5" font-weight="700" fill="#222">GND in · 1O</text></svg></figure>
   <table class="pins"><tr><th>Wire</th><th>Pad</th><th>ESP32 / supply</th></tr><tr><td><span class="sw" style="background:#e74c3c"></span>5 V in</td><td><b>3O</b></td><td>5 V</td></tr><tr><td><span class="sw" style="background:#222"></span>GND in</td><td><b>1O</b></td><td>ground</td></tr></table><p>Use 22 AWG for these two. With the battery: from the boost's <b>VOUT</b> and <b>GND</b>. Without it: straight from the USB-C breakout's <b>VBUS</b> and <b>GND</b>.</p>
+  
   
 </section>
 <section class="bbstep" id="all">
   <div class="bbhead"><span class="num">13</span><h2>All the wires at once</h2><span class="time">⏱ –</span></div>
   <p>For checking: every wire and its pad. Wires leaving the front edge (row A) go to the modules at the front and the lid; the left column (rails) carries power and ground; the back edge (rows N and O) goes to the clock module, the alarm lights and the battery boards.</p>
   
-  <div class="pic"><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="All wires" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+  <figure class="shot"><img src="img/pb-all.jpg?v=20261123a" alt="Every wire in place, before the ESP32 goes in." width="1400" height="875" loading="lazy"><figcaption>Every wire in place, before the ESP32 goes in.</figcaption></figure><figure class="shot"><img src="img/pb-all-under.jpg?v=20261123a" alt="The underside when it&#x27;s finished: the three rails, the short bridges, the three links, and a joint at every header pin and wire." width="1400" height="875" loading="lazy"><figcaption>The underside when it's finished: the three rails, the short bridges, the three links, and a joint at every header pin and wire.</figcaption></figure>
+  <figure class="pic"><figcaption class="maptitle">Hole map</figcaption><svg viewBox="0 0 1150 680" class="pbsvg" role="img" aria-label="All wires" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
 <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9z" fill="#e8743b"/></marker></defs>
 <rect x="190" y="105" width="770.0" height="440.0" rx="6" fill="#c9a26a" stroke="#8a6a3b" stroke-width="2"/>
 <circle cx="211.8" cy="520.6" r="5.2" fill="#e2b866" stroke="#9c7434" stroke-width="1"/><circle cx="211.8" cy="520.6" r="1.9" fill="#3b2a12"/>
@@ -7531,12 +7565,12 @@
 <polyline points="407.4,520.6 407.4,573.0" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
 <polyline points="407.4,520.6 407.4,573.0" fill="none" stroke="#2e86c1" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="407.4" cy="520.6" r="5" fill="#c8ccd2" stroke="#555"/>
-<polyline points="239.7,492.6 184.0,475.6 140.0,475.6" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="239.7,492.6 184.0,475.6 140.0,475.6" fill="none" stroke="#e67e22" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="239.7" cy="492.6" r="5" fill="#c8ccd2" stroke="#555"/>
-<polyline points="211.8,492.6 184.0,492.6 140.0,492.6" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="211.8,492.6 184.0,492.6 140.0,492.6" fill="none" stroke="#222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="211.8" cy="492.6" r="5" fill="#c8ccd2" stroke="#555"/>
+<polyline points="239.7,408.8 184.0,391.8 140.0,391.8" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="239.7,408.8 184.0,391.8 140.0,391.8" fill="none" stroke="#e67e22" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="239.7" cy="408.8" r="5" fill="#c8ccd2" stroke="#555"/>
+<polyline points="211.8,464.7 184.0,464.7 140.0,464.7" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="211.8,464.7 184.0,464.7 140.0,464.7" fill="none" stroke="#222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="211.8" cy="464.7" r="5" fill="#c8ccd2" stroke="#555"/>
 <polyline points="770.6,520.6 770.6,573.0" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
 <polyline points="770.6,520.6 770.6,573.0" fill="none" stroke="#7d3c98" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="770.6" cy="520.6" r="5" fill="#c8ccd2" stroke="#555"/>
@@ -7632,25 +7666,32 @@
 <circle cx="267.7" cy="129.4" r="5" fill="#c8ccd2" stroke="#555"/>
 <polyline points="211.8,129.4 184.0,129.4 140.0,129.4" fill="none" stroke="#111" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
 <polyline points="211.8,129.4 184.0,129.4 140.0,129.4" fill="none" stroke="#222" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="211.8" cy="129.4" r="5" fill="#c8ccd2" stroke="#555"/></svg></div>
+<circle cx="211.8" cy="129.4" r="5" fill="#c8ccd2" stroke="#555"/></svg></figure>
   
+  <h3>Turn it round</h3><p>Drag to turn the finished board, scroll or pinch to zoom.</p>
+<div class="pb3d"><canvas id="pb3d"></canvas><div class="pb3dbar">
+<button type="button" data-v="top">Top</button><button type="button" data-v="under">Underside</button><button type="button" data-v="esp">Take the ESP32 out</button></div></div>
   
 </section>
 <section class="bbstep" id="move">
   <div class="bbhead"><span class="num">14</span><h2>Move the ESP32 over and test, one module at a time</h2><span class="time">⏱ 30 min</span></div>
   <p>With nothing plugged into the sockets, check once more that 1, 2 and 3 don't beep to each other. Then:</p>
   <div class="warn">⚠️ Never plug the USB-C supply and the ESP32's own USB port into power at the same time.</div>
+  <figure class="shot"><img src="img/pb-esp32.jpg?v=20261123a" alt="The ESP32 in its sockets: antenna end over column 4, USB ports at the right. 22 pins in each row." width="1400" height="875" loading="lazy"><figcaption>The ESP32 in its sockets: antenna end over column 4, USB ports at the right. 22 pins in each row.</figcaption></figure><figure class="shot"><img src="img/pb-esp32-back.jpg?v=20261123a" alt="From the back right: the USB ports, the back edge&#x27;s wires to the clock module, alarm lights and battery boards, and the power-in pair on the left." width="1400" height="875" loading="lazy"><figcaption>From the back right: the USB ports, the back edge's wires to the clock module, alarm lights and battery boards, and the power-in pair on the left.</figcaption></figure>
   
   <ol>
 <li>Unplug the USB cable and lift the ESP32 off the breadboard. Plug it into the perfboard's sockets with its antenna end over column 4 and its USB ports at column 25. Every pin must be in a socket: count that 22 pins sit in each row.</li>
 <li>Connect only the power wires and the <b>front display</b>. Power it from the USB-C supply. The front display shows the time within 30 seconds.</li>
 <li>Add the modules one at a time, powering off between each: projector display, amplifier, clock module, lid, button B, battery boards. After each, run that module's test from the <a href="breadboard.html">breadboard guide</a>.</li>
 <li>Open the clock's web page: status should show the clock module found, and with the battery boards a Battery line.</li></ol>
+  
   <div class="test"><b>✅ Check:</b> Everything that worked on the breadboard works here. If one module doesn't, its wires are the only new thing: beep each one from the module's pin to its pad.</div>
 </section>
 <section class="bbstep" id="fit">
   <div class="bbhead"><span class="num">15</span><h2>Into the case</h2><span class="time">⏱ 10 min</span></div>
   <p>The board sits on the four pads at the front right of the base, ESP32 USB end toward the right wall, row A toward the front. Press it down until the two hooks on each short side click over its edges. Route the lid and projector wires up the right side, leave the battery and clock-module wires along the floor, and keep everything clear of the barrel, which turns. See the <a href="assembly.html">assembly steps</a> for the rest.</p>
+  
+  <figure class="shot"><img src="img/pb-incase.jpg?v=20261123a" alt="Where it ends up: the board at the front right of the base, ESP32 on top, with the battery, the floor modules and the wiring around it." width="1400" height="875" loading="lazy"><figcaption>Where it ends up: the board at the front right of the base, ESP32 on top, with the battery, the floor modules and the wiring around it.</figcaption></figure>
   
   
   
@@ -7658,4 +7699,47 @@
 </section>
 </main>
 <script src="js/declutter.js?v=4"></script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { makeStudio, v } from './js/pbscene.js?v=20261123a';
+const cv = document.getElementById('pb3d');
+if (cv) {
+  const st = makeStudio(cv, { width: cv.clientWidth, height: cv.clientWidth * 10 / 16, shadows: false });
+  st.mat.visible = false;
+  st.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  const ctl = new OrbitControls(st.camera, cv);
+  ctl.enableDamping = true; ctl.minDistance = 40; ctl.maxDistance = 400;
+  let need = true; ctl.addEventListener('change', () => need = true);
+  // Underside turns the board over left to right, as you would in your hands: row A stays toward you, column 1 goes right
+  const pivot = new THREE.Group(); pivot.position.copy(v(35, 20, 0.8)); st.scene.add(pivot);
+  let flipTo = 0, anim = null;
+  function go(k) {
+    if (k === 'top' || k === 'under') { flipTo = k === 'under' ? Math.PI : 0; anim = performance.now(); }
+    st.look([35, -70, 95], [35, 20, 4], 32); ctl.target.copy(v(35, 20, 4)); ctl.update(); need = true;
+  }
+  let started = false;
+  const start = async () => {
+    if (started) return; started = true;
+    await st.load('models/perfboard.glb?v=20261123a', 0);
+    pivot.add(st.model); st.model.position.copy(pivot.position).negate(); go('top');
+    const esp = []; st.model.traverse(o => { if (o.isMesh && /^esp32_/.test(o.name)) esp.push(o); });
+    document.querySelectorAll('.pb3dbar button').forEach(b => b.addEventListener('click', () => {
+      if (b.dataset.v === 'esp') { const out = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', out); esp.forEach(o => o.visible = !out); b.textContent = out ? 'Put the ESP32 in' : 'Take the ESP32 out'; need = true; }
+      else go(b.dataset.v);
+    }));
+    (function loop(t) {
+      requestAnimationFrame(loop); ctl.update();
+      if (anim !== null) {
+        const d = flipTo - pivot.rotation.z;
+        if (Math.abs(d) < 0.01) { pivot.rotation.z = flipTo; anim = null; } else pivot.rotation.z += d * 0.16;
+        need = true;
+      }
+      if (need) { st.render(); need = false; }
+    })();
+  };
+  new IntersectionObserver((es, o) => { if (es.some(e => e.isIntersecting)) { o.disconnect(); start(); } }, { rootMargin: '300px' }).observe(cv);
+  addEventListener('resize', () => { st.renderer.setSize(cv.clientWidth, cv.clientWidth * 10 / 16, false); st.camera.aspect = 1.6; st.camera.updateProjectionMatrix(); need = true; });
+}
+</script>
 </body></html>

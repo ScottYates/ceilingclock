@@ -1,7 +1,9 @@
+*.o
 .pio/
 .vscode/
-*.o
 a.out
-node_modules/
 firmware/sim/build/
 firmware/sim/sim_fs/
+hardware/__pycache__/
+hardware/pb_render/.out/
+node_modules/

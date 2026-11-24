@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!-- Headless renderer for the perfboard pictures: hardware/make_perfboard_renders.py serves the repository,
+     opens this page in Chromium and calls window.shot() for each picture. -->
+<html><head><meta charset="utf-8">
+<script type="importmap">{"imports":{"three":"/docs/vendor/three.module.min.js","three/addons/":"/docs/vendor/addons/"}}</script>
+<style>body{margin:0;background:#fff}canvas{display:block}</style>
+</head><body><canvas id="c"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { makeStudio } from '/docs/js/pbscene.js';
+import { PARTS, MATERIALS } from '/docs/js/parts.js';
+const W = 1600, H = 1000;
+const st = makeStudio(document.getElementById('c'), { width: W, height: H, preserve: true });
+let loaded = null;
+// the whole clock's model (docs/models/clock.glb), coloured like the site's viewer, showing only `show`
+async function loadClock(url, show) {
+  const gltf = await new GLTFLoader().loadAsync(url);
+  const root = gltf.scene;
+  let zmin = Infinity;
+  root.traverse(o => {
+    if (!o.isMesh) return;
+    const [base, mn] = o.name.split('__');
+    const p = PARTS[base];
+    o.visible = !!p && show.includes(base);
+    if (!o.visible) return;
+    const mt = (mn && MATERIALS[mn]) || { color: p.color };
+    o.geometry.computeVertexNormals();
+    o.material = new THREE.MeshStandardMaterial({ color: mt.color, roughness: mt.roughness ?? 0.6, metalness: mt.metalness ?? 0.05, emissive: mt.emissive ?? 0 });
+    o.castShadow = o.receiveShadow = true;
+    o.geometry.computeBoundingBox(); zmin = Math.min(zmin, o.geometry.boundingBox.min.z);
+  });
+  return { root, zmin };
+}
+let clockFloor = 0;
+window.shot = async ({ model, floor, cam, target, fov, show }) => {
+  const id = model + (show ? show.join() : '');
+  if (loaded !== id) {
+    if (show) {
+      const { root, zmin } = await loadClock(model, show);
+      root.rotation.x = -Math.PI / 2; st.scene.add(root); st.setModel(root); clockFloor = zmin;
+    } else await st.load(model, floor);
+    loaded = id;
+  }
+  st.mat.position.y = show ? clockFloor : floor;
+  st.look(cam, target, fov || 28);
+  st.render();
+  return st.renderer.domElement.toDataURL('image/png');
+};
+window.ready = true;
+</script></body></html>
