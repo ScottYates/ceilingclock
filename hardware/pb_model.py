@@ -1,7 +1,7 @@
 """3D model of the clock's perfboard at every build stage, for the pictures in docs/perfboard.html.
 
 Uses the layout in make_perfboard_guide.py (pads, bridges, links, wires), so the pictures and the hole maps
-always agree. Coordinates in mm: x along the columns (column 1 at the left), y along the rows (row A at the
+always agree. Coordinates in mm: x along the columns (column A at the left), y along the rows (row 1 at the
 front), z up; the board's underside is z = 0 and its top z = 1.6. stage(name) returns a trimesh.Scene with one
 mesh per material, with PBR materials, ready to export as GLB.
 """
@@ -18,8 +18,8 @@ LITE = False                             # fewer facets, for the page's interact
 P = G.P
 
 
-def hole(c, r):
-    return np.array([G.X0 + (c - 1) * P, G.Y0 + r * P])
+def hole(c, r):                       # c: 1 = column A; r: 1 = row 1 (front)
+    return np.array([G.X0 + (c - 1) * P, G.Y0 + (r - 1) * P])
 
 
 def padxy(name):
@@ -40,8 +40,8 @@ def mat(color, metal=0.0, rough=0.6):
 
 
 MATS = {
-    'board': mat('#c69a5c', 0, 0.75),
-    'copper': mat('#d48a4f', 1, 0.32),
+    'board': mat('#1f6b45', 0, 0.55),
+    'copper': mat('#cfd4d8', 1, 0.3),                      # tinned (HASL) pads
     'solder': mat('#d7dbe0', 1, 0.22),
     'header': mat('#161616', 0, 0.45),
     'gold': mat('#d4a64a', 1, 0.3),
@@ -72,6 +72,7 @@ def wire_mat(color, old=False):
 class Build:
     def __init__(self):
         self.parts = {}
+        self.textured = []                                   # (name, mesh with its own texture)
 
     def add(self, m, mesh):
         self.parts.setdefault(m, []).append(mesh)
@@ -88,6 +89,12 @@ class Build:
             mesh.visual = TextureVisuals(material=PBRMaterial(name=m, baseColorFactor=lin,
                                                               metallicFactor=d['metal'], roughnessFactor=d['rough'], doubleSided=False))
             sc.add_geometry(mesh, node_name=m, geom_name=m)
+        for nm, mesh in self.textured:
+            mesh = mesh.copy()
+            if flip:
+                M = np.eye(4); M[0, 0] = -1; M[2, 2] = -1; M[0, 3] = G.BW; M[2, 3] = T
+                mesh.apply_transform(M)
+            sc.add_geometry(mesh, node_name=nm, geom_name=nm)
         return sc
 
 
@@ -142,22 +149,69 @@ def bezier(p0, p1, p2, p3, n=12):
 _board_cache = {}
 
 
+EDGE_X = (2.7, G.BW - 2.7)                             # the oval pads at each end of the board
+CORNER = 2.0                                           # mounting holes, from each edge
+
+
+def silk(top=True, px_mm=24):
+    """The board's printed face as a texture: green, dark holes, white column letters and row numbers."""
+    from PIL import Image, ImageDraw, ImageFont
+    W, H = int(G.BW * px_mm), int(G.BH * px_mm)
+    im = Image.new('RGB', (W, H), '#1f6b45'); d = ImageDraw.Draw(im)
+    def at(x, y):                                      # board mm (top view) -> texture px
+        if not top: x = G.BW - x
+        return x * px_mm, (G.BH - y) * px_mm
+    fp = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
+    font = ImageFont.truetype(fp, int(1.25 * px_mm)); small = ImageFont.truetype(fp, int(0.95 * px_mm))
+    for c in range(1, G.COLS + 1):
+        for r in range(1, G.ROWS + 1):
+            x, y = at(*hole(c, r)); d.ellipse([x - 0.5 * px_mm, y - 0.5 * px_mm, x + 0.5 * px_mm, y + 0.5 * px_mm], fill='#1b1d1c')
+        for y in (G.Y0 - 1.75, G.Y0 + (G.ROWS - 1) * P + 1.75):
+            x, yy = at(hole(c, 1)[0], y); d.text((x, yy), G.CL[c - 1], fill='#f2f4f2', font=font, anchor='mm')
+    for r in range(1, G.ROWS + 1):
+        for x in (G.X0 - 1.85, G.X0 + (G.COLS - 1) * P + 1.85):
+            xx, y = at(x, hole(1, r)[1]); d.text((xx, y), f'{r:02d}', fill='#f2f4f2', font=small, anchor='mm')
+    for x in (CORNER, G.BW - CORNER):
+        for y in (CORNER, G.BH - CORNER):
+            xx, yy = at(x, y); d.ellipse([xx - 1.1 * px_mm, yy - 1.1 * px_mm, xx + 1.1 * px_mm, yy + 1.1 * px_mm], fill='#e9e6df')
+    return im
+
+
+def silk_plane(top=True):
+    z = T + 0.004 if top else -0.004
+    v = np.array([[0, 0, z], [G.BW, 0, z], [G.BW, G.BH, z], [0, G.BH, z]], float)
+    f = np.array([[0, 1, 2], [0, 2, 3]] if top else [[0, 2, 1], [0, 3, 2]])
+    uv = np.array([[0, 0], [1, 0], [1, 1], [0, 1]], float)
+    if not top: uv[:, 0] = 1 - uv[:, 0]
+    m = trimesh.Trimesh(vertices=v, faces=f, process=False)
+    m.visual = TextureVisuals(uv=uv, material=PBRMaterial(name='silk_top' if top else 'silk_under', baseColorTexture=silk(top, 16 if LITE else 24),
+                                                          metallicFactor=0.0, roughnessFactor=0.5))
+    return m
+
+
 def board(b):
     if LITE not in _board_cache:
         slab = box(0, 0, 0, G.BW, G.BH, T)
-        holes = [cyl(0.5, (*hole(c, r), -1), (*hole(c, r), T + 1), 8) for c in range(1, G.COLS + 1) for r in range(G.ROWS)]
+        holes = [cyl(0.5, (*hole(c, r), -1), (*hole(c, r), T + 1), 8) for c in range(1, G.COLS + 1) for r in range(1, G.ROWS + 1)]
+        holes += [cyl(1.1, (x, y, -1), (x, y, T + 1), 16) for x in (CORNER, G.BW - CORNER) for y in (CORNER, G.BH - CORNER)]
         slab = slab.difference(trimesh.util.concatenate(holes), engine='manifold')
         ring = trimesh.creation.annulus(r_min=0.5, r_max=0.95, height=0.05, sections=7 if LITE else 12)
         pads = []
         for c in range(1, G.COLS + 1):
-            for r in range(G.ROWS):
+            for r in range(1, G.ROWS + 1):
                 x, y = hole(c, r)
                 for z in (-0.025, T + 0.025):
                     m = ring.copy(); m.apply_translation([x, y, z]); pads.append(m)
-        _board_cache[LITE] = (slab, trimesh.util.concatenate(pads))
-    slab, pads = _board_cache[LITE]
+        for x in EDGE_X:                                   # oval pads at the ends, rows 2-17
+            for r in range(2, G.ROWS):
+                y = hole(1, r)[1]
+                for z0, z1 in ((-0.05, 0), (T, T + 0.05)):
+                    pads.append(box(x - 1.6, y - 0.85, z0, x + 1.6, y + 0.85, z1))
+        _board_cache[LITE] = (slab, trimesh.util.concatenate(pads), silk_plane(True), silk_plane(False))
+    slab, pads, st, su = _board_cache[LITE]
     b.add('board', slab.copy())
     b.add('copper', pads.copy())
+    b.textured += [('silk_top', st), ('silk_under', su)]
 
 
 def joint(b, xy, stub=0.9, r=0.95):
@@ -174,9 +228,10 @@ def bridge(b, a, z, solder_every=True):
     """Bare tinned wire along a column on the underside, soldered at every pad it crosses."""
     (c1, r1), (c2, r2) = G.pad(a), G.pad(z)
     p0, p1 = hole(c1, r1), hole(c2, r2)
-    b.add('solder', cyl(0.3, (*p0, -0.3), (*p1, -0.3), 10))
-    for r in range(min(r1, r2), max(r1, r2) + 1):
-        x, y = hole(c1, r)
+    b.add('solder', cyl(0.36, (*p0, -0.36), (*p1, -0.36), 10))
+    cells = [(c1, r) for r in range(min(r1, r2), max(r1, r2) + 1)] if c1 == c2 else [(c, r1) for c in range(min(c1, c2), max(c1, c2) + 1)]
+    for c, r in cells:
+        x, y = hole(c, r)
         b.add('solder', revolve([(0, 0.02), (1.0, 0.02), (0.85, -0.3), (0.5, -0.62), (0, -0.7)], (x, y, 0), 8 if LITE else 16))
 
 
@@ -184,14 +239,8 @@ def link(b, a, z, color):
     """Insulated link on the underside, ends through the holes and soldered."""
     pa, pz = padxy(a), padxy(z)
     lo = -1.6
-    if a == '24C':                                   # the long 5 V link: back toward the middle, across, then down to 3K
-        mid1 = hole(23, 7); mid2 = hole(5, 9)
-        path = [(*pa, -0.4), (*pa, lo)] + bezier((*pa, lo), (pa[0], pa[1] + 10, lo), (mid1[0] + 4, mid1[1], lo), (*mid1, lo), 8)[1:] \
-            + bezier((*mid1, lo), (mid1[0] - 10, mid1[1], lo), (mid2[0] + 10, mid2[1], lo), (*mid2, lo), 10)[1:] \
-            + bezier((*mid2, lo), (mid2[0] - 2, mid2[1] + 1, lo), (pz[0] + 1, pz[1] - 2, lo), (*pz, lo), 8)[1:] + [(*pz, -0.4)]
-    else:
-        m = (pa + pz) / 2
-        path = [(*pa, -0.4), (*pa, lo)] + bezier((*pa, lo), (pa[0], pa[1] - 2.5, lo - 0.6), (pz[0], pz[1] - 2.5, lo - 0.6), (*pz, lo), 10)[1:] + [(*pz, -0.4)]
+    bow = -1.27 if G.pad(a)[0] < 12 else 1.27       # half a hole to the side, so it lies between the pads it passes
+    path = [(*pa, -0.4), (*pa, lo)] + bezier((*pa, lo), (pa[0] + bow, pa[1] + 2.5, lo - 0.5), (pz[0] + bow, pz[1] - 2.5, lo - 0.5), (*pz, lo), 14)[1:] + [(*pz, -0.4)]
     b.add(wire_mat(color), tube(path[1:-1], 0.55, 10))
     for p in (pa, pz):
         joint(b, p, 0.6)
@@ -243,7 +292,7 @@ def capacitor(b, lying=False, at=None):
 
 def esp32(b):
     L, W = 62.7, 28.0
-    cx = hole(14.5, 7)[0]; cy = hole(4, 7)[1]
+    cx = hole(G.HC0 + 10.5, 8)[0]; cy = hole(1, (G.ROW_J1 + G.ROW_J3) / 2)[1]
     x0, y0 = cx - L / 2, cy - W / 2
     z0 = T + 8.5 + 2.5
     b.add('pcb_black', box(x0, y0, z0, x0 + L, y0 + W, z0 + 1.6))
@@ -282,13 +331,10 @@ def wire(b, pad_name, color, old=False, floor=-1.4, rise=None, ends=True):
     x, y = hole(c, r)
     R = 0.62                                           # 26 AWG with insulation
     key = wire_mat(color, old)
-    if c <= 3:                                         # rail pads: out to the left; column 3 rides highest
-        h = T + 1.3 + (c - 1) * 1.75
-        out = np.array([-1, 0]); edge = x + 3
-    elif r == 0:
+    if r == 1:                                         # front pins: over the front edge
         h = T + 1.3; out = np.array([0, -1]); edge = y + 3
-    else:
-        h = T + 1.3 + (14 - r) * 1.75; out = np.array([0, 1]); edge = G.BH - y + 3
+    else:                                              # back pins and rails: over the back edge; row 14 rides over row 15
+        h = T + 1.3 + max(0, 15 - r) * 1.75; out = np.array([0, 1]); edge = G.BH - y + 3
     if rise is not None:
         h = rise
     p_in = np.array([x, y, T + 0.9])
@@ -296,13 +342,13 @@ def wire(b, pad_name, color, old=False, floor=-1.4, rise=None, ends=True):
     run0 = np.array([x + out[0] * 1.6, y + out[1] * 1.6, h])
     run1 = np.array([x + out[0] * edge, y + out[1] * edge, h])
     drop = floor + R + 0.05
-    curve = bezier(run1, run1 + np.r_[out * 6, 0], np.r_[run1[:2] + out * 10, drop], np.r_[run1[:2] + out * 18, drop], 10)
-    tail = np.r_[run1[:2] + out * 40, drop]
+    curve = bezier(run1, run1 + np.r_[out * 5, 0], np.r_[run1[:2] + out * 8, drop], np.r_[run1[:2] + out * 14, drop], 10)
+    tail = np.r_[run1[:2] + out * 26, drop]
     pts = [p_in, bend] + bezier(bend, bend + [0, 0, 0.7], run0 - np.r_[out * 0.7, 0], run0, 5)[1:] + [run1] + curve[1:] + [tail]
     b.add(key, tube(pts, R, 12))
     # stripped, tinned end
     if ends:
-        b.add('solder', cyl(0.3, tail, np.r_[run1[:2] + out * 43.5, drop], 8))
+        b.add('solder', cyl(0.3, tail, np.r_[run1[:2] + out * 29, drop], 8))
     # the lead through the board and its joint underneath
     b.add('solder', cyl(0.3, (x, y, T + 1.0), (x, y, -0.6), 8))
     joint(b, (x, y), 0.9)
@@ -314,13 +360,13 @@ GROUP_IDS = [g['id'] for g in G.GROUPS]
 
 def underside_basics(b, rails=True, signals=True, links=True):
     if rails:
-        for c in (G.GND, G.V33, G.V5):
-            bridge(b, f'{c}A', f'{c}O')
+        for r in (G.V5, G.V33, G.GND):
+            bridge(b, G.pname(1, r), G.pname(G.COLS, r))
     if signals:
         for c in G.SIG_COLS_FRONT:
-            bridge(b, f'{c}A', f'{c}C')
+            bridge(b, G.pname(c, 1), G.pname(c, G.ROW_J1))
         for c in G.SIG_COLS_BACK:
-            bridge(b, f'{c}M', f'{c}O')
+            bridge(b, G.pname(c, G.ROW_J3), G.pname(c, 15))
     if links:
         for a, z, _, colr in G.LINKS:
             link(b, a, z, colr)

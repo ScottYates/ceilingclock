@@ -110,9 +110,12 @@ tm_w = tm_disp[0] + 1; tm_h = tm_disp[1] + 1; tm_z = 28 + bat_h/2;          // f
 tm_pcb_y = -box_d/2 + wall + tm_disp[2];                          // PCB plane (display face against the wall)
 // left side panel: USB-C power and button B
 usb_y = -8;  usb_z = 18;  btnb_y = -40;  btnb_z = 28 + bat_h/2;
-// circuit board: a 70 x 50 mm perfboard cut down to 70 x 40 (14 rows), resting on 4 pads, held by 4 snap hooks on
-// its short edges. Its back edge stays clear of the bearing block; its front edge clears the alarm buttons' tabs.
-pb_xy = [45, -24.5];  pb_size = [70, 40];  pb_boss_h = 12;
+// circuit board: a 70 x 50 mm perfboard, used whole (it was once cut to 70 x 40), resting on 4 pads, held by 4 snap
+// hooks on its short edges. The pads keep their 70 x 40 spacing (Scott's printed base, 2026-11-25: the whole board fits).
+pb_xy = [45, -24.5];  pb_size = [70, 50];  pb_post = [70, 40];  pb_boss_h = 12;
+// The board's back-right corner would hit the barrel's bearing block, so the whole board sits 5 mm forward of the
+// posts' centre (the hooks only hold its ends, so it can): front and back overhang 10 and 0 mm.
+pb_c = [pb_xy[0], pb_xy[1] - 5];                         // centre of the board itself
 pb_top = feet_h + floor_t + pb_boss_h + 1.6;           // top surface of the board
 hook_t = 1.4;  hook_lip = 0.9;  hook_w = 8;  hook_dy = 12;
 // speaker (40 mm), facing down through the floor
@@ -143,7 +146,7 @@ module base() {
       for (p = posts) translate([p[0] * post_xy[0], p[1] * post_xy[1], feet_h]) cylinder(r = 4.5, h = base_top - feet_h);
       // circuit board support pads (under the corners) and snap hooks (on the short edges)
       for (sx = [-1, 1], sy = [-1, 1])
-        translate([pb_xy[0] + sx * (pb_size[0]/2 - 3.5), pb_xy[1] + sy * (pb_size[1]/2 - 3.5), feet_h])
+        translate([pb_xy[0] + sx * (pb_post[0]/2 - 3.5), pb_xy[1] + sy * (pb_post[1]/2 - 3.5), feet_h])
           cylinder(d = 7, h = floor_t + pb_boss_h);
       for (side = [-1, 1], dy = [-hook_dy, hook_dy]) board_hook(pb_xy[1] + dy, side);
       // speaker retaining ring

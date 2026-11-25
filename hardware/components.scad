@@ -123,22 +123,27 @@ module ref_ldr() translate([ldr_xy[0], ldr_xy[1], lid_top - 2]) {
 }
 
 // ---------------------------------------------------------------- circuit board: perfboard + ESP32-S3-DevKitC-1 + parts
-pb0 = [pb_xy[0] - pb_size[0]/2, pb_xy[1] - pb_size[1]/2, pb_top - 1.6];
-// Perfboard: 27 x 15 holes on a 2.54 mm grid (columns 1-27 left to right, rows A-O front to back), as in
-// docs/perfboard.html (hardware/make_perfboard_guide.py). ESP32 female headers in rows C and M, columns 4-25.
-function pbh(c, r) = [pb0[0] + 1.98 + (c - 1) * 2.54, pb0[1] + 2.22 + r * 2.54];   // r: 0 = row A
+pb0 = [pb_c[0] - pb_size[0]/2, pb_c[1] - pb_size[1]/2, pb_top - 1.6];
+// Perfboard: Scott's 70 x 50 mm double-sided board, 24 x 18 holes on a 2.54 mm grid (columns A-X left to right,
+// rows 1-18 front to back, as printed on it), as in docs/perfboard.html (hardware/make_perfboard_guide.py).
+// ESP32 female headers in rows 3 and 13, columns B-W; power rails along rows 16-18; 100 uF in A16/A18.
+pb_x0 = (70 - 23 * 2.54) / 2;  pb_y0 = (50 - 17 * 2.54) / 2;
+function pbh(c, r) = [pb0[0] + pb_x0 + (c - 1) * 2.54, pb0[1] + pb_y0 + (r - 1) * 2.54];   // c: 1 = column A; r: 1 = row 1
 module ref_perfboard() {
   translate(pb0) {
-    M("pcb_green") pcb(pb_size[0], pb_size[1]);
-    M("copper") for (c = [1:27], r = [0:14]) translate([1.98 + (c - 1) * 2.54, 2.22 + r * 2.54, 1.6]) cylinder(d = 1.7, h = 0.06, $fn = 8);
+    M("pcb_green") difference() {
+      pcb(pb_size[0], pb_size[1]);
+      for (x = [2, pb_size[0] - 2], y = [2, pb_size[1] - 2]) translate([x, y, -1]) cylinder(d = 2.2, h = 4, $fn = 16);
+    }
+    M("metal") for (c = [1:24], r = [1:18]) translate([pb_x0 + (c - 1) * 2.54, pb_y0 + (r - 1) * 2.54, 1.6]) cylinder(d = 1.7, h = 0.06, $fn = 8);
   }
-  M("black") for (r = [2, 12]) translate([pbh(4, r)[0] - 1.27, pbh(4, r)[1] - 1.27, pb_top]) female_header(22);
-  translate([pbh(2, 0)[0], pbh(2, 0)[1], pb_top]) electrolytic(6.3, 11);                       // 100 uF across 5 V and GND, front-left
-  // power comes in on two 22 AWG wires soldered into the 5 V and GND columns at the back-left (pads 3O and 1O)
+  M("black") for (r = [3, 13]) translate([pbh(2, r)[0] - 1.27, pbh(2, r)[1] - 1.27, pb_top]) female_header(22);
+  translate([pbh(1, 17)[0], pbh(1, 17)[1], pb_top]) electrolytic(6.3, 11);                      // 100 uF across 5 V and GND, back-left
+  // power comes in on two 22 AWG wires soldered into the 5 V and GND rails at the back right (W16, X18)
 }
 module ref_esp32() {
   L = 62.7; W = 28; z0 = pb_top + 8.5 + 2.5;        // its pin strips sit on top of the female headers (rows 25.4 apart)
-  x0 = pbh(14.5, 7)[0] - L/2; y0 = pbh(4, 7)[1] - W/2;
+  x0 = pbh(12.5, 8)[0] - L/2; y0 = pbh(2, 8)[1] - W/2;
   translate([x0, y0, z0]) {
     M("pcb_black") pcb(L, W);
     // ESP32-S3-WROOM-1 module at the -x end: PCB, metal shield, antenna

@@ -18,8 +18,8 @@ IMG = os.path.join(ROOT, 'docs', 'img')
 FRONT = dict(cam=[30, -95, 95], target=[35, 12, 2], fov=32)
 BACK = dict(cam=[-20, 115, 100], target=[36, 24, 2], fov=32)
 ABOVE = dict(cam=[33, -60, 135], target=[35, 15, 2], fov=34)
-UNDER = dict(cam=[35, -75, 90], target=[35, 20, 0], fov=30)
-WIRES = dict(cam=[35, -62, 140], target=[35, 21, 2], fov=35)                 # every wire step: row A toward you, both edges in view
+UNDER = dict(cam=[35, -52, 86], target=[35, 27, 0], fov=31)
+WIRES = dict(cam=[35, -42, 118], target=[35, 25, 2], fov=37)                 # every wire step: row A toward you, both edges in view
 GROUP_VIEW = {g: WIRES for g in pb_model.GROUP_IDS}
 
 SHOTS = [
@@ -28,13 +28,13 @@ SHOTS = [
     ('bridges', 'bridges', UNDER),
     ('bridges-close', 'bridges', dict(cam=[48, -24, 34], target=[46, 6, 0], fov=30)),
     ('links', 'links', UNDER),
-    ('jig', 'jig', dict(cam=[18, -80, 88], target=[35, 20, 8], fov=30)),
-    ('headers', 'headers', dict(cam=[30, -70, 85], target=[35, 20, 3], fov=30)),
+    ('jig', 'jig', dict(cam=[18, -82, 95], target=[35, 24, 8], fov=31)),
+    ('headers', 'headers', dict(cam=[30, -72, 95], target=[35, 25, 3], fov=31)),
 ] + [(f'g-{g}', f'g:{g}', GROUP_VIEW[g]) for g in pb_model.GROUP_IDS] + [
     ('all', 'all', WIRES),
-    ('all-under', 'all_under', dict(cam=[30, -95, 95], target=[35, 14, -3], fov=32)),
-    ('esp32', 'esp32', dict(cam=[-10, -90, 90], target=[35, 15, 5], fov=32)),
-    ('esp32-back', 'esp32', dict(cam=[105, 105, 95], target=[35, 20, 5], fov=32)),
+    ('all-under', 'all_under', dict(cam=[30, -70, 100], target=[35, 22, -3], fov=34)),
+    ('esp32', 'esp32', dict(cam=[-10, -90, 100], target=[35, 20, 5], fov=33)),
+    ('esp32-back', 'esp32', dict(cam=[110, 118, 100], target=[35, 27, 5], fov=33)),
 ]
 CASE_SHOT = ('incase', dict(cam=[40, -125, 330], target=[18, -8, 20], fov=34,
                             show=['base', 'ref_feet', 'ref_perfboard', 'ref_esp32', 'ref_amp', 'ref_rtc', 'ref_speaker', 'ref_tm1637',

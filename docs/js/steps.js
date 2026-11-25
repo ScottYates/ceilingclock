@@ -52,7 +52,7 @@ export const STEPS = [
   {
     title: 'Build the electronics board',
     view: { visible: s3, highlight: ELEC, explode: 0.6, camera: [240, 320, 300], target: [25, 30, 25] },
-    html: `<p>Use a 70 × 50 mm perfboard cut down to <b>70 × 40</b>: score across it with a knife along a row of holes, four rows in from one long edge, and snap it. The alarm buttons hang down just in front of it. Follow the <a href="wiring.html">wiring page</a> for every connection.</p>
+    html: `<p>Use a whole 70 × 50 mm perfboard (24 × 18 holes), built as in the <a href="perfboard.html">perfboard guide</a>. It sits on the four posts at the front right, slid forward so its back edge clears the barrel's bearing block, and the hooks click over its ends. The alarm buttons hang down just in front of it.</p>
 <ol>
 <li>Solder two rows of female headers so the ESP32-S3 board plugs in rather than being soldered. That way you can replace or reflash it easily.</li>
 <li>Add the 5 V and GND rails, the 100 µF capacitor by the amplifier, the 10 kΩ resistor for the light sensor, and the two 220 Ω resistors for the alarm buttons' lights. Keep the right-hand two thirds of the board's front edge (the edge toward the front of the clock) free of anything taller than 2.5 mm: the alarm buttons' bodies end just above it.</li>
