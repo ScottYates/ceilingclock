@@ -24,12 +24,14 @@ GROUP_VIEW = {g: WIRES for g in pb_model.GROUP_IDS}
 
 SHOTS = [
     ('kit', 'kit', dict(cam=[50, -110, 120], target=[50, 0, 0], fov=32)),
+    ('jig', 'jig', dict(cam=[18, -82, 95], target=[35, 24, 8], fov=31)),
+    ('headers', 'headers', dict(cam=[30, -72, 95], target=[35, 25, 3], fov=31)),
     ('rails', 'rails', UNDER),
+    ('rails-close', 'rails', dict(cam=[38, 18, 34], target=[37, 44, 0], fov=30)),
     ('bridges', 'bridges', UNDER),
     ('bridges-close', 'bridges', dict(cam=[48, -24, 34], target=[46, 6, 0], fov=30)),
     ('links', 'links', UNDER),
-    ('jig', 'jig', dict(cam=[18, -82, 95], target=[35, 24, 8], fov=31)),
-    ('headers', 'headers', dict(cam=[30, -72, 95], target=[35, 25, 3], fov=31)),
+    ('cap', 'cap', dict(cam=[-22, -10, 62], target=[12, 40, 4], fov=32)),
 ] + [(f'g-{g}', f'g:{g}', GROUP_VIEW[g]) for g in pb_model.GROUP_IDS] + [
     ('all', 'all', WIRES),
     ('all-under', 'all_under', dict(cam=[30, -70, 100], target=[35, 22, -3], fov=34)),

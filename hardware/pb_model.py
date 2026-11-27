@@ -121,6 +121,8 @@ def ball(r, p, sub=1):
 def revolve(profile, at, sections=20):
     """profile: [(r, z), ...] from the axis out and back; revolved about z, placed at `at` (x, y, z)."""
     m = trimesh.creation.revolve(np.array(profile, float), sections=sections)
+    if m.volume < 0:                                   # profile drawn the other way round: turn it outside-out
+        m.invert()
     m.apply_translation(at)
     return m
 
@@ -215,6 +217,10 @@ def board(b):
 
 
 def joint(b, xy, stub=0.9, r=0.95):
+    """xy: a pad's position, or its name; on a bar the fillet is wider, taking in the bar too."""
+    if isinstance(xy, str):
+        if xy in G.ON_BAR: r = 1.2
+        xy = padxy(xy)
     """Solder joint on the underside: a fillet cone round a lead stub."""
     b.add('solder', revolve([(0, 0.02), (r, 0.02), (r * 0.97, -0.18), (r * 0.82, -0.42), (r * 0.58, -0.68), (0.34, -0.95), (0.3, -stub - 0.15),
                              (0.2, -stub - 0.3), (0, -stub - 0.33)], (xy[0], xy[1], 0), 9 if LITE else 18))
@@ -224,15 +230,17 @@ def top_joint(b, xy, r=0.85):
     b.add('solder', revolve([(0, T - 0.02), (r, T - 0.02), (r * 0.7, T + 0.3), (0.3, T + 0.55), (0, T + 0.6)], (xy[0], xy[1], 0)))
 
 
-def bridge(b, a, z, solder_every=True):
-    """Bare tinned wire along a column on the underside, soldered at every pad it crosses."""
+def bridge(b, a, z, solder=None, side=0.8):
+    """Bare tinned wire on the underside, lying along one side of its holes (so they stay open), soldered only at
+    the holes in `solder` (names); the rest of its pads it just lies on."""
     (c1, r1), (c2, r2) = G.pad(a), G.pad(z)
-    p0, p1 = hole(c1, r1), hole(c2, r2)
+    off = np.array([0, side]) if r1 == r2 else np.array([side, 0])    # rails sit toward the back, bridges to one side
+    p0, p1 = hole(c1, r1) + off, hole(c2, r2) + off
     b.add('solder', cyl(0.36, (*p0, -0.36), (*p1, -0.36), 10))
-    cells = [(c1, r) for r in range(min(r1, r2), max(r1, r2) + 1)] if c1 == c2 else [(c, r1) for c in range(min(c1, c2), max(c1, c2) + 1)]
-    for c, r in cells:
-        x, y = hole(c, r)
-        b.add('solder', revolve([(0, 0.02), (1.0, 0.02), (0.85, -0.3), (0.5, -0.62), (0, -0.7)], (x, y, 0), 8 if LITE else 16))
+    for name in solder or []:
+        x, y = padxy(name)
+        cx, cy = x + off[0] * 0.45, y + off[1] * 0.45
+        b.add('solder', revolve([(0, 0.02), (1.2, 0.02), (1.05, -0.3), (0.65, -0.68), (0, -0.78)], (cx, cy, 0), 8 if LITE else 16))
 
 
 def link(b, a, z, color):
@@ -242,8 +250,8 @@ def link(b, a, z, color):
     bow = -1.27 if G.pad(a)[0] < 12 else 1.27       # half a hole to the side, so it lies between the pads it passes
     path = [(*pa, -0.4), (*pa, lo)] + bezier((*pa, lo), (pa[0] + bow, pa[1] + 2.5, lo - 0.5), (pz[0] + bow, pz[1] - 2.5, lo - 0.5), (*pz, lo), 14)[1:] + [(*pz, -0.4)]
     b.add(wire_mat(color), tube(path[1:-1], 0.55, 10))
-    for p in (pa, pz):
-        joint(b, p, 0.6)
+    for name in (a, z):
+        joint(b, name, 0.6)
 
 
 def header(b, row, socket=True, pins_soldered=True, lift=0.0):
@@ -284,10 +292,10 @@ def capacitor(b, lying=False, at=None):
     b.add('cap_stripe', s.intersection(wedge, engine='manifold'))
     b.add('alu', cyl(2.95, (*c, z0 + 11), (*c, z0 + 11.05), 28))
     b.add('header', cyl(3.0, (*c, z0 - 0.4), (*c, z0), 28))           # rubber bung
-    for p, off in ((plus, -1.25), (minus, 1.25)):
+    for p, off, name in ((plus, -1.25, G.CAP[0]), (minus, 1.25, G.CAP[1])):
         leg_top = c + d * off
         b.add('solder', tube([(*leg_top, z0 - 0.2), (*leg_top, T + 0.35), (*p, T + 0.1), (*p, -1.0)], 0.28, 8))
-        joint(b, p, 0.8)
+        joint(b, name, 0.8)
 
 
 def esp32(b):
@@ -351,7 +359,7 @@ def wire(b, pad_name, color, old=False, floor=-1.4, rise=None, ends=True):
         b.add('solder', cyl(0.3, tail, np.r_[run1[:2] + out * 29, drop], 8))
     # the lead through the board and its joint underneath
     b.add('solder', cyl(0.3, (x, y, T + 1.0), (x, y, -0.6), 8))
-    joint(b, (x, y), 0.9)
+    joint(b, pad_name, 0.9)
 
 
 # ---------------------------------------------------------------- stages
@@ -361,12 +369,12 @@ GROUP_IDS = [g['id'] for g in G.GROUPS]
 def underside_basics(b, rails=True, signals=True, links=True):
     if rails:
         for r in (G.V5, G.V33, G.GND):
-            bridge(b, G.pname(1, r), G.pname(G.COLS, r))
+            bridge(b, G.pname(1, r), G.pname(G.COLS, r), [G.pname(c, r) for c in G.RAIL_ANCHORS[r]])
     if signals:
         for c in G.SIG_COLS_FRONT:
-            bridge(b, G.pname(c, 1), G.pname(c, G.ROW_J1))
+            bridge(b, G.pname(c, 1), G.pname(c, G.ROW_J1), [G.pname(c, r) for r in G.bridge_solder_rows(c, True)])
         for c in G.SIG_COLS_BACK:
-            bridge(b, G.pname(c, G.ROW_J3), G.pname(c, 15))
+            bridge(b, G.pname(c, G.ROW_J3), G.pname(c, 15), [G.pname(c, r) for r in G.bridge_solder_rows(c, False)])
     if links:
         for a, z, _, colr in G.LINKS:
             link(b, a, z, colr)
@@ -394,22 +402,23 @@ def stage(name):
         coil = [(18 + 8 * math.cos(t), -38 + 5 * math.sin(t), 0.3 + 0.12 * t) for t in np.linspace(0, 6 * math.pi, 120)]
         b.add('solder', tube(coil, 0.3, 8))
         return b.scene(), False, 0.0
-    if name in ('rails', 'bridges', 'links'):
+    if name == 'jig':                                   # sockets first, held straight by the ESP32
         board(b)
-        underside_basics(b, True, name != 'rails', name == 'links')
-        return b.scene(flip=True), True, 0.0
-    if name == 'jig':
-        board(b)
-        underside_basics(b)
         for row in (G.ROW_J1, G.ROW_J3):
             header(b, row, pins_soldered=False)
         esp32(b)
-        return b.scene(), False, -1.4
-    board(b); underside_basics(b)
+        return b.scene(), False, -2.9
+    board(b)
     for row in (G.ROW_J1, G.ROW_J3):
         header(b, row)
-    capacitor(b)
     if name == 'headers':
+        return b.scene(), False, -2.0
+    if name in ('rails', 'bridges', 'links'):          # turned over, resting on the sockets
+        underside_basics(b, True, name != 'rails', name == 'links')
+        return b.scene(flip=True), True, -8.5
+    underside_basics(b)
+    capacitor(b)
+    if name == 'cap':
         return b.scene(), False, -1.4
     if name.startswith('g:'):
         gid = name[2:]
@@ -439,7 +448,7 @@ def stage(name):
     raise ValueError(name)
 
 
-STAGES = ['kit', 'rails', 'bridges', 'links', 'jig', 'headers'] + ['g:' + g for g in GROUP_IDS] + ['all', 'all_under', 'esp32']
+STAGES = ['kit', 'jig', 'headers', 'rails', 'bridges', 'links', 'cap'] + ['g:' + g for g in GROUP_IDS] + ['all', 'all_under', 'esp32']
 
 if __name__ == '__main__':
     import sys, os
